@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Leaderboard - Beta Beer Dye League</title>
+  <!-- Styles -->
+  <link rel="stylesheet" href="../css/admin.css">
+  <link rel="stylesheet" href="../css/carousel.css">
+  <link rel="stylesheet" href="../css/global.css">
+  <link rel="stylesheet" href="../css/navigation.css">
+  <link rel="stylesheet" href="../css/sponsors.css">
+  <link rel="stylesheet" href="../css/styles.css">
+  <script defer src="../js/menu.js"></script>
+  <script defer src="../js/standings.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+
+<!-- Menu Button -->
+<div class="menu-btn">
+  <span class="menu-btn__burger"></span>
+  <span class="menu-btn__burger"></span>
+  <span class="menu-btn__burger"></span>
+</div>
+
+<nav class="nav">
+  <ul class="nav__list">
+    <li class="nav__item"><a href="Homepage.html" class="nav__link">Home</a></li>
+    <li class="nav__item"><a href="Standings.html" class="nav__link">Standings</a></li>
+    <li class="nav__item"><a href="Add-Team.html" class="nav__link">Add Team</a></li>
+    <li class="nav__item"><a href="PlayerBios.html" class="nav__link">Player Bios</a></li>
+    <li class="nav__item"><a href="Rulebook.html" class="nav__link">Rulebook</a></li>
+    <li class="nav__item"><a href="Contact.html" class="nav__link">Contact</a></li>
+  </ul>
+</nav>
+
+<div class="first-part">
+  <h1 class="logo-text">Beta Beer Dye League Leaderboard</h1>
+  <img class="logo" src="../images/BBDL%20Logo.png" alt="BBDL Logo">
+</div>
+
+<div class="middle-part">
+  <h2>Leaderboard</h2>
+  <table id="leaderboard-table">
+    <caption><br>*PF - Points For<br>*PA - Points Against</caption>
+    <thead>
+    <tr>
+      <th onclick="sortTable(0)">Rank <i class="fas fa-sort"></i></th>
+      <th onclick="sortTable(1)">Team Name <i class="fas fa-sort"></i></th>
+      <th>Player 1</th>
+      <th>Player 2</th>
+      <th onclick="sortTable(2)">W <i class="fas fa-sort"></i></th>
+      <th onclick="sortTable(3)">L <i class="fas fa-sort"></i></th>
+      <th onclick="sortTable(4)">PF <i class="fas fa-sort"></i></th>
+      <th onclick="sortTable(5)">PA <i class="fas fa-sort"></i></th>
+    </tr>
+    </thead>
+    <tbody>
+    <!-- JavaScript will populate this -->
+    </tbody>
+  </table>
+</div>
+
+</body>
+</html>

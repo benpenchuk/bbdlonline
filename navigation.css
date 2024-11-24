@@ -1,0 +1,102 @@
+/* Navigation Menu */
+.menu-btn {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    z-index: 10;
+    cursor: pointer;
+    width: 40px;
+    height: 30px;
+    display: flex;
+    justify-content: space-between;
+    flex-direction: column;
+    background: transparent;
+    border: none;
+}
+
+.menu-btn__burger {
+    width: 100%;
+    height: 4px;
+    background-color: #ffffff;
+    border-radius: 5px;
+    transition: all 0.3s ease;
+}
+
+/* Hover effect for menu button */
+.menu-btn:hover {
+    transform: scale(1.1);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* Active state styling for the menu button */
+.menu-btn.active .menu-btn__burger {
+    background-color: #ffffff;
+}
+
+/* Transform the first burger line to the top diagonal of the X */
+.menu-btn.active .menu-btn__burger:nth-child(1) {
+    transform: rotate(45deg) translate(5px, 5px);
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform-origin: center;
+}
+
+/* Hide the middle burger line when active */
+.menu-btn.active .menu-btn__burger:nth-child(2) {
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+/* Transform the last burger line to the bottom diagonal of the X */
+.menu-btn.active .menu-btn__burger:nth-child(3) {
+    transform: rotate(-45deg) translate(5px, -5px);
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform-origin: center;
+}
+
+/* Navigation container */
+.nav {
+    position: fixed;
+    left: -250px;
+    top: 0;
+    width: 250px;
+    height: 100vh;
+    background-color: #001f54;
+    transition: 0.3s ease;
+    z-index: 5;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Open state for the navigation menu */
+.nav.open {
+    left: 0;
+}
+
+/* Navigation list styling */
+.nav__list {
+    list-style: none;
+    padding: 0;
+}
+
+/* Individual navigation items */
+.nav__item {
+    margin: 20px 0;
+}
+
+/* Links inside navigation items */
+.nav__link {
+    color: #f4f4f9;
+    font-size: 20px;
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+/* Hover effect for navigation links */
+.nav__link:hover {
+    color: #ba211f;
+}

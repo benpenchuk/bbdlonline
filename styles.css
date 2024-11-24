@@ -1,0 +1,133 @@
+/* General Styles */
+body {
+    background-color: #f4f4f9;
+    color: #1c1c1e;
+    font-family: 'Georgia', serif;
+}
+
+/* Header and Titles */
+h1, h2 {
+    color: #001f54;
+    text-align: center;
+}
+
+h2 {
+    margin-bottom: 20px;
+    font-size: 1.5rem;
+}
+
+/* Centering the logo */
+.logo {
+    display: block;
+    margin: 20px auto;
+    max-width: 150px;
+    height: auto;
+    border: 3px solid #001f54;
+    border-radius: 50%;
+    background-color: #ffffff;
+    padding: 10px;
+}
+
+/* Shared Form and Input Fields */
+.form-group {
+    margin-bottom: 15px;
+}
+
+label {
+    display: block;
+    margin-bottom: 5px;
+    color: #001f54;
+    font-weight: bold;
+}
+
+input[type="text"], input[type="file"], input[type="number"] {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    box-sizing: border-box;
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
+    font-size: 1rem;
+    transition: border-color 0.3s;
+}
+
+input[type="text"]:focus, input[type="file"]:focus, input[type="number"]:focus {
+    border-color: #001f54;
+    outline: none;
+}
+
+/* Buttons */
+button {
+    background-color: #001f54;
+    color: #ffffff;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: background-color 0.3s, box-shadow 0.3s;
+}
+
+button:hover {
+    background-color: #ba211f;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Shared Table Styling */
+table {
+    background-color: #ffffff;
+    color: #001f54;
+    width: 100%;
+    border: 1px solid #ba211f;
+    border-collapse: collapse;
+    margin-bottom: 50px;
+}
+
+th, td {
+    padding: 12px;
+    border-bottom: 1px solid #001f54;
+    text-align: center;
+}
+
+thead th {
+    position: sticky;
+    top: 0;
+    background-color: #001f54;
+    color: #f4f4f9;
+    z-index: 2;
+}
+
+caption {
+  caption-side: bottom;
+  text-align: right;
+  font-size: 0.9rem; /* Optional: Adjust the size */
+  color: #6c757d; /* Optional: Subtle gray color */
+  margin-top: 8px; /* Adds spacing above the caption */
+}
+
+tr:hover {
+    background-color: #f2f2f2;
+}
+
+/* Shared Image Styling */
+img {
+    max-width: 100%;
+    height: auto;
+    border: none;
+    border-radius: 0;
+}
+
+/* Responsive Design */
+@media screen and (max-width: 768px) {
+    th, td {
+        font-size: 0.9rem;
+        padding: 8px;
+    }
+}
+
+@media screen and (max-width: 480px) {
+    th, td {
+        font-size: 0.8rem;
+        padding: 6px;
+    }
+}

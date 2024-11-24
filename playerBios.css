@@ -1,0 +1,72 @@
+/* Styling for Team Section */
+.team-section {
+  margin: 40px auto;
+  padding: 20px;
+  max-width: 1200px;
+  text-align: center;
+}
+
+.team-section h2 {
+  color: #001f54;
+  margin-bottom: 30px;
+  font-size: 1.8rem;
+}
+
+/* Styling for Player Cards */
+.players {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.player-card {
+  background-color: #ffffff;
+  border: 2px solid #001f54;
+  border-radius: 10px;
+  padding: 20px;
+  width: 250px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.player-card:hover {
+  transform: scale(1.05);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+}
+
+.player-photo {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-bottom: 15px;
+}
+
+.player-card h3 {
+  color: #001f54;
+  margin-bottom: 10px;
+}
+
+.player-card p {
+  font-size: 0.9rem;
+  color: #333333;
+  margin-bottom: 20px;
+}
+
+.player-card button {
+  background-color: #001f54;
+  color: #ffffff;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background-color 0.3s, box-shadow 0.3s;
+}
+
+.player-card button:hover {
+  background-color: #ba211f;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}

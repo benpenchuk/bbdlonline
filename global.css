@@ -1,0 +1,100 @@
+/* Global Styles - Fonts, Colors, Resets */
+body {
+    background-color: #f4f4f9;
+    color: #1c1c1e;
+    font-family: 'Georgia', serif;
+}
+
+img {
+    max-width: 100%;
+    height: auto;
+    border: none;
+    border-radius: 0;
+}
+
+/* Form and Input Fields */
+input[type="text"], input[type="file"], input[type="number"] {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    box-sizing: border-box;
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
+    font-size: 1rem;
+    transition: border-color 0.3s;
+}
+
+input[type="text"]:focus, input[type="file"]:focus, input[type="number"]:focus {
+    border-color: #001f54;
+    outline: none;
+}
+
+/* Buttons */
+button {
+    background-color: #001f54;
+    color: #ffffff;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: background-color 0.3s, box-shadow 0.3s;
+}
+
+button:hover {
+    background-color: #ba211f;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* First Part Section */
+.first-part {
+    text-align: center;
+    background-color: #001f54;
+    padding: 40px 20px;
+    color: #f4f4f9;
+    border-radius: 10px 10px 10px 10px;
+}
+
+.first-part h1 {
+    color: #f4f4f9;
+    font-size: 2.5rem;
+    margin-top: 20px;
+}
+
+.logo {
+    display: block;
+    margin: 20px auto;
+    max-width: 150px;
+    height: auto;
+    border: 3px solid #f4f4f9;
+    border-radius: 50%;
+    padding: 10px;
+}
+
+/* Middle Part Section */
+.middle-part {
+    background-color: #ffffff;
+    text-align: center;
+    padding-top: 40px;
+    padding-bottom: 40px;
+    padding-left: 20px;
+    padding-right: 20px;
+    margin-top: 30px;
+    margin-bottom: 30px;
+    color: #1c1c1e;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+}
+
+.middle-part h2 {
+    color: #001f54;
+    font-size: 1.8rem;
+    margin-bottom: 20px;
+}
+
+.middle-part p {
+    font-size: 1rem;
+    line-height: 1.6;
+    margin: 0 auto;
+    max-width: 800px;
+}

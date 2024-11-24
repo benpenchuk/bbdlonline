@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Dashboard - BBDL</title>
+    <!-- Styles -->
+    <link rel="stylesheet" href="../css/admin.css">
+    <link rel="stylesheet" href="../css/carousel.css">
+    <link rel="stylesheet" href="../css/global.css">
+    <link rel="stylesheet" href="../css/navigation.css">
+    <link rel="stylesheet" href="../css/sponsors.css">
+    <link rel="stylesheet" href="../css/styles.css">
+    <script defer src="../js/admin.js"></script>
+</head>
+<body>
+<div class="admin-dashboard">
+    <h1>Admin Dashboard</h1>
+
+    <!-- Section for Editing Teams -->
+    <div class="admin-section">
+        <h2>Edit Teams</h2>
+        <table id="teamsTable">
+            <thead>
+            <tr>
+                <th>Team Name</th>
+                <th>Player 1</th>
+                <th>Player 2</th>
+                <th>Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+            <!-- Dynamic content populated by JavaScript -->
+            </tbody>
+        </table>
+        <button onclick="addNewTeam()">Add New Team</button>
+
+        <!-- Form for Adding/Editing a Team -->
+        <div id="teamForm" style="display: none;">
+            <h3 id="formTitle">Add New Team</h3>
+            <form id="editTeamForm">
+                <input type="text" id="teamName" placeholder="Team Name" required>
+                <input type="text" id="player1" placeholder="Player 1" required>
+                <input type="text" id="player2" placeholder="Player 2" required>
+                <button type="submit" id="submitTeamBtn">Save Team</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Section for Editing Player Bios -->
+    <div class="admin-section">
+        <h2>Edit Player Bios</h2>
+        <table id="playersTable">
+            <thead>
+            <tr>
+                <th>Player Name</th>
+                <th>Team</th>
+                <th>Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+            <!-- Dynamic content populated by JavaScript -->
+            </tbody>
+        </table>
+        <button onclick="addNewPlayer()">Add New Player</button>
+
+        <!-- Form for Adding/Editing a Player -->
+        <div id="playerForm" style="display: none;">
+            <h3 id="playerFormTitle">Add New Player</h3>
+            <form id="editPlayerForm">
+                <input type="text" id="playerName" placeholder="Player Name" required>
+                <input type="text" id="teamNameForPlayer" placeholder="Team Name" required>
+                <button type="submit" id="submitPlayerBtn">Save Player</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Section for Editing Game Scores -->
+    <div class="admin-section">
+        <h2>Edit Game Scores</h2>
+        <table id="gamesTable">
+            <thead>
+            <tr>
+                <th>Game ID</th>
+                <th>Team 1</th>
+                <th>Team 2</th>
+                <th>Score</th>
+                <th>Date</th>
+                <th>Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+            <!-- Dynamic content populated by JavaScript -->
+            </tbody>
+        </table>
+        <button onclick="addNewGame()">Add New Game</button>
+
+        <!-- Form for Editing Game Scores -->
+        <div id="gameForm" style="display: none;">
+            <h3 id="gameFormTitle">Edit Game Score</h3>
+            <form id="editGameForm">
+                <input type="text" id="gameId" placeholder="Game ID" required>
+                <input type="text" id="team1Score" placeholder="Team 1 Score" required>
+                <input type="text" id="team2Score" placeholder="Team 2 Score" required>
+                <input type="date" id="gameDate" required>
+                <button type="submit" id="submitGameBtn">Save Game</button>
+            </form>
+        </div>
+    </div>
+</div>
+</body>
+</html>

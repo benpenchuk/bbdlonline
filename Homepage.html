@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OnlineBBDL</title>
+    <!-- Styles -->
+    <link rel="stylesheet" href="../css/admin.css">
+    <link rel="stylesheet" href="../css/carousel.css">
+    <link rel="stylesheet" href="../css/global.css">
+    <link rel="stylesheet" href="../css/navigation.css">
+    <link rel="stylesheet" href="../css/sponsors.css">
+    <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+
+<!-- Menu Button -->
+<div class="menu-btn">
+    <span class="menu-btn__burger"></span>
+    <span class="menu-btn__burger"></span>
+    <span class="menu-btn__burger"></span>
+</div>
+
+<!-- Navigation Menu -->
+<nav class="nav">
+    <ul class="nav__list">
+        <li class="nav__item"><a href="Homepage.html" class="nav__link">Home</a></li>
+        <li class="nav__item"><a href="Standings.html" class="nav__link">Standings</a></li>
+        <li class="nav__item"><a href="Add-Team.html" class="nav__link">Add Team</a></li>
+        <li class="nav__item"><a href="PlayerBios.html" class="nav__link">Player Bios</a></li>
+        <li class="nav__item"><a href="Rulebook.html" class="nav__link">Rulebook</a></li>
+        <li class="nav__item"><a href="Contact.html" class="nav__link">Contact</a></li>
+    </ul>
+</nav>
+
+<!-- Page Header -->
+<div class="first-part">
+    <img class="logo" src="../images/BBDL%20Logo.png" alt="BBDL Logo">
+    <h1>Beta Beer Dye League</h1>
+</div>
+
+<!-- About Section -->
+<div class="middle-part">
+    <h2>About the League:</h2>
+    <p>The Beta Beer Dye League (BBDL) began in the spring of 2022 as a fun
+        and competitive gathering of friends with a shared passion for the game.
+        Now entering its fourth season, the league has grown into a staple tradition,
+        showcasing the spirit of sportsmanship, strategy, and camaraderie. With 22
+        teams competing fiercely for the top spot, each season brings new rivalries,
+        unforgettable moments, and the pursuit of glory. Under the guidance of current
+        commissioner Mason Esworthy, the league continues to foster a welcoming community
+        where players celebrate both the thrill of victory and the lessons of defeat. Whether
+        it’s the nail-biting finales or the lighthearted banter among teams, the BBDL is more
+        than just a competition—it’s a testament to shared experiences and the joy of the game.</p>
+</div>
+
+<!-- Carousel -->
+<div class="carousel">
+    <button class="carousel-btn prev" onclick="moveCarousel(-1)">&#10094;</button>
+    <div class="carousel-item active"><img src="../images/Bando%20Backyard.jpeg" alt="Bando Backyard"></div>
+    <div class="carousel-item"><img src="../images/10.16.1.JPG" alt="League Photo 2"></div>
+    <div class="carousel-item"><img src="../images/10.16.2.JPG" alt="League Photo 3"></div>
+    <!-- Add more carousel items as needed -->
+    <button class="carousel-btn next" onclick="moveCarousel(1)">&#10095;</button>
+</div>
+
+<!-- Sponsors Section -->
+<section id="sponsors">
+    <h2>Our Sponsors</h2>
+    <div class="sponsor-logos">
+        <div class="sponsor">
+            <a href="https://www.solocup.com" target="_blank" title="Visit Solo's website">
+                <img src="../images/solo.png" alt="Solo" />
+            </a>
+        </div>
+        <div class="sponsor">
+            <a href="https://www.naturallight.com" target="_blank" title="Visit Natty Light's website">
+                <img src="../images/nattylight.png" alt="Natty Light" />
+            </a>
+        </div>
+        <div class="sponsor">
+            <a href="https://www.mountaindew.com" target="_blank" title="Visit Mountain Dew Baja Blast's website">
+                <img src="../images/mountaindewbajablast.svg" alt="Mountain Dew Baja Blast" />
+            </a>
+        </div>
+        <div class="sponsor">
+            <a href="https://www.tacobell.com" target="_blank" title="Visit Taco Bell's website">
+                <img src="../images/tacobell.svg" alt="Taco Bell" />
+            </a>
+        </div>
+        <div class="sponsor">
+            <a href="https://www.barstoolsports.com" target="_blank" title="Visit Barstool Sports' website">
+                <img src="../images/barstoolsports.png" alt="Barstool Sports" />
+            </a>
+        </div>
+        <div class="sponsor">
+            <a href="https://www.yeti.com" target="_blank" title="Visit YETI's website">
+                <img src="../images/yeti.png" alt="YETI" />
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- Scripts -->
+<script defer src="../js/menu.js"></script>
+<script src="../js/carousel.js" defer></script>
+
+</body>
+</html>
