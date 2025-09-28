@@ -1,8 +1,8 @@
 import React from 'react';
 import { Trophy, Users, Calendar, Play } from 'lucide-react';
-import { Tournament, Team } from '../../types';
+import { Tournament, Team } from '../../core/types';
 import { format } from 'date-fns';
-import { isTournamentComplete, getTournamentWinner } from '../../utils/tournamentUtils';
+import { isTournamentComplete, getTournamentWinner } from '../../core/utils/tournamentUtils';
 
 interface TournamentCardProps {
   tournament: Tournament;

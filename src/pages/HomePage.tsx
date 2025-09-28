@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Calendar, Trophy, TrendingUp, Users, Clock, Award } from 'lucide-react';
-import { teamsApi, playersApi, gamesApi, announcementsApi } from '../services/api';
-import { getConfig } from '../config/appConfig';
-import { Game, Player, Team } from '../types';
-import { calculateSeasonStats, generateLeaderboard, sortGames } from '../utils/statsCalculations';
+import { useData } from '../state';
+import { getConfig } from '../core/config/appConfig';
+import { calculateSeasonStats, sortGames } from '../core/utils/statsCalculations';
+import { getLeagueLeaders } from '../core/services/stats';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import StatCard from '../components/common/StatCard';
 import GameCard from '../components/common/GameCard';
@@ -13,38 +13,8 @@ import WeatherWidget from '../components/common/WeatherWidget';
 import SponsorCarousel from '../components/common/SponsorCarousel';
 
 const HomePage: React.FC = () => {
-  const [loading, setLoading] = useState(true);
-  const [games, setGames] = useState<Game[]>([]);
-  const [players, setPlayers] = useState<Player[]>([]);
-  const [teams, setTeams] = useState<Team[]>([]);
-  const [announcements, setAnnouncements] = useState<any[]>([]);
-  
+  const { games, players, teams, announcements, loading } = useData();
   const config = getConfig();
-
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        setLoading(true);
-        const [gamesRes, playersRes, teamsRes, announcementsRes] = await Promise.all([
-          gamesApi.getAll(),
-          playersApi.getAll(),
-          teamsApi.getAll(),
-          announcementsApi.getAll()
-        ]);
-
-        if (gamesRes.success) setGames(gamesRes.data);
-        if (playersRes.success) setPlayers(playersRes.data);
-        if (teamsRes.success) setTeams(teamsRes.data);
-        if (announcementsRes.success) setAnnouncements(announcementsRes.data);
-      } catch (error) {
-        console.error('Failed to load homepage data:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadData();
-  }, []);
 
   if (loading) {
     return <LoadingSpinner />;
@@ -61,7 +31,8 @@ const HomePage: React.FC = () => {
     'newest'
   ).slice(0, 5);
 
-  const topPlayers = generateLeaderboard(players, games, 'wins').slice(0, 5);
+  const leagueLeaders = getLeagueLeaders(games, players);
+  const topPlayers = leagueLeaders.mostWins.slice(0, 5);
 
   return (
     <div className="page-container">

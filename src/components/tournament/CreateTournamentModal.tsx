@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { X, Trophy, Users, AlertCircle } from 'lucide-react';
-import { Team } from '../../types';
-import { validateTournamentSetup } from '../../utils/tournamentUtils';
+import { Team } from '../../core/types';
+import { validateTournamentSetup } from '../../core/utils/tournamentUtils';
 
 interface CreateTournamentModalProps {
   teams: Team[];

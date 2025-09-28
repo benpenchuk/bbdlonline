@@ -27,7 +27,13 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "deploy:patch": "node scripts/deploy.js patch",
+    "deploy:minor": "node scripts/deploy.js minor",
+    "deploy:major": "node scripts/deploy.js major",
+    "deploy:custom": "node scripts/deploy.js custom",
+    "version:current": "git describe --tags --abbrev=0 || echo 'No tags yet'",
+    "version:list": "git tag -l -n5"
   },
   "eslintConfig": {
     "extends": [

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Trophy, Target, Calendar } from 'lucide-react';
-import { HeadToHeadComparison as H2HType, Team } from '../../types';
+import { HeadToHeadComparison as H2HType, Team } from '../../core/types';
 import { format } from 'date-fns';
 
 interface HeadToHeadComparisonProps {

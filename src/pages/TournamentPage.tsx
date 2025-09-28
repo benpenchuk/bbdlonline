@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Plus, Trophy, Users, Calendar, Settings } from 'lucide-react';
-import { tournamentsApi, teamsApi } from '../services/api';
-import { Tournament, Team } from '../types';
-import { createTournament, getBracketStructure, isTournamentComplete, getTournamentWinner } from '../utils/tournamentUtils';
+import { useData } from '../state';
+import { Tournament, Team } from '../core/types';
+import { createTournament, isTournamentComplete, getTournamentWinner } from '../core/utils/tournamentUtils';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import TournamentCard from '../components/tournament/TournamentCard';
 import TournamentBracket from '../components/tournament/TournamentBracket';
@@ -10,44 +10,19 @@ import CreateTournamentModal from '../components/tournament/CreateTournamentModa
 import TournamentHistory from '../components/tournament/TournamentHistory';
 
 const TournamentPage: React.FC = () => {
-  const [loading, setLoading] = useState(true);
-  const [tournaments, setTournaments] = useState<Tournament[]>([]);
-  const [teams, setTeams] = useState<Team[]>([]);
+  const { tournaments, teams, loading, createTournament: createTournamentData, updateTournament, refreshData } = useData();
   const [selectedTournament, setSelectedTournament] = useState<Tournament | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [activeTab, setActiveTab] = useState<'current' | 'history'>('current');
 
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        setLoading(true);
-        const [tournamentsRes, teamsRes] = await Promise.all([
-          tournamentsApi.getAll(),
-          teamsApi.getAll()
-        ]);
-
-        if (tournamentsRes.success) setTournaments(tournamentsRes.data);
-        if (teamsRes.success) setTeams(teamsRes.data);
-      } catch (error) {
-        console.error('Failed to load tournament data:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadData();
-  }, []);
 
   const handleCreateTournament = async (name: string, selectedTeams: Team[]) => {
     try {
       const newTournament = createTournament(name, selectedTeams);
-      const response = await tournamentsApi.create(newTournament);
-      
-      if (response.success) {
-        setTournaments([...tournaments, response.data]);
-        setSelectedTournament(response.data);
-        setShowCreateModal(false);
-      }
+      const createdTournament = await createTournamentData(newTournament);
+      await refreshData();
+      setSelectedTournament(createdTournament);
+      setShowCreateModal(false);
     } catch (error) {
       console.error('Failed to create tournament:', error);
     }
@@ -55,11 +30,9 @@ const TournamentPage: React.FC = () => {
 
   const handleUpdateTournament = async (tournament: Tournament) => {
     try {
-      const response = await tournamentsApi.update(tournament.id, tournament);
-      if (response.success) {
-        setTournaments(tournaments.map(t => t.id === tournament.id ? response.data : t));
-        setSelectedTournament(response.data);
-      }
+      const updatedTournament = await updateTournament(tournament.id, tournament);
+      await refreshData();
+      setSelectedTournament(updatedTournament);
     } catch (error) {
       console.error('Failed to update tournament:', error);
     }

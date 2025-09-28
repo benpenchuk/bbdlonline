@@ -1,6 +1,6 @@
 import React from 'react';
 import { Trophy, Target, Zap, Award } from 'lucide-react';
-import { Player, Team } from '../../types';
+import { Player, Team } from '../../core/types';
 
 interface PlayerCardProps {
   player: Player;

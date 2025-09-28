@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
-import { Download, Upload, RotateCcw, AlertTriangle, CheckCircle, Database } from 'lucide-react';
-import { dataApi } from '../../services/api';
+import { Download, Upload, RotateCcw, AlertTriangle, CheckCircle, Database, Calculator } from 'lucide-react';
+import { dataApi } from '../../core/services/api';
+import { useData } from '../../state';
 
 interface DataToolsTabProps {
   onDataChange: () => void;
 }
 
 const DataToolsTab: React.FC<DataToolsTabProps> = ({ onDataChange }) => {
+  const { recalculateStats } = useData();
   const [status, setStatus] = useState<{
     type: 'idle' | 'success' | 'error';
     message: string;
@@ -112,6 +114,25 @@ const DataToolsTab: React.FC<DataToolsTabProps> = ({ onDataChange }) => {
     }
   };
 
+  const handleRecalculateStats = async () => {
+    try {
+      setLoading(true);
+      await recalculateStats();
+      setStatus({
+        type: 'success',
+        message: 'All league statistics have been recalculated!'
+      });
+    } catch (error) {
+      setStatus({
+        type: 'error',
+        message: 'Failed to recalculate statistics. Please try again.'
+      });
+    } finally {
+      setLoading(false);
+      setTimeout(() => setStatus({ type: 'idle', message: '' }), 5000);
+    }
+  };
+
   return (
     <div className="admin-tab-content">
       <div className="tab-header">
@@ -172,6 +193,30 @@ const DataToolsTab: React.FC<DataToolsTabProps> = ({ onDataChange }) => {
               className="file-input-hidden"
             />
           </label>
+        </div>
+
+        {/* Recalculate Stats */}
+        <div className="data-tool-card">
+          <div className="tool-header">
+            <Calculator size={24} />
+            <h3>Recalculate Statistics</h3>
+          </div>
+          <p>
+            Manually recalculate all league statistics including wins, losses, 
+            averages, streaks, and leaderboards. Stats are normally updated automatically.
+          </p>
+          <button 
+            className="btn btn-primary"
+            onClick={handleRecalculateStats}
+            disabled={loading}
+          >
+            {loading ? (
+              <div className="loading-spinner small" />
+            ) : (
+              <Calculator size={16} />
+            )}
+            Recalculate All Stats
+          </button>
         </div>
 
         {/* Reset Data */}

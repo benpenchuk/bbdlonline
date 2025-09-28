@@ -1,80 +1,50 @@
-import React, { useState, useEffect } from 'react';
-import { Lock, Users, UserPlus, Calendar, Settings, Database, Download, Upload, RotateCcw } from 'lucide-react';
-import { getConfig, saveConfig, resetConfig } from '../config/appConfig';
-import { teamsApi, playersApi, gamesApi, dataApi } from '../services/api';
-import { Team, Player, Game } from '../types';
+import React, { useState } from 'react';
+import { Lock, Users, UserPlus, Calendar, Settings, Database, LogOut, Shield } from 'lucide-react';
+import { getConfig } from '../core/config/appConfig';
+import { useData } from '../state';
+import { useAuth } from '../state';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import AdminLogin from '../components/admin/AdminLogin';
 import TeamsTab from '../components/admin/TeamsTab';
 import PlayersTab from '../components/admin/PlayersTab';
 import GamesTab from '../components/admin/GamesTab';
 import SettingsTab from '../components/admin/SettingsTab';
-import DataToolsTab from '../components/admin/DataToolsTab';
+import DataManagementTab from '../components/admin/DataManagementTab';
+import DataDebugTab from '../components/admin/DataDebugTab';
 
-type AdminTab = 'teams' | 'players' | 'games' | 'settings' | 'data';
+type AdminTab = 'teams' | 'players' | 'games' | 'settings' | 'data' | 'debug';
 
 const AdminPage: React.FC = () => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<AdminTab>('teams');
-  const [teams, setTeams] = useState<Team[]>([]);
-  const [players, setPlayers] = useState<Player[]>([]);
-  const [games, setGames] = useState<Game[]>([]);
-
+  
+  const { teams, players, games, loading } = useData();
+  const { isAuthenticated, logout, demoMode, toggleDemoMode } = useAuth();
   const config = getConfig();
 
-  useEffect(() => {
-    if (isAuthenticated) {
-      loadData();
-    }
-  }, [isAuthenticated]);
-
-  const loadData = async () => {
-    try {
-      setLoading(true);
-      const [teamsRes, playersRes, gamesRes] = await Promise.all([
-        teamsApi.getAll(),
-        playersApi.getAll(),
-        gamesApi.getAll()
-      ]);
-
-      if (teamsRes.success) setTeams(teamsRes.data);
-      if (playersRes.success) setPlayers(playersRes.data);
-      if (gamesRes.success) setGames(gamesRes.data);
-    } catch (error) {
-      console.error('Failed to load admin data:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleLogin = (password: string) => {
-    if (password === config.admin.password) {
-      setIsAuthenticated(true);
-    } else {
-      throw new Error('Incorrect password');
-    }
-  };
 
   const handleLogout = () => {
-    setIsAuthenticated(false);
+    logout();
     setActiveTab('teams');
   };
 
   if (!isAuthenticated) {
-    return <AdminLogin onLogin={handleLogin} />;
+    return <AdminLogin />;
   }
 
   if (loading) {
     return <LoadingSpinner message="Loading admin data..." />;
   }
 
+  // Debug: Log data to console
+  console.log('Admin Page - Teams:', teams.length, 'Players:', players.length, 'Games:', games.length);
+
   const adminTabs = [
     { id: 'teams', label: 'Teams', icon: Users },
     { id: 'players', label: 'Players', icon: UserPlus },
     { id: 'games', label: 'Games', icon: Calendar },
     { id: 'settings', label: 'Settings', icon: Settings },
-    { id: 'data', label: 'Data Tools', icon: Database }
+    { id: 'data', label: 'Data Tools', icon: Database },
+    { id: 'debug', label: 'Debug', icon: Settings }
   ] as const;
 
   return (
@@ -89,7 +59,21 @@ const AdminPage: React.FC = () => {
         </div>
         
         <div className="page-actions">
+          <div className="demo-mode-toggle">
+            <label className="toggle-label">
+              <Shield size={16} />
+              <span>Demo Mode</span>
+              <input
+                type="checkbox"
+                checked={demoMode}
+                onChange={toggleDemoMode}
+                className="toggle-input"
+              />
+              <span className="toggle-slider"></span>
+            </label>
+          </div>
           <button className="btn btn-outline" onClick={handleLogout}>
+            <LogOut size={16} />
             Logout
           </button>
         </div>
@@ -118,7 +102,6 @@ const AdminPage: React.FC = () => {
           <TeamsTab 
             teams={teams} 
             players={players}
-            onDataChange={loadData}
           />
         )}
         
@@ -126,7 +109,6 @@ const AdminPage: React.FC = () => {
           <PlayersTab 
             players={players} 
             teams={teams}
-            onDataChange={loadData}
           />
         )}
         
@@ -134,7 +116,6 @@ const AdminPage: React.FC = () => {
           <GamesTab 
             games={games} 
             teams={teams}
-            onDataChange={loadData}
           />
         )}
         
@@ -143,9 +124,11 @@ const AdminPage: React.FC = () => {
         )}
         
         {activeTab === 'data' && (
-          <DataToolsTab 
-            onDataChange={loadData}
-          />
+          <DataManagementTab />
+        )}
+        
+        {activeTab === 'debug' && (
+          <DataDebugTab />
         )}
       </div>
     </div>

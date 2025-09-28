@@ -1,15 +1,16 @@
 import React, { useState } from 'react';
 import { Plus, Edit, Trash2, Users } from 'lucide-react';
-import { Team, Player } from '../../types';
-import { teamsApi } from '../../services/api';
+import { Team, Player } from '../../core/types';
+import { useData, useAuth } from '../../state';
 
 interface TeamsTabProps {
   teams: Team[];
   players: Player[];
-  onDataChange: () => void;
 }
 
-const TeamsTab: React.FC<TeamsTabProps> = ({ teams, players, onDataChange }) => {
+const TeamsTab: React.FC<TeamsTabProps> = ({ teams, players }) => {
+  const { deleteTeam, refreshData } = useData();
+  const { demoMode } = useAuth();
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [editingTeam, setEditingTeam] = useState<Team | null>(null);
 
@@ -18,13 +19,29 @@ const TeamsTab: React.FC<TeamsTabProps> = ({ teams, players, onDataChange }) => 
   };
 
   const handleDeleteTeam = async (teamId: string) => {
-    if (window.confirm('Are you sure you want to delete this team?')) {
-      try {
-        await teamsApi.delete(teamId);
-        onDataChange();
-      } catch (error) {
-        console.error('Failed to delete team:', error);
+    const team = teams.find(t => t.id === teamId);
+    const teamName = team?.name || 'this team';
+    
+    const confirmMessage = demoMode 
+      ? `Are you sure you want to delete "${teamName}"?\n\n⚠️ DEMO MODE: This action cannot be undone!`
+      : `Are you sure you want to delete "${teamName}"?`;
+    
+    if (!window.confirm(confirmMessage)) {
+      return;
+    }
+
+    // Extra confirmation in demo mode
+    if (demoMode) {
+      if (!window.confirm(`🛡️ DEMO MODE PROTECTION: This will permanently delete "${teamName}" and all associated data. Are you absolutely certain?`)) {
+        return;
       }
+    }
+
+    try {
+      await deleteTeam(teamId);
+      await refreshData();
+    } catch (error) {
+      console.error('Failed to delete team:', error);
     }
   };
 
@@ -42,7 +59,13 @@ const TeamsTab: React.FC<TeamsTabProps> = ({ teams, players, onDataChange }) => 
       </div>
 
       <div className="teams-list">
-        {teams.map(team => {
+        {teams.length === 0 ? (
+          <div className="no-data-message">
+            <p>No teams found. The data might still be loading or there may be an issue with data initialization.</p>
+            <p>Teams count: {teams.length}</p>
+          </div>
+        ) : (
+          teams.map(team => {
           const teamPlayers = getTeamPlayers(team.id);
           return (
             <div key={team.id} className="team-item">
@@ -79,7 +102,7 @@ const TeamsTab: React.FC<TeamsTabProps> = ({ teams, players, onDataChange }) => 
               </div>
             </div>
           );
-        })}
+        }))}
       </div>
 
       {teams.length === 0 && (

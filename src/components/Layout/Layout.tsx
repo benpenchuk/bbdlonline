@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Home, Calendar, Users, BarChart3, Trophy, Settings, Mail } from 'lucide-react';
-import { getConfig } from '../../config/appConfig';
+import { getConfig } from '../../core/config/appConfig';
 
 interface LayoutProps {
   children: React.ReactNode;

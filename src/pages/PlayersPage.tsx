@@ -1,15 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Filter, SortAsc, Users, UserPlus } from 'lucide-react';
-import { playersApi, teamsApi } from '../services/api';
-import { Player, Team, PlayerSort } from '../types';
+import { useData } from '../state';
+import { Player, Team, PlayerSort } from '../core/types';
+import { getPlayerStats } from '../core/services/stats';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import PlayerCard from '../components/common/PlayerCard';
 import TeamSection from '../components/players/TeamSection';
 
 const PlayersPage: React.FC = () => {
-  const [loading, setLoading] = useState(true);
-  const [players, setPlayers] = useState<Player[]>([]);
-  const [teams, setTeams] = useState<Team[]>([]);
+  const { players, teams, games, loading } = useData();
   const [filteredPlayers, setFilteredPlayers] = useState<Player[]>([]);
   
   // Filters and sorting
@@ -18,26 +17,6 @@ const PlayersPage: React.FC = () => {
   const [sortBy, setSortBy] = useState<PlayerSort>('wins');
   const [viewByTeam, setViewByTeam] = useState(true);
 
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        setLoading(true);
-        const [playersRes, teamsRes] = await Promise.all([
-          playersApi.getAll(),
-          teamsApi.getAll()
-        ]);
-
-        if (playersRes.success) setPlayers(playersRes.data);
-        if (teamsRes.success) setTeams(teamsRes.data);
-      } catch (error) {
-        console.error('Failed to load players data:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadData();
-  }, []);
 
   useEffect(() => {
     let filtered = players;
@@ -56,15 +35,24 @@ const PlayersPage: React.FC = () => {
       );
     }
 
-    // Apply sorting
+    // Apply sorting using new stats system
     filtered = [...filtered].sort((a, b) => {
       switch (sortBy) {
-        case 'wins':
-          return b.stats.wins - a.stats.wins;
-        case 'games':
-          return b.stats.gamesPlayed - a.stats.gamesPlayed;
-        case 'average':
-          return b.stats.averagePoints - a.stats.averagePoints;
+        case 'wins': {
+          const aStats = getPlayerStats(a.id, games, players);
+          const bStats = getPlayerStats(b.id, games, players);
+          return (bStats?.wins || 0) - (aStats?.wins || 0);
+        }
+        case 'games': {
+          const aStats = getPlayerStats(a.id, games, players);
+          const bStats = getPlayerStats(b.id, games, players);
+          return (bStats?.gamesPlayed || 0) - (aStats?.gamesPlayed || 0);
+        }
+        case 'average': {
+          const aStats = getPlayerStats(a.id, games, players);
+          const bStats = getPlayerStats(b.id, games, players);
+          return (bStats?.averagePointsPerGame || 0) - (aStats?.averagePointsPerGame || 0);
+        }
         case 'name':
           return a.name.localeCompare(b.name);
         default:
@@ -73,7 +61,7 @@ const PlayersPage: React.FC = () => {
     });
 
     setFilteredPlayers(filtered);
-  }, [players, searchQuery, teamFilter, sortBy]);
+  }, [players, games, searchQuery, teamFilter, sortBy]);
 
   if (loading) {
     return <LoadingSpinner message="Loading players..." />;

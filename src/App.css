@@ -2248,6 +2248,63 @@
   }
 }
 
+/* Game Form Modal Styles */
+.form-row {
+  display: flex;
+  gap: var(--space-md);
+  align-items: end;
+}
+
+.form-row .form-group {
+  flex: 1;
+}
+
+.vs-indicator {
+  padding: var(--space-sm) var(--space-md);
+  background: var(--color-primary);
+  color: white;
+  border-radius: var(--border-radius-md);
+  font-weight: var(--font-weight-bold);
+  font-size: var(--font-size-sm);
+  text-align: center;
+  margin-bottom: var(--space-sm);
+}
+
+.form-select {
+  width: 100%;
+  padding: var(--space-sm) var(--space-md);
+  border: 2px solid var(--color-border);
+  border-radius: var(--border-radius-md);
+  background-color: var(--color-surface);
+  font-size: var(--font-size-base);
+  transition: all var(--transition-fast);
+}
+
+.form-select:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(0, 51, 102, 0.1);
+}
+
+.error-message {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  background-color: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: var(--border-radius-md);
+  color: var(--color-danger);
+  font-size: var(--font-size-sm);
+  margin-top: var(--space-md);
+}
+
+.loading-spinner.small {
+  width: 16px;
+  height: 16px;
+  border-width: 2px;
+}
+
 @media (min-width: 1024px) {
   .sidebar {
     transform: translateX(0);

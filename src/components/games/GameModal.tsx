@@ -1,6 +1,6 @@
 import React from 'react';
 import { X, Calendar, Clock, Trophy, Users, Target } from 'lucide-react';
-import { Game, Team } from '../../types';
+import { Game, Team } from '../../core/types';
 import { format } from 'date-fns';
 
 interface GameModalProps {

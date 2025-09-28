@@ -1,7 +1,7 @@
 import React from 'react';
 import { Calendar, Trophy, Users, TrendingUp, Target } from 'lucide-react';
-import { Game, Player, Team } from '../../types';
-import { getConfig } from '../../config/appConfig';
+import { Game, Player, Team } from '../../core/types';
+import { getConfig } from '../../core/config/appConfig';
 
 interface HeroSectionProps {
   games: Game[];

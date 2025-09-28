@@ -1,15 +1,15 @@
 import React, { useState } from 'react';
 import { Plus, Edit, Trash2, UserPlus } from 'lucide-react';
-import { Player, Team } from '../../types';
-import { playersApi } from '../../services/api';
+import { Player, Team } from '../../core/types';
+import { useData } from '../../state';
 
 interface PlayersTabProps {
   players: Player[];
   teams: Team[];
-  onDataChange: () => void;
 }
 
-const PlayersTab: React.FC<PlayersTabProps> = ({ players, teams, onDataChange }) => {
+const PlayersTab: React.FC<PlayersTabProps> = ({ players, teams }) => {
+  const { deletePlayer, refreshData } = useData();
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [editingPlayer, setEditingPlayer] = useState<Player | null>(null);
 
@@ -24,8 +24,8 @@ const PlayersTab: React.FC<PlayersTabProps> = ({ players, teams, onDataChange })
   const handleDeletePlayer = async (playerId: string) => {
     if (window.confirm('Are you sure you want to delete this player?')) {
       try {
-        await playersApi.delete(playerId);
-        onDataChange();
+        await deletePlayer(playerId);
+        await refreshData();
       } catch (error) {
         console.error('Failed to delete player:', error);
       }

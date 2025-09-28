@@ -1,6 +1,30 @@
-# Getting Started with Create React App
+# BBDL Frontend
+
+A modern React-based frontend for the Beer Bottle Dart League (BBDL) management system. Features automated statistics, game management, player profiles, and tournament brackets.
+
+## 🚀 Quick Start
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+
+## 📦 Installation
+
+```bash
+npm install
+npm start
+```
+
+Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+
+## 🚢 Deployment
+
+For detailed deployment instructions with versioning and automated GitHub/Vercel integration, see [DEPLOYMENT.md](./DEPLOYMENT.md).
+
+### Quick Deploy Commands
+```bash
+npm run deploy:patch    # Bug fixes (1.1.2 → 1.1.3)
+npm run deploy:minor    # New features (1.1.3 → 1.2.0)
+npm run deploy:major    # Breaking changes (1.9.0 → 2.0.0)
+```
 
 ## Available Scripts
 
@@ -38,6 +62,26 @@ If you aren’t satisfied with the build tool and configuration choices, you can
 Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
 
 You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
+
+## ✨ Features
+
+- **📊 Automated Statistics System**: Real-time calculation of wins, losses, averages, streaks, and more
+- **🎯 Game Management**: Create, edit, and track games with automatic stats updates
+- **👥 Player Profiles**: Complete player management with team assignments and performance tracking
+- **🏆 Tournament System**: Single-elimination tournament brackets with automated progression
+- **📈 Advanced Analytics**: League leaders, head-to-head comparisons, and notable records
+- **🔧 Admin Panel**: Complete administrative control over teams, players, games, and data
+- **📱 Responsive Design**: Works perfectly on desktop, tablet, and mobile devices
+- **⚡ Performance**: Cached statistics and optimized rendering for fast load times
+
+## 🛠️ Tech Stack
+
+- **React 19**: Latest React with modern hooks and features
+- **TypeScript**: Full type safety and enhanced development experience
+- **Lucide React**: Beautiful, customizable icons
+- **CSS Variables**: Consistent theming and easy customization
+- **Local Storage**: Client-side data persistence
+- **Date-fns**: Robust date manipulation and formatting
 
 ## Learn More
 

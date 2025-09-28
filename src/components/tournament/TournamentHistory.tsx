@@ -1,6 +1,6 @@
 import React from 'react';
 import { Trophy, Calendar, Users, Eye } from 'lucide-react';
-import { Tournament, Team } from '../../types';
+import { Tournament, Team } from '../../core/types';
 import { format } from 'date-fns';
 
 interface TournamentHistoryProps {

@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { BarChart3, Trophy, Target, Zap, Award, Users, Swords } from 'lucide-react';
-import { playersApi, teamsApi, gamesApi } from '../services/api';
-import { Player, Team, Game } from '../types';
-import { calculateSeasonStats, generateLeaderboard, calculateHeadToHead } from '../utils/statsCalculations';
+import { useData } from '../state';
+import { Player, Team, Game } from '../core/types';
+import { calculateSeasonStats, calculateHeadToHead } from '../core/utils/statsCalculations';
+import { getLeagueLeaders } from '../core/services/stats';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import StatCard from '../components/common/StatCard';
 import LeaderboardTable from '../components/stats/LeaderboardTable';
@@ -11,10 +12,7 @@ import HeadToHeadComparison from '../components/stats/HeadToHeadComparison';
 import NotableRecords from '../components/stats/NotableRecords';
 
 const StatsPage: React.FC = () => {
-  const [loading, setLoading] = useState(true);
-  const [players, setPlayers] = useState<Player[]>([]);
-  const [teams, setTeams] = useState<Team[]>([]);
-  const [games, setGames] = useState<Game[]>([]);
+  const { players, teams, games, loading } = useData();
   
   // Active tabs and selections
   const [activeLeaderboard, setActiveLeaderboard] = useState<'wins' | 'average' | 'shutouts' | 'blowouts' | 'clutch' | 'streak'>('wins');
@@ -22,41 +20,22 @@ const StatsPage: React.FC = () => {
   const [h2hTeam1, setH2hTeam1] = useState<string>('');
   const [h2hTeam2, setH2hTeam2] = useState<string>('');
 
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        setLoading(true);
-        const [playersRes, teamsRes, gamesRes] = await Promise.all([
-          playersApi.getAll(),
-          teamsApi.getAll(),
-          gamesApi.getAll()
-        ]);
-
-        if (playersRes.success) setPlayers(playersRes.data);
-        if (teamsRes.success) setTeams(teamsRes.data);
-        if (gamesRes.success) setGames(gamesRes.data);
-      } catch (error) {
-        console.error('Failed to load stats data:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadData();
-  }, []);
 
   if (loading) {
     return <LoadingSpinner message="Loading statistics..." />;
   }
 
   const seasonStats = calculateSeasonStats(games);
+  const leagueLeaders = getLeagueLeaders(games, players);
+  
+  // Convert new stats format to match existing LeaderboardTable expectations
   const leaderboards = {
-    wins: generateLeaderboard(players, games, 'wins'),
-    average: generateLeaderboard(players, games, 'average'),
-    shutouts: generateLeaderboard(players, games, 'shutouts'),
-    blowouts: generateLeaderboard(players, games, 'blowouts'),
-    clutch: generateLeaderboard(players, games, 'clutch'),
-    streak: generateLeaderboard(players, games, 'streak')
+    wins: leagueLeaders.mostWins.map((entry, index) => ({ ...entry, rank: index + 1 })),
+    average: leagueLeaders.highestAverage.map((entry, index) => ({ ...entry, rank: index + 1 })),
+    shutouts: leagueLeaders.mostShutouts.map((entry, index) => ({ ...entry, rank: index + 1 })),
+    blowouts: leagueLeaders.mostBlowouts.map((entry, index) => ({ ...entry, rank: index + 1 })),
+    clutch: leagueLeaders.mostClutch.map((entry, index) => ({ ...entry, rank: index + 1 })),
+    streak: leagueLeaders.longestStreak.map((entry, index) => ({ ...entry, rank: index + 1 }))
   };
 
   const headToHeadData = h2hTeam1 && h2hTeam2 && h2hTeam1 !== h2hTeam2 

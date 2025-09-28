@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Trophy, Edit3, Save, X } from 'lucide-react';
-import { Tournament, Team, TournamentMatch } from '../../types';
-import { getBracketStructure, advanceWinner, getRoundName } from '../../utils/tournamentUtils';
+import { Tournament, Team, TournamentMatch } from '../../core/types';
+import { getBracketStructure, advanceWinner, getRoundName } from '../../core/utils/tournamentUtils';
 
 interface TournamentBracketProps {
   tournament: Tournament;

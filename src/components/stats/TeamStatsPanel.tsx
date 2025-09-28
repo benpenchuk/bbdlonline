@@ -1,7 +1,7 @@
 import React from 'react';
 import { Trophy, Target, Users, Zap, Award, TrendingUp } from 'lucide-react';
-import { Team, Game, Player } from '../../types';
-import { calculateTeamStats } from '../../utils/statsCalculations';
+import { Team, Game, Player } from '../../core/types';
+import { calculateTeamStats } from '../../core/utils/statsCalculations';
 
 interface TeamStatsPanelProps {
   teamId: string;

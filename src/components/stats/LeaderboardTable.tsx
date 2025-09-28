@@ -1,6 +1,6 @@
 import React from 'react';
 import { Trophy, Target, Award, Zap, Users, BarChart3 } from 'lucide-react';
-import { LeaderboardEntry, Player, Team } from '../../types';
+import { LeaderboardEntry, Player, Team } from '../../core/types';
 
 interface LeaderboardTableProps {
   entries: LeaderboardEntry[];

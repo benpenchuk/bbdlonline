@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Filter, SortAsc, Grid, List, Search, Calendar, Plus } from 'lucide-react';
-import { gamesApi, teamsApi } from '../services/api';
-import { Game, Team, GameStatus, ViewMode } from '../types';
-import { sortGames, filterGames } from '../utils/statsCalculations';
+import { useData } from '../state';
+import { Game, GameStatus, ViewMode } from '../core/types';
+import { sortGames, filterGames } from '../core/utils/statsCalculations';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import GameCard from '../components/common/GameCard';
 import GameTable from '../components/games/GameTable';
@@ -10,9 +10,7 @@ import GameModal from '../components/games/GameModal';
 import FilterPanel from '../components/games/FilterPanel';
 
 const GamesPage: React.FC = () => {
-  const [loading, setLoading] = useState(true);
-  const [games, setGames] = useState<Game[]>([]);
-  const [teams, setTeams] = useState<Team[]>([]);
+  const { games, teams, loading } = useData();
   const [filteredGames, setFilteredGames] = useState<Game[]>([]);
   const [selectedGame, setSelectedGame] = useState<Game | null>(null);
   
@@ -24,26 +22,6 @@ const GamesPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [showFilters, setShowFilters] = useState(false);
 
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        setLoading(true);
-        const [gamesRes, teamsRes] = await Promise.all([
-          gamesApi.getAll(),
-          teamsApi.getAll()
-        ]);
-
-        if (gamesRes.success) setGames(gamesRes.data);
-        if (teamsRes.success) setTeams(teamsRes.data);
-      } catch (error) {
-        console.error('Failed to load games data:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadData();
-  }, []);
 
   useEffect(() => {
     let filtered = games;

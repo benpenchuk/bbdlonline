@@ -1,6 +1,6 @@
 import React from 'react';
 import { Users, Trophy, Target } from 'lucide-react';
-import { Team, Player } from '../../types';
+import { Team, Player } from '../../core/types';
 import PlayerCard from '../common/PlayerCard';
 
 interface TeamSectionProps {

@@ -1,16 +1,17 @@
 import React, { useState } from 'react';
 import { Plus, Edit, Trash2, Calendar } from 'lucide-react';
-import { Game, Team } from '../../types';
-import { gamesApi } from '../../services/api';
+import { Game, Team } from '../../core/types';
+import { useData } from '../../state';
 import { format } from 'date-fns';
+import GameFormModal from './GameFormModal';
 
 interface GamesTabProps {
   games: Game[];
   teams: Team[];
-  onDataChange: () => void;
 }
 
-const GamesTab: React.FC<GamesTabProps> = ({ games, teams, onDataChange }) => {
+const GamesTab: React.FC<GamesTabProps> = ({ games, teams }) => {
+  const { deleteGame, refreshData } = useData();
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [editingGame, setEditingGame] = useState<Game | null>(null);
 
@@ -25,12 +26,21 @@ const GamesTab: React.FC<GamesTabProps> = ({ games, teams, onDataChange }) => {
   const handleDeleteGame = async (gameId: string) => {
     if (window.confirm('Are you sure you want to delete this game?')) {
       try {
-        await gamesApi.delete(gameId);
-        onDataChange();
+        await deleteGame(gameId);
+        await refreshData();
       } catch (error) {
         console.error('Failed to delete game:', error);
       }
     }
+  };
+
+  const handleCloseModal = () => {
+    setShowCreateForm(false);
+    setEditingGame(null);
+  };
+
+  const handleSaveGame = async () => {
+    await refreshData();
   };
 
   const sortedGames = [...games].sort((a, b) => 
@@ -120,6 +130,16 @@ const GamesTab: React.FC<GamesTabProps> = ({ games, teams, onDataChange }) => {
           <h3>No games scheduled</h3>
           <p>Schedule your first game to get started</p>
         </div>
+      )}
+
+      {/* Game Form Modal */}
+      {(showCreateForm || editingGame) && (
+        <GameFormModal
+          game={editingGame}
+          teams={teams}
+          onClose={handleCloseModal}
+          onSave={handleSaveGame}
+        />
       )}
     </div>
   );

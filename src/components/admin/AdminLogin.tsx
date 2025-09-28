@@ -1,15 +1,30 @@
-import React, { useState } from 'react';
-import { Lock, Eye, EyeOff, AlertCircle } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Lock, Eye, EyeOff, AlertCircle, Clock, Shield } from 'lucide-react';
+import { useAuth } from '../../state';
 
-interface AdminLoginProps {
-  onLogin: (password: string) => void;
-}
-
-const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
+const AdminLogin: React.FC = () => {
+  const { login, failedAttempts, isLockedOut, getRemainingLockoutTime } = useAuth();
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [lockoutTime, setLockoutTime] = useState(0);
+
+  // Update lockout countdown
+  useEffect(() => {
+    if (isLockedOut()) {
+      const interval = setInterval(() => {
+        const remaining = getRemainingLockoutTime();
+        setLockoutTime(remaining);
+        if (remaining <= 0) {
+          clearInterval(interval);
+          setError('');
+        }
+      }, 1000);
+
+      return () => clearInterval(interval);
+    }
+  }, [isLockedOut, getRemainingLockoutTime]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -19,12 +34,19 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
       return;
     }
 
+    if (isLockedOut()) {
+      setError(`Account locked. Please wait ${getRemainingLockoutTime()} seconds.`);
+      return;
+    }
+
     try {
       setLoading(true);
       setError('');
-      onLogin(password);
-    } catch (err) {
-      setError('Incorrect password. Please try again.');
+      await login(password);
+      // Login successful - component will unmount as user is now authenticated
+    } catch (err: any) {
+      setError(err.message || 'Login failed. Please try again.');
+      setPassword(''); // Clear password on failed attempt
     } finally {
       setLoading(false);
     }
@@ -35,10 +57,16 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
       <div className="admin-login-card">
         <div className="login-header">
           <div className="login-icon">
-            <Lock size={32} />
+            {isLockedOut() ? <Clock size={32} /> : <Lock size={32} />}
           </div>
           <h2>Admin Access</h2>
-          <p>Enter your admin password to access the management panel</p>
+          {isLockedOut() ? (
+            <p className="lockout-message">
+              Account temporarily locked. Please wait {lockoutTime} seconds.
+            </p>
+          ) : (
+            <p>Enter your admin password to access the management panel</p>
+          )}
         </div>
 
         <form onSubmit={handleSubmit} className="login-form">
@@ -78,10 +106,15 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
           <button 
             type="submit" 
             className="btn btn-primary btn-full"
-            disabled={loading || !password.trim()}
+            disabled={loading || !password.trim() || isLockedOut()}
           >
             {loading ? (
               <div className="loading-spinner small" />
+            ) : isLockedOut() ? (
+              <>
+                <Clock size={16} />
+                Locked ({lockoutTime}s)
+              </>
             ) : (
               <>
                 <Lock size={16} />
@@ -92,6 +125,12 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
         </form>
 
         <div className="login-footer">
+          {failedAttempts > 0 && !isLockedOut() && (
+            <div className="attempts-warning">
+              <Shield size={14} />
+              <span>{failedAttempts}/5 failed attempts</span>
+            </div>
+          )}
           <p className="login-hint">
             Default password: <code>bbdladmin2025</code>
           </p>

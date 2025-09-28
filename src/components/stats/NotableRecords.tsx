@@ -1,6 +1,6 @@
 import React from 'react';
 import { Trophy, Target, Zap, Award, Star, TrendingUp } from 'lucide-react';
-import { Player, Team, Game } from '../../types';
+import { Player, Team, Game } from '../../core/types';
 
 interface NotableRecordsProps {
   players: Player[];

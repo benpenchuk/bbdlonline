@@ -1,6 +1,6 @@
 import React from 'react';
 import { X } from 'lucide-react';
-import { GameStatus, Team } from '../../types';
+import { GameStatus, Team } from '../../core/types';
 
 interface FilterPanelProps {
   statusFilter: GameStatus[];
