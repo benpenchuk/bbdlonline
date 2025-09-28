@@ -5,7 +5,7 @@ import { v4 as uuidv4 } from 'uuid';
 export const mockTeams: Team[] = [
   {
     id: 'team-1',
-    name: 'Thunder Bolts',
+    name: 'Backdoor Bandits',
     color: '#3B82F6',
     wins: 0,
     losses: 0,
@@ -15,7 +15,7 @@ export const mockTeams: Team[] = [
   },
   {
     id: 'team-2',
-    name: 'Fire Dragons',
+    name: 'Griers Fishy Autistic Clumpy Discharge',
     color: '#EF4444',
     wins: 0,
     losses: 0,
@@ -25,7 +25,7 @@ export const mockTeams: Team[] = [
   },
   {
     id: 'team-3',
-    name: 'Ice Wolves',
+    name: 'Little Red Rockets',
     color: '#06B6D4',
     wins: 0,
     losses: 0,
@@ -35,7 +35,7 @@ export const mockTeams: Team[] = [
   },
   {
     id: 'team-4',
-    name: 'Storm Hawks',
+    name: 'Stim Lords',
     color: '#8B5CF6',
     wins: 0,
     losses: 0,
@@ -45,7 +45,7 @@ export const mockTeams: Team[] = [
   },
   {
     id: 'team-5',
-    name: 'Iron Lions',
+    name: 'Hitler Youth',
     color: '#F59E0B',
     wins: 0,
     losses: 0,
@@ -55,13 +55,33 @@ export const mockTeams: Team[] = [
   },
   {
     id: 'team-6',
-    name: 'Shadow Panthers',
+    name: 'The Pants Party',
     color: '#6B7280',
     wins: 0,
     losses: 0,
     totalPoints: 0,
     gamesPlayed: 0,
     players: ['player-11', 'player-12']
+  },
+  {
+    id: 'team-7',
+    name: 'Wam',
+    color: '#FBBF24',
+    wins: 0,
+    losses: 0,
+    totalPoints: 0,
+    gamesPlayed: 0,
+    players: ['player-13', 'player-14']
+  },
+  {
+    id: 'team-8',
+    name: 'Peas n Pickles',
+    color: '#10B981',
+    wins: 0,
+    losses: 0,
+    totalPoints: 0,
+    gamesPlayed: 0,
+    players: ['player-15', 'player-16']
   }
 ];
 
@@ -69,10 +89,10 @@ export const mockTeams: Team[] = [
 export const mockPlayers: Player[] = [
   {
     id: 'player-1',
-    name: 'Alex Thunder',
+    name: 'Tate Booch',
     teamId: 'team-1',
-    bio: 'Veteran player with lightning-fast reflexes and strategic gameplay.',
-    photoUrl: '/api/placeholder/150/150',
+    bio: 'Once arm-wrestled a cactus and lost. The cactus cheated.',
+    photoUrl: '/images/players/Tate Booch.png',
     stats: {
       wins: 0,
       losses: 0,
@@ -88,10 +108,10 @@ export const mockPlayers: Player[] = [
   },
   {
     id: 'player-2',
-    name: 'Sam Bolt',
+    name: 'Diddy',
     teamId: 'team-1',
-    bio: 'Known for incredible accuracy and clutch performance under pressure.',
-    photoUrl: '/api/placeholder/150/150',
+    bio: 'Claims to have invented the color blue. We have our doubts.',
+    photoUrl: '/images/players/Diddy.png',
     stats: {
       wins: 0,
       losses: 0,
@@ -107,10 +127,10 @@ export const mockPlayers: Player[] = [
   },
   {
     id: 'player-3',
-    name: 'Jordan Fire',
+    name: 'Donald Trump',
     teamId: 'team-2',
-    bio: 'Aggressive player who brings intensity and passion to every game.',
-    photoUrl: '/api/placeholder/150/150',
+    bio: "Thinks 'HTML' is a type of sandwich. A tremendous sandwich, the best.",
+    photoUrl: '/images/players/Donald Trump.png',
     stats: {
       wins: 0,
       losses: 0,
@@ -126,10 +146,10 @@ export const mockPlayers: Player[] = [
   },
   {
     id: 'player-4',
-    name: 'Casey Dragon',
+    name: 'Yancy Longin',
     teamId: 'team-2',
-    bio: 'Strategic mastermind with an eye for finding opponents\' weaknesses.',
-    photoUrl: '/api/placeholder/150/150',
+    bio: 'His spirit animal is a slightly confused pigeon.',
+    photoUrl: '/images/players/Yancy Longin.png',
     stats: {
       wins: 0,
       losses: 0,
@@ -145,10 +165,10 @@ export const mockPlayers: Player[] = [
   },
   {
     id: 'player-5',
-    name: 'Riley Ice',
+    name: 'Kamala Harris',
     teamId: 'team-3',
-    bio: 'Cool under pressure with consistent performance game after game.',
-    photoUrl: '/api/placeholder/150/150',
+    bio: 'Laughs at her own jokes, which is good because no one else does.',
+    photoUrl: '/images/players/Kamala Harris.png',
     stats: {
       wins: 0,
       losses: 0,
@@ -164,10 +184,10 @@ export const mockPlayers: Player[] = [
   },
   {
     id: 'player-6',
-    name: 'Morgan Wolf',
+    name: 'Noah Biggers',
     teamId: 'team-3',
-    bio: 'Team captain with natural leadership and tactical expertise.',
-    photoUrl: '/api/placeholder/150/150',
+    bio: "Has a pet rock named 'Dwayne'. They have deep conversations.",
+    photoUrl: '/images/players/Noah Biggers.jpg',
     stats: {
       wins: 0,
       losses: 0,
@@ -183,10 +203,10 @@ export const mockPlayers: Player[] = [
   },
   {
     id: 'player-7',
-    name: 'Taylor Storm',
+    name: 'Craig Brandstetter',
     teamId: 'team-4',
-    bio: 'Dynamic player known for unpredictable and creative strategies.',
-    photoUrl: '/api/placeholder/150/150',
+    bio: "Believes that pineapple on pizza is a war crime, and he's willing to die on that hill.",
+    photoUrl: '/images/players/Craig Brandstetter.png',
     stats: {
       wins: 0,
       losses: 0,
@@ -202,10 +222,10 @@ export const mockPlayers: Player[] = [
   },
   {
     id: 'player-8',
-    name: 'Avery Hawk',
+    name: 'Mason Esworthy',
     teamId: 'team-4',
-    bio: 'Precision shooter with eagle-eye accuracy and mental toughness.',
-    photoUrl: '/api/placeholder/150/150',
+    bio: 'Still uses a flip phone. Unironically.',
+    photoUrl: '/images/players/Mason Esworthy.png',
     stats: {
       wins: 0,
       losses: 0,
@@ -221,10 +241,10 @@ export const mockPlayers: Player[] = [
   },
   {
     id: 'player-9',
-    name: 'Blake Iron',
+    name: 'George Washington',
     teamId: 'team-5',
-    bio: 'Powerhouse player with incredible strength and determination.',
-    photoUrl: '/api/placeholder/150/150',
+    bio: 'Wooden teeth? Please. These are artisanal, small-batch, gluten-free dentures.',
+    photoUrl: '/images/players/George Washington.png',
     stats: {
       wins: 0,
       losses: 0,
@@ -240,10 +260,10 @@ export const mockPlayers: Player[] = [
   },
   {
     id: 'player-10',
-    name: 'Drew Lion',
+    name: 'Evan Eisman',
     teamId: 'team-5',
-    bio: 'Fearless competitor who never backs down from a challenge.',
-    photoUrl: '/api/placeholder/150/150',
+    bio: "Convinced he's a wizard, but his only trick is making beer disappear.",
+    photoUrl: '/images/players/Evan Eisman.png',
     stats: {
       wins: 0,
       losses: 0,
@@ -259,10 +279,10 @@ export const mockPlayers: Player[] = [
   },
   {
     id: 'player-11',
-    name: 'Quinn Shadow',
+    name: 'Adam Carey',
     teamId: 'team-6',
-    bio: 'Stealthy player with surprising moves and tactical brilliance.',
-    photoUrl: '/api/placeholder/150/150',
+    bio: 'Wears socks with sandals and dares you to say something.',
+    photoUrl: '/images/players/Adam Carey.png',
     stats: {
       wins: 0,
       losses: 0,
@@ -278,10 +298,86 @@ export const mockPlayers: Player[] = [
   },
   {
     id: 'player-12',
-    name: 'Sage Panther',
+    name: 'Ben Penchuk',
     teamId: 'team-6',
-    bio: 'Experienced veteran with wisdom and skill earned through years of play.',
-    photoUrl: '/api/placeholder/150/150',
+    bio: 'Once tried to pay for a burrito with a half-eaten granola bar. The cashier was not amused.',
+    photoUrl: '/images/players/Ben Penchuk.png',
+    stats: {
+      wins: 0,
+      losses: 0,
+      gamesPlayed: 0,
+      totalPoints: 0,
+      averagePoints: 0,
+      shutouts: 0,
+      blowoutWins: 0,
+      clutchWins: 0,
+      longestWinStreak: 0,
+      currentWinStreak: 0
+    }
+  },
+  {
+    id: 'player-13',
+    name: 'Jack Silk',
+    teamId: 'team-7',
+    bio: 'His secret talent is being able to parallel park a unicycle.',
+    photoUrl: '/images/players/Jack Silk.png',
+    stats: {
+      wins: 0,
+      losses: 0,
+      gamesPlayed: 0,
+      totalPoints: 0,
+      averagePoints: 0,
+      shutouts: 0,
+      blowoutWins: 0,
+      clutchWins: 0,
+      longestWinStreak: 0,
+      currentWinStreak: 0
+    }
+  },
+  {
+    id: 'player-14',
+    name: 'Colin Gross',
+    teamId: 'team-7',
+    bio: 'Speaks fluent sarcasm and broken English.',
+    photoUrl: '/images/players/Colin Gross.png',
+    stats: {
+      wins: 0,
+      losses: 0,
+      gamesPlayed: 0,
+      totalPoints: 0,
+      averagePoints: 0,
+      shutouts: 0,
+      blowoutWins: 0,
+      clutchWins: 0,
+      longestWinStreak: 0,
+      currentWinStreak: 0
+    }
+  },
+  {
+    id: 'player-15',
+    name: 'John Ertel',
+    teamId: 'team-8',
+    bio: "Is currently in a staring contest with a garden gnome. It's been three days.",
+    photoUrl: '/images/players/John Ertel.png',
+    stats: {
+      wins: 0,
+      losses: 0,
+      gamesPlayed: 0,
+      totalPoints: 0,
+      averagePoints: 0,
+      shutouts: 0,
+      blowoutWins: 0,
+      clutchWins: 0,
+      longestWinStreak: 0,
+      currentWinStreak: 0
+    }
+  },
+  {
+    id: 'player-16',
+    name: 'Matt Malarkey',
+    teamId: 'team-8',
+    bio: "His last name is not an invitation for shenanigans. Or is it?",
+    photoUrl: '/images/players/Matt Malarkey.png',
     stats: {
       wins: 0,
       losses: 0,

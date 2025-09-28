@@ -1,37 +1,33 @@
 import React from 'react';
-import { Trophy, Target, Zap, Award } from 'lucide-react';
+import { Home, Shield, Target } from 'lucide-react';
 import { Player, Team } from '../../core/types';
 
 interface PlayerCardProps {
   player: Player;
   team?: Team;
-  rank?: number;
-  compact?: boolean;
-  onClick?: () => void;
+  record?: { wins: number; losses: number };
+  avgPoints?: number;
+  onClick?: (e: React.MouseEvent<HTMLDivElement> | React.KeyboardEvent<HTMLDivElement>) => void;
 }
 
-const PlayerCard: React.FC<PlayerCardProps> = ({ 
+const PlayerCard: React.FC<PlayerCardProps> = React.memo(({ 
   player, 
   team, 
-  rank, 
-  compact = false, 
+  record,
+  avgPoints,
   onClick 
 }) => {
-  const winPercentage = player.stats.gamesPlayed > 0 
-    ? Math.round((player.stats.wins / player.stats.gamesPlayed) * 100)
-    : 0;
-
   return (
     <div 
-      className={`player-card ${compact ? 'player-card-compact' : ''} ${onClick ? 'player-card-clickable' : ''}`}
+      className={`player-card ${onClick ? 'player-card-clickable' : ''}`}
       onClick={onClick}
+      tabIndex={onClick ? 0 : -1}
+      onKeyPress={(e) => {
+        if (onClick && (e.key === 'Enter' || e.key === ' ')) {
+          onClick(e);
+        }
+      }}
     >
-      {rank && (
-        <div className="player-rank">
-          <span className="rank-number">#{rank}</span>
-        </div>
-      )}
-
       <div className="player-avatar">
         {player.photoUrl ? (
           <img src={player.photoUrl} alt={player.name} className="player-photo" />
@@ -43,73 +39,39 @@ const PlayerCard: React.FC<PlayerCardProps> = ({
       </div>
 
       <div className="player-info">
-        <h3 className="player-name">{player.name}</h3>
-        {team && (
-          <div className="player-team">
-            <div 
-              className="team-color-dot" 
-              style={{ backgroundColor: team.color }}
-            />
-            <span>{team.name}</span>
-          </div>
-        )}
+        <h3 className="player-name">{player.name || '—'}</h3>
         
-        {!compact && player.bio && (
-          <p className="player-bio">{player.bio}</p>
-        )}
-      </div>
-
-      <div className="player-stats">
-        <div className="stat-item">
-          <Trophy size={16} />
-          <span className="stat-value">{player.stats.wins}</span>
-          <span className="stat-label">Wins</span>
-        </div>
-
-        <div className="stat-item">
-          <Target size={16} />
-          <span className="stat-value">{player.stats.averagePoints.toFixed(1)}</span>
-          <span className="stat-label">Avg</span>
-        </div>
-
-        {!compact && (
-          <>
-            <div className="stat-item">
-              <Zap size={16} />
-              <span className="stat-value">{winPercentage}%</span>
-              <span className="stat-label">Win %</span>
+        <div className="player-meta">
+          <div className="meta-item">
+            <Home size={14} />
+            <span>{player.bio || '—'}</span>
+          </div>
+          {team && (
+            <div className="meta-item player-team-badge">
+              <div 
+                className="team-color-dot" 
+                style={{ backgroundColor: team.color }}
+              />
+              <span>{team.name || '—'}</span>
             </div>
-
-            <div className="stat-item">
-              <Award size={16} />
-              <span className="stat-value">{player.stats.longestWinStreak}</span>
-              <span className="stat-label">Streak</span>
-            </div>
-          </>
-        )}
-      </div>
-
-      {!compact && (player.stats.shutouts > 0 || player.stats.clutchWins > 0 || player.stats.blowoutWins > 0) && (
-        <div className="player-badges">
-          {player.stats.shutouts > 0 && (
-            <span className="badge badge-shutout" title="Shutouts">
-              🥅 {player.stats.shutouts}
-            </span>
-          )}
-          {player.stats.clutchWins > 0 && (
-            <span className="badge badge-clutch" title="Clutch Wins">
-              🎯 {player.stats.clutchWins}
-            </span>
-          )}
-          {player.stats.blowoutWins > 0 && (
-            <span className="badge badge-blowout" title="Blowout Wins">
-              💥 {player.stats.blowoutWins}
-            </span>
           )}
         </div>
-      )}
+        
+        <div className="player-stats-compact">
+          <div className="stat-item-compact">
+            <Shield size={14} />
+            <span className="stat-label">Record</span>
+            <span className="stat-value">{record ? `${record.wins}–${record.losses}` : '—'}</span>
+          </div>
+          <div className="stat-item-compact">
+            <Target size={14} />
+            <span className="stat-label">Avg Pts</span>
+            <span className="stat-value">{avgPoints?.toFixed(1) ?? '—'}</span>
+          </div>
+        </div>
+      </div>
     </div>
   );
-};
+});
 
 export default PlayerCard;

@@ -124,9 +124,7 @@ const HomePage: React.FC = () => {
                   <PlayerCard 
                     key={player.id} 
                     player={player} 
-                    team={team} 
-                    rank={index + 1}
-                    compact 
+                    team={team}
                   />
                 ) : null;
               })}

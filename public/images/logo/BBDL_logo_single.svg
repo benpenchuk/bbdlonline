@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <style>
+      .word { font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; font-weight: 900; }
+      .shadow { filter: drop-shadow(0 2px 2px rgba(0,0,0,0.18)); }
+    </style>
+  </defs>
+
+  <!-- Icon group (die + cup) -->
+  <g class="shadow">
+    <!-- Red Solo cup -->
+    <g transform="translate(100,140)">
+      <!-- cup body (trapezoid) -->
+      <path d="M 30 40 L 210 40 L 180 260 L 60 260 Z" fill="#D32F2F"/>
+      <!-- rim -->
+      <rect x="20" y="20" width="200" height="28" rx="6" fill="#FFFFFF"/>
+      <!-- inner detail lines -->
+      <rect x="54" y="84" width="132" height="10" rx="5" fill="#ffffff22"/>
+      <rect x="50" y="128" width="140" height="8" rx="4" fill="#ffffff22"/>
+      <rect x="46" y="170" width="148" height="8" rx="4" fill="#00000011"/>
+    </g>
+
+    <!-- Die (light pink) rotated -->
+    <g transform="translate(290,90) rotate(18 60 60)">
+      <rect x="0" y="0" width="120" height="120" rx="16" fill="#F4C2C2"/>
+      <!-- pips -->
+      <circle cx="30" cy="30" r="10" fill="#0E2A47"/>
+      <circle cx="60" cy="60" r="10" fill="#0E2A47"/>
+      <circle cx="90" cy="90" r="10" fill="#0E2A47"/>
+    </g>
+  </g>
+
+  <!-- Wordmark -->
+  <text x="256.0" y="452" class="word" font-size="120" text-anchor="middle" fill="#0E2A47">BBDL</text>
+</svg>

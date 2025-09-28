@@ -123,6 +123,9 @@ After setup, verify:
 
 ## Quick Reference Commands
 
+# Make sure you're in the right directory
+cd bbdl-frontend
+
 ```bash
 # Check current deployment status
 npm run version:current

@@ -1,76 +1,85 @@
 import React from 'react';
-import { Users, Trophy, Target } from 'lucide-react';
+import { Users, Trophy, Target, ChevronDown } from 'lucide-react';
 import { Team, Player } from '../../core/types';
 import PlayerCard from '../common/PlayerCard';
+
+type PlayerStatsMap = Map<string, { record: { wins: number; losses: number; }; avgPoints: number; }>;
 
 interface TeamSectionProps {
   team: Team;
   players: Player[];
+  teamStats: {
+    totalWins: number;
+    totalGames: number;
+    averagePoints: number;
+  };
+  isInitiallyCollapsed: boolean;
+  onToggleCollapse: () => void;
+  onPlayerClick: (player: Player, e: React.MouseEvent<HTMLDivElement> | React.KeyboardEvent<HTMLDivElement>) => void;
+  playerStats: PlayerStatsMap;
 }
 
-const TeamSection: React.FC<TeamSectionProps> = ({ team, players }) => {
-  const teamStats = {
-    totalWins: players.reduce((sum, player) => sum + player.stats.wins, 0),
-    totalGames: players.reduce((sum, player) => sum + player.stats.gamesPlayed, 0),
-    averagePoints: players.length > 0 
-      ? players.reduce((sum, player) => sum + player.stats.averagePoints, 0) / players.length
-      : 0
-  };
-
+const TeamSection: React.FC<TeamSectionProps> = ({ 
+  team, 
+  players, 
+  teamStats, 
+  isInitiallyCollapsed, 
+  onToggleCollapse,
+  onPlayerClick,
+  playerStats,
+}) => {
   return (
-    <div className="team-section">
-      <div className="team-header">
-        <div className="team-info">
-          <div className="team-identity">
-            <div 
-              className="team-color-large"
-              style={{ backgroundColor: team.color }}
-            />
-            <div className="team-details">
-              <h2 className="team-name">{team.name}</h2>
-              <div className="team-record">
-                {team.wins}W - {team.losses}L
-              </div>
-            </div>
-          </div>
-          
-          <div className="team-stats">
-            <div className="team-stat">
-              <Users size={16} />
-              <span className="stat-value">{players.length}</span>
-              <span className="stat-label">Players</span>
-            </div>
-            
-            <div className="team-stat">
-              <Trophy size={16} />
-              <span className="stat-value">{teamStats.totalWins}</span>
-              <span className="stat-label">Total Wins</span>
-            </div>
-            
-            <div className="team-stat">
-              <Target size={16} />
-              <span className="stat-value">{teamStats.averagePoints.toFixed(1)}</span>
-              <span className="stat-label">Avg Points</span>
-            </div>
-          </div>
+    <div className="team-section" data-collapsed={isInitiallyCollapsed}>
+      <div className="team-header" onClick={onToggleCollapse} aria-expanded={!isInitiallyCollapsed}>
+        <div className="team-info-left">
+          <div 
+            className="team-color-dot"
+            style={{ backgroundColor: team.color }}
+          />
+          <h2 className="team-name">{team.name}</h2>
         </div>
+        <div className="team-header-stats">
+            <div className="team-header-stat">
+              <Users size={16} />
+              <strong>{players.length}</strong>
+              <span>Players</span>
+            </div>
+            <div className="team-header-stat">
+              <Trophy size={16} />
+              <strong>{teamStats.totalWins}</strong>
+              <span>Wins</span>
+            </div>
+            <div className="team-header-stat">
+              <Target size={16} />
+              <strong>{teamStats.averagePoints.toFixed(1)}</strong>
+              <span>Avg Pts</span>
+            </div>
+        </div>
+        <button className="collapse-icon">
+          <ChevronDown size={24} style={{ transform: isInitiallyCollapsed ? 'rotate(0deg)' : 'rotate(180deg)', transition: 'transform 0.3s' }} />
+        </button>
       </div>
 
-      <div className="team-players">
+      <div className="team-players-container" data-collapsed={isInitiallyCollapsed}>
         {players.length > 0 ? (
           <div className="players-grid">
-            {players.map(player => (
-              <PlayerCard
-                key={player.id}
-                player={player}
-                team={team}
-              />
-            ))}
+            {players.map(player => {
+              const stats = playerStats.get(player.id);
+              return (
+                <PlayerCard
+                  key={player.id}
+                  player={player}
+                  team={team}
+                  record={stats?.record}
+                  avgPoints={stats?.avgPoints}
+                  onClick={(e) => onPlayerClick(player, e)}
+                />
+              );
+            })}
           </div>
         ) : (
-          <div className="empty-team">
-            <Users size={32} />
-            <p>No players in this team</p>
+          <div className="empty-state" style={{padding: 'var(--space-lg)', minHeight: '100px'}}>
+            <p>No players match the current filters.</p>
           </div>
         )}
       </div>
