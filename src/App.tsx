@@ -2,7 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Layout from './components/Layout/Layout';
 import HomePage from './pages/HomePage';
-import GamesPage from './pages/GamesPage';
+import GamesPageESPN from './pages/GamesPageESPN';
 import PlayersPage from './pages/PlayersPage';
 import StatsPage from './pages/StatsPage';
 import TournamentPage from './pages/TournamentPage';
@@ -20,7 +20,7 @@ function App() {
             <Layout>
               <Routes>
                 <Route path="/" element={<HomePage />} />
-                <Route path="/games" element={<GamesPage />} />
+                <Route path="/games" element={<GamesPageESPN />} />
                 <Route path="/players" element={<PlayersPage />} />
                 <Route path="/stats" element={<StatsPage />} />
                 <Route path="/tournament" element={<TournamentPage />} />

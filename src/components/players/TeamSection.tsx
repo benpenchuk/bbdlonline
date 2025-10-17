@@ -2,6 +2,7 @@ import React from 'react';
 import { Users, Trophy, Target, ChevronDown } from 'lucide-react';
 import { Team, Player } from '../../core/types';
 import PlayerCard from '../common/PlayerCard';
+import TeamIcon from '../common/TeamIcon';
 
 type PlayerStatsMap = Map<string, { record: { wins: number; losses: number; }; avgPoints: number; }>;
 
@@ -32,10 +33,7 @@ const TeamSection: React.FC<TeamSectionProps> = ({
     <div className="team-section" data-collapsed={isInitiallyCollapsed}>
       <div className="team-header" onClick={onToggleCollapse} aria-expanded={!isInitiallyCollapsed}>
         <div className="team-info-left">
-          <div 
-            className="team-color-dot"
-            style={{ backgroundColor: team.color }}
-          />
+          <TeamIcon iconId={team.icon} color={team.color} size={24} />
           <h2 className="team-name">{team.name}</h2>
         </div>
         <div className="team-header-stats">

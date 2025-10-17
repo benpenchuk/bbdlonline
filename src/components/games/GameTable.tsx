@@ -2,6 +2,7 @@ import React from 'react';
 import { Trophy, Clock, X, Calendar } from 'lucide-react';
 import { Game, Team } from '../../core/types';
 import { format } from 'date-fns';
+import TeamIcon from '../common/TeamIcon';
 
 interface GameTableProps {
   games: Game[];
@@ -81,9 +82,10 @@ const GameTable: React.FC<GameTableProps> = ({ games, teams, onGameClick }) => {
 
               <td>
                 <div className="team-cell">
-                  <div 
-                    className="team-color-dot"
-                    style={{ backgroundColor: getTeamColor(game.team1Id) }}
+                  <TeamIcon 
+                    iconId={teams.find(t => t.id === game.team1Id)?.icon || 'trophy'} 
+                    color={getTeamColor(game.team1Id)} 
+                    size={16} 
                   />
                   <span>{getTeamName(game.team1Id)}</span>
                 </div>
@@ -91,9 +93,10 @@ const GameTable: React.FC<GameTableProps> = ({ games, teams, onGameClick }) => {
 
               <td>
                 <div className="team-cell">
-                  <div 
-                    className="team-color-dot"
-                    style={{ backgroundColor: getTeamColor(game.team2Id) }}
+                  <TeamIcon 
+                    iconId={teams.find(t => t.id === game.team2Id)?.icon || 'trophy'} 
+                    color={getTeamColor(game.team2Id)} 
+                    size={16} 
                   />
                   <span>{getTeamName(game.team2Id)}</span>
                 </div>

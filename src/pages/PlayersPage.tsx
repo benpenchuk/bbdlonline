@@ -82,7 +82,6 @@ const PlayersPage: React.FC = () => {
 
   // --- Modal State ---
   const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
-  const triggerRef = useRef<HTMLDivElement>(null);
   
   // --- Team Collapse State ---
   const [collapsedTeams, setCollapsedTeams] = useLocalStorage<Record<string, boolean>>('collapsedTeams', {});
@@ -209,15 +208,11 @@ const PlayersPage: React.FC = () => {
 
   // --- Modal Logic ---
   const openModal = (player: Player, e: React.MouseEvent<HTMLDivElement> | React.KeyboardEvent<HTMLDivElement>) => {
-    triggerRef.current = e.currentTarget as HTMLDivElement;
     setSelectedPlayer(player);
   };
 
   const closeModal = useCallback(() => {
     setSelectedPlayer(null);
-    setTimeout(() => {
-      triggerRef.current?.focus();
-    }, 0);
   }, []);
 
   useEffect(() => {

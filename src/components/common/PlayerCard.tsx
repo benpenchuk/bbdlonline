@@ -1,6 +1,7 @@
 import React from 'react';
 import { Home, Shield, Target } from 'lucide-react';
 import { Player, Team } from '../../core/types';
+import TeamIcon from './TeamIcon';
 
 interface PlayerCardProps {
   player: Player;
@@ -48,10 +49,7 @@ const PlayerCard: React.FC<PlayerCardProps> = React.memo(({
           </div>
           {team && (
             <div className="meta-item player-team-badge">
-              <div 
-                className="team-color-dot" 
-                style={{ backgroundColor: team.color }}
-              />
+              <TeamIcon iconId={team.icon} color={team.color} size={12} />
               <span>{team.name || '—'}</span>
             </div>
           )}

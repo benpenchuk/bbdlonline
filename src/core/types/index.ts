@@ -2,6 +2,7 @@ export interface Team {
   id: string;
   name: string;
   color: string;
+  icon: string; // Icon identifier (e.g., 'trophy', 'flame', 'shield')
   wins: number;
   losses: number;
   totalPoints: number;

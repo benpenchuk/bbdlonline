@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Home, Calendar, Users, BarChart3, Trophy, Settings, Mail } from 'lucide-react';
+import { Home, Calendar, Users, BarChart3, Trophy, Settings, Mail, Menu, X } from 'lucide-react';
 import { getConfig } from '../../core/config/appConfig';
+import VersionBanner from '../common/VersionBanner';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -10,6 +11,7 @@ interface LayoutProps {
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   const location = useLocation();
   const config = getConfig();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const navigation = [
     { name: 'Home', href: '/', icon: Home },
@@ -22,6 +24,23 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   ];
 
   const isActive = (href: string) => location.pathname === href;
+
+  // Close mobile menu on route change
+  useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [location.pathname]);
+
+  // Prevent body scroll when mobile menu is open
+  useEffect(() => {
+    if (mobileMenuOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [mobileMenuOpen]);
 
   return (
     <div className="layout-top-nav">
@@ -37,8 +56,18 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             </div>
           </div>
           
-          {/* Navigation Links */}
-          <nav className="nav-links">
+          {/* Mobile Menu Toggle */}
+          <button 
+            className="mobile-menu-toggle"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
+            aria-expanded={mobileMenuOpen}
+          >
+            {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+          </button>
+          
+          {/* Navigation Links - Desktop */}
+          <nav className={`nav-links ${mobileMenuOpen ? 'nav-links-mobile-open' : ''}`}>
             {navigation.map((item) => {
               const Icon = item.icon;
               return (
@@ -46,6 +75,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                   key={item.name}
                   to={item.href}
                   className={`nav-link ${isActive(item.href) ? 'nav-link-active' : ''}`}
+                  onClick={() => setMobileMenuOpen(false)}
                 >
                   <Icon size={18} />
                   <span>{item.name}</span>
@@ -56,10 +86,22 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         </div>
       </header>
 
+      {/* Mobile Menu Backdrop */}
+      {mobileMenuOpen && (
+        <div 
+          className="mobile-menu-backdrop" 
+          onClick={() => setMobileMenuOpen(false)}
+          aria-hidden="true"
+        />
+      )}
+
       {/* Main Content */}
       <main className="main-content-top-nav">
         {children}
       </main>
+
+      {/* Version Banner */}
+      <VersionBanner />
     </div>
   );
 };

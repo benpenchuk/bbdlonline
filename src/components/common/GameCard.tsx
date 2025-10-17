@@ -2,6 +2,7 @@ import React from 'react';
 import { Calendar, Clock, Trophy, X } from 'lucide-react';
 import { Game, Team } from '../../core/types';
 import { format } from 'date-fns';
+import TeamIcon from './TeamIcon';
 
 interface GameCardProps {
   game: Game;
@@ -79,10 +80,7 @@ const GameCard: React.FC<GameCardProps> = ({ game, teams, compact = false, onCli
 
       <div className="game-teams">
         <div className="game-team">
-          <div 
-            className="team-color" 
-            style={{ backgroundColor: team1.color }}
-          />
+          <TeamIcon iconId={team1.icon} color={team1.color} size={20} />
           <span className="team-name">{team1.name}</span>
           {game.status === 'completed' && (
             <span className={`team-score ${game.winnerId === team1.id ? 'winner-score' : ''}`}>
@@ -94,10 +92,7 @@ const GameCard: React.FC<GameCardProps> = ({ game, teams, compact = false, onCli
         <div className="game-vs">vs</div>
 
         <div className="game-team">
-          <div 
-            className="team-color" 
-            style={{ backgroundColor: team2.color }}
-          />
+          <TeamIcon iconId={team2.icon} color={team2.color} size={20} />
           <span className="team-name">{team2.name}</span>
           {game.status === 'completed' && (
             <span className={`team-score ${game.winnerId === team2.id ? 'winner-score' : ''}`}>
