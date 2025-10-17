@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { Calendar, Filter, Grid, List, Star } from 'lucide-react';
+import React, { useState, useMemo } from 'react';
+import { Calendar, Grid, Star } from 'lucide-react';
 import { useData } from '../state';
-import { Game, GameStatus } from '../core/types';
+import { Game } from '../core/types';
 import { format, startOfDay, isSameDay, addDays, subDays } from 'date-fns';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import DateNavigator from '../components/games/DateNavigator';

@@ -1,9 +1,8 @@
 import React from 'react';
-import { Clock, MapPin, Trophy, Calendar } from 'lucide-react';
+import { MapPin, Trophy, Calendar } from 'lucide-react';
 import { Game, Team } from '../../core/types';
 import { format } from 'date-fns';
 import TeamIcon from '../common/TeamIcon';
-import { useNavigate } from 'react-router-dom';
 
 interface ESPNGameCardProps {
   game: Game;
@@ -12,7 +11,6 @@ interface ESPNGameCardProps {
 }
 
 const ESPNGameCard: React.FC<ESPNGameCardProps> = ({ game, teams, onClick }) => {
-  const navigate = useNavigate();
   const team1 = teams.find(t => t.id === game.team1Id);
   const team2 = teams.find(t => t.id === game.team2Id);
   

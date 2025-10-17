@@ -1,10 +1,12 @@
 import React from 'react';
-import packageJson from '../../../package.json';
 
 const VersionBanner: React.FC = () => {
+  // Version is injected at build time via package.json
+  const version = process.env.REACT_APP_VERSION || '0.0.4';
+  
   return (
     <div className="version-banner">
-      BBDL v{packageJson.version}
+      BBDL v{version}
     </div>
   );
 };
