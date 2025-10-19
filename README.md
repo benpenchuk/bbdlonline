@@ -21,6 +21,8 @@ For detailed deployment instructions with versioning and automated GitHub/Vercel
 
 ### Quick Deploy Commands
 ```bash
+cd bbdl-frontend
+
 npm run deploy:patch    # Bug fixes (1.1.2 → 1.1.3)
 npm run deploy:minor    # New features (1.1.3 → 1.2.0)
 npm run deploy:major    # Breaking changes (1.9.0 → 2.0.0)
