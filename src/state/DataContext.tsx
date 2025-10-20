@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { Team, Player, Game, Tournament } from '../core/types';
-import { mockTeams, mockPlayers, generateMockGames, generateMockTournament, mockAnnouncements } from '../core/data/mockData';
+import { teamsApi, playersApi, gamesApi, tournamentsApi, announcementsApi, dataApi } from '../core/services/api';
 import { recalculateAllStats } from '../core/services/stats';
 
 interface DataState {
@@ -61,16 +61,7 @@ interface DataContextType {
   recalculateStats: () => Promise<void>;
 }
 
-const STORAGE_KEYS = {
-  teams: 'bbdl-teams',
-  players: 'bbdl-players',
-  games: 'bbdl-games',
-  tournaments: 'bbdl-tournaments',
-  announcements: 'bbdl-announcements'
-};
-
-// Simulate API delay
-const delay = (ms: number = 100) => new Promise(resolve => setTimeout(resolve, ms));
+// Removed localStorage keys - now using Supabase
 
 // Game validation functions
 const validateGameData = (gameData: Partial<Game>): { valid: boolean; errors: string[] } => {
@@ -115,95 +106,52 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   // Initialize data on mount
   useEffect(() => {
     const initialize = async () => {
-      console.log('DataContext: Initializing data...');
-      initializeData();
+      console.log('DataContext: Initializing data from Supabase...');
       await loadAllData();
       console.log('DataContext: Data initialization complete');
     };
     initialize();
   }, []);
 
-  const initializeData = () => {
-    if (!localStorage.getItem(STORAGE_KEYS.teams)) {
-      localStorage.setItem(STORAGE_KEYS.teams, JSON.stringify(mockTeams));
-    }
-    if (!localStorage.getItem(STORAGE_KEYS.players)) {
-      localStorage.setItem(STORAGE_KEYS.players, JSON.stringify(mockPlayers));
-    }
-    if (!localStorage.getItem(STORAGE_KEYS.games)) {
-      localStorage.setItem(STORAGE_KEYS.games, JSON.stringify(generateMockGames()));
-    }
-    if (!localStorage.getItem(STORAGE_KEYS.tournaments)) {
-      localStorage.setItem(STORAGE_KEYS.tournaments, JSON.stringify([generateMockTournament()]));
-    }
-    if (!localStorage.getItem(STORAGE_KEYS.announcements)) {
-      localStorage.setItem(STORAGE_KEYS.announcements, JSON.stringify(mockAnnouncements));
-    }
-  };
-
   const loadAllData = async () => {
     setState(prev => ({ ...prev, loading: true }));
     try {
-      console.log('DataContext: Loading data from localStorage...');
-      const teams = JSON.parse(localStorage.getItem(STORAGE_KEYS.teams) || '[]');
-      const players = JSON.parse(localStorage.getItem(STORAGE_KEYS.players) || '[]');
-      const games = JSON.parse(localStorage.getItem(STORAGE_KEYS.games) || '[]');
-      const tournaments = JSON.parse(localStorage.getItem(STORAGE_KEYS.tournaments) || '[]');
-      const announcements = JSON.parse(localStorage.getItem(STORAGE_KEYS.announcements) || '[]');
+      console.log('DataContext: Loading data from Supabase...');
       
-      console.log('DataContext: Raw data loaded - Teams:', teams.length, 'Players:', players.length, 'Games:', games.length, 'Tournaments:', tournaments.length, 'Announcements:', announcements.length);
+      // Fetch all data from Supabase
+      const [teamsResponse, playersResponse, gamesResponse, tournamentsResponse, announcementsResponse] = await Promise.all([
+        teamsApi.getAll(),
+        playersApi.getAll(),
+        gamesApi.getAll(),
+        tournamentsApi.getAll(),
+        announcementsApi.getAll()
+      ]);
 
-      // Convert date strings back to Date objects
-      const gamesWithDates = games.map((game: any) => ({
-        ...game,
-        scheduledDate: new Date(game.scheduledDate),
-        completedDate: game.completedDate ? new Date(game.completedDate) : undefined
-      }));
-
-      const tournamentsWithDates = tournaments.map((tournament: any) => ({
-        ...tournament,
-        createdDate: new Date(tournament.createdDate),
-        completedDate: tournament.completedDate ? new Date(tournament.completedDate) : undefined
-      }));
-
-      const announcementsWithDates = announcements.map((announcement: any) => ({
-        ...announcement,
-        date: new Date(announcement.date)
-      }));
-
-      // Keep teams as-is, ensure players have stats property (even if empty initially)
-      const updatedTeams = teams;
-      const updatedPlayers = players.map((player: Player) => ({
-        ...player,
-        stats: player.stats || {
-          wins: 0,
-          losses: 0,
-          gamesPlayed: 0,
-          totalPoints: 0,
-          averagePoints: 0,
-          shutouts: 0,
-          blowoutWins: 0,
-          clutchWins: 0,
-          longestWinStreak: 0,
-          currentWinStreak: 0
-        }
-      }));
+      const teams = teamsResponse.data || [];
+      const players = playersResponse.data || [];
+      const games = gamesResponse.data || [];
+      const tournaments = tournamentsResponse.data || [];
+      const announcements = announcementsResponse.data || [];
+      
+      console.log('DataContext: Data loaded from Supabase - Teams:', teams.length, 'Players:', players.length, 'Games:', games.length, 'Tournaments:', tournaments.length, 'Announcements:', announcements.length);
 
       setState({
-        teams: updatedTeams,
-        players: updatedPlayers,
-        games: gamesWithDates,
-        tournaments: tournamentsWithDates,
-        announcements: announcementsWithDates,
+        teams,
+        players,
+        games,
+        tournaments,
+        announcements,
         loading: false
       });
       
-      console.log('DataContext: State updated with processed data - Teams:', updatedTeams.length, 'Players:', updatedPlayers.length, 'Games:', gamesWithDates.length, 'Tournaments:', tournamentsWithDates.length, 'Announcements:', announcementsWithDates.length);
+      console.log('DataContext: State updated with Supabase data');
       
       // Initialize stats system with loaded data
-      recalculateAllStats(gamesWithDates, updatedPlayers, updatedTeams);
+      if (games.length > 0) {
+        recalculateAllStats(games, players, teams);
+      }
     } catch (error) {
-      console.error('Failed to load data:', error);
+      console.error('Failed to load data from Supabase:', error);
       setState(prev => ({ ...prev, loading: false }));
     }
   };
@@ -213,345 +161,201 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const recalculateStats = async () => {
-    await delay();
     recalculateAllStats(state.games, state.players, state.teams);
   };
 
   // Team operations
   const getTeams = async (): Promise<Team[]> => {
-    await delay();
     return state.teams;
   };
 
   const getTeamById = async (id: string): Promise<Team | null> => {
-    await delay();
-    return state.teams.find(team => team.id === id) || null;
+    const response = await teamsApi.getById(id);
+    return response.data;
   };
 
   const createTeam = async (teamData: Omit<Team, 'id'>): Promise<Team> => {
-    await delay();
-    const newTeam: Team = {
-      ...teamData,
-      id: `team-${Date.now()}`
-    };
-    
-    const updatedTeams = [...state.teams, newTeam];
-    localStorage.setItem(STORAGE_KEYS.teams, JSON.stringify(updatedTeams));
-    setState(prev => ({ ...prev, teams: updatedTeams }));
-    
-    return newTeam;
+    const response = await teamsApi.create(teamData);
+    if (response.success && response.data) {
+      const updatedTeams = [...state.teams, response.data];
+      setState(prev => ({ ...prev, teams: updatedTeams }));
+      return response.data;
+    }
+    throw new Error(response.message || 'Failed to create team');
   };
 
   const updateTeam = async (id: string, updates: Partial<Team>): Promise<Team> => {
-    await delay();
-    const updatedTeams = state.teams.map(team =>
-      team.id === id ? { ...team, ...updates } : team
-    );
-    
-    localStorage.setItem(STORAGE_KEYS.teams, JSON.stringify(updatedTeams));
-    setState(prev => ({ ...prev, teams: updatedTeams }));
-    
-    const updatedTeam = updatedTeams.find(team => team.id === id)!;
-    return updatedTeam;
+    const response = await teamsApi.update(id, updates);
+    if (response.success && response.data) {
+      const updatedTeams = state.teams.map(team =>
+        team.id === id ? response.data! : team
+      );
+      setState(prev => ({ ...prev, teams: updatedTeams }));
+      return response.data;
+    }
+    throw new Error(response.message || 'Failed to update team');
   };
 
   const deleteTeam = async (id: string): Promise<boolean> => {
-    await delay();
-    const updatedTeams = state.teams.filter(team => team.id !== id);
-    localStorage.setItem(STORAGE_KEYS.teams, JSON.stringify(updatedTeams));
-    setState(prev => ({ ...prev, teams: updatedTeams }));
-    return true;
+    const response = await teamsApi.delete(id);
+    if (response.success) {
+      const updatedTeams = state.teams.filter(team => team.id !== id);
+      setState(prev => ({ ...prev, teams: updatedTeams }));
+      return true;
+    }
+    throw new Error(response.message || 'Failed to delete team');
   };
 
   // Player operations
   const getPlayers = async (): Promise<Player[]> => {
-    await delay();
     return state.players;
   };
 
   const getPlayerById = async (id: string): Promise<Player | null> => {
-    await delay();
-    return state.players.find(player => player.id === id) || null;
+    const response = await playersApi.getById(id);
+    return response.data;
   };
 
   const getPlayersByTeam = async (teamId: string): Promise<Player[]> => {
-    await delay();
-    return state.players.filter(player => player.teamId === teamId);
+    const response = await playersApi.getByTeam(teamId);
+    return response.data || [];
   };
 
   const createPlayer = async (playerData: Omit<Player, 'id'>): Promise<Player> => {
-    await delay();
-    const newPlayer: Player = {
-      ...playerData,
-      id: `player-${Date.now()}`
-    };
-    
-    const updatedPlayers = [...state.players, newPlayer];
-    localStorage.setItem(STORAGE_KEYS.players, JSON.stringify(updatedPlayers));
-    
-    // Update team players list
-    const updatedTeams = state.teams.map(team =>
-      team.id === playerData.teamId
-        ? { ...team, players: [...team.players, newPlayer.id] }
-        : team
-    );
-    localStorage.setItem(STORAGE_KEYS.teams, JSON.stringify(updatedTeams));
-    
-    setState(prev => ({ 
-      ...prev, 
-      players: updatedPlayers,
-      teams: updatedTeams
-    }));
-    
-    return newPlayer;
+    const response = await playersApi.create(playerData);
+    if (response.success && response.data) {
+      await refreshData(); // Refresh to get updated teams and players
+      return response.data;
+    }
+    throw new Error(response.message || 'Failed to create player');
   };
 
   const updatePlayer = async (id: string, updates: Partial<Player>): Promise<Player> => {
-    await delay();
-    const oldPlayer = state.players.find(p => p.id === id);
-    const updatedPlayers = state.players.map(player =>
-      player.id === id ? { ...player, ...updates } : player
-    );
-    
-    localStorage.setItem(STORAGE_KEYS.players, JSON.stringify(updatedPlayers));
-    
-    // Update team players lists if team changed
-    let updatedTeams = state.teams;
-    if (updates.teamId && oldPlayer && updates.teamId !== oldPlayer.teamId) {
-      updatedTeams = state.teams.map(team => {
-        if (team.id === oldPlayer.teamId) {
-          return { ...team, players: team.players.filter(pid => pid !== id) };
-        }
-        if (team.id === updates.teamId) {
-          return { ...team, players: [...team.players, id] };
-        }
-        return team;
-      });
-      localStorage.setItem(STORAGE_KEYS.teams, JSON.stringify(updatedTeams));
+    const response = await playersApi.update(id, updates);
+    if (response.success && response.data) {
+      await refreshData(); // Refresh to get updated teams and players
+      return response.data;
     }
-    
-    setState(prev => ({ 
-      ...prev, 
-      players: updatedPlayers,
-      teams: updatedTeams
-    }));
-    
-    const updatedPlayer = updatedPlayers.find(player => player.id === id)!;
-    return updatedPlayer;
+    throw new Error(response.message || 'Failed to update player');
   };
 
   const deletePlayer = async (id: string): Promise<boolean> => {
-    await delay();
-    const player = state.players.find(p => p.id === id);
-    const updatedPlayers = state.players.filter(player => player.id !== id);
-    localStorage.setItem(STORAGE_KEYS.players, JSON.stringify(updatedPlayers));
-    
-    // Remove from team players list
-    let updatedTeams = state.teams;
-    if (player) {
-      updatedTeams = state.teams.map(team =>
-        team.id === player.teamId
-          ? { ...team, players: team.players.filter(pid => pid !== id) }
-          : team
-      );
-      localStorage.setItem(STORAGE_KEYS.teams, JSON.stringify(updatedTeams));
+    const response = await playersApi.delete(id);
+    if (response.success) {
+      await refreshData(); // Refresh to get updated teams and players
+      return true;
     }
-    
-    setState(prev => ({ 
-      ...prev, 
-      players: updatedPlayers,
-      teams: updatedTeams
-    }));
-    return true;
+    throw new Error(response.message || 'Failed to delete player');
   };
 
   // Game operations
   const getGames = async (): Promise<Game[]> => {
-    await delay();
     return state.games;
   };
 
   const getGameById = async (id: string): Promise<Game | null> => {
-    await delay();
-    return state.games.find(game => game.id === id) || null;
+    const response = await gamesApi.getById(id);
+    return response.data;
   };
 
   const createGame = async (gameData: Omit<Game, 'id'>): Promise<Game> => {
-    await delay();
-    
     // Validate game data
     const validation = validateGameData(gameData);
     if (!validation.valid) {
       throw new Error(`Game validation failed: ${validation.errors.join(', ')}`);
     }
     
-    const newGame: Game = {
-      ...gameData,
-      id: `game-${Date.now()}`
-    };
-    
-    const updatedGames = [...state.games, newGame];
-    localStorage.setItem(STORAGE_KEYS.games, JSON.stringify(updatedGames));
-    setState(prev => ({ ...prev, games: updatedGames }));
-    
-    // Recalculate stats if this is a completed game
-    if (newGame.status === 'completed') {
-      recalculateAllStats(updatedGames, state.players, state.teams);
+    const response = await gamesApi.create(gameData);
+    if (response.success && response.data) {
+      await refreshData(); // Refresh to update games and stats
+      return response.data;
     }
-    
-    return newGame;
+    throw new Error(response.message || 'Failed to create game');
   };
 
   const updateGame = async (id: string, updates: Partial<Game>): Promise<Game> => {
-    await delay();
-    
     // Validate updates
     const validation = validateGameData(updates);
     if (!validation.valid) {
       throw new Error(`Game validation failed: ${validation.errors.join(', ')}`);
     }
     
-    const originalGame = state.games.find(game => game.id === id);
-    if (!originalGame) {
-      throw new Error(`Game with ID ${id} not found`);
+    const response = await gamesApi.update(id, updates);
+    if (response.success && response.data) {
+      await refreshData(); // Refresh to update games and stats
+      return response.data;
     }
-    
-    const updatedGames = state.games.map(game => {
-      if (game.id === id) {
-        const updatedGame = { ...game, ...updates };
-        
-        // Handle score updates and determine winner
-        if (updates.team1Score !== undefined && updates.team2Score !== undefined) {
-          const team1Score = updates.team1Score;
-          const team2Score = updates.team2Score;
-          const scoreDiff = Math.abs(team1Score - team2Score);
-          
-          updatedGame.winnerId = team1Score > team2Score ? game.team1Id : game.team2Id;
-          updatedGame.isBlowout = scoreDiff >= 10; // Use our constant
-          updatedGame.isClutch = scoreDiff <= 2;
-          updatedGame.isShutout = team1Score === 0 || team2Score === 0;
-          updatedGame.status = 'completed';
-          updatedGame.completedDate = new Date();
-        }
-        
-        return updatedGame;
-      }
-      return game;
-    });
-    
-    localStorage.setItem(STORAGE_KEYS.games, JSON.stringify(updatedGames));
-    setState(prev => ({ ...prev, games: updatedGames }));
-    
-    // Recalculate stats if the game is now completed or scores were updated
-    const updatedGame = updatedGames.find(game => game.id === id)!;
-    if (updatedGame.status === 'completed' || 
-        (updates.team1Score !== undefined || updates.team2Score !== undefined)) {
-      recalculateAllStats(updatedGames, state.players, state.teams);
-    }
-    
-    return updatedGame;
+    throw new Error(response.message || 'Failed to update game');
   };
 
   const deleteGame = async (id: string): Promise<boolean> => {
-    await delay();
-    const updatedGames = state.games.filter(game => game.id !== id);
-    localStorage.setItem(STORAGE_KEYS.games, JSON.stringify(updatedGames));
-    setState(prev => ({ ...prev, games: updatedGames }));
-    
-    // Recalculate stats after game deletion
-    recalculateAllStats(updatedGames, state.players, state.teams);
-    
-    return true;
+    const response = await gamesApi.delete(id);
+    if (response.success) {
+      await refreshData(); // Refresh to update games and stats
+      return true;
+    }
+    throw new Error(response.message || 'Failed to delete game');
   };
 
   // Tournament operations
   const getTournaments = async (): Promise<Tournament[]> => {
-    await delay();
     return state.tournaments;
   };
 
   const getTournamentById = async (id: string): Promise<Tournament | null> => {
-    await delay();
-    return state.tournaments.find(tournament => tournament.id === id) || null;
+    const response = await tournamentsApi.getById(id);
+    return response.data;
   };
 
   const createTournament = async (tournamentData: Omit<Tournament, 'id'>): Promise<Tournament> => {
-    await delay();
-    const newTournament: Tournament = {
-      ...tournamentData,
-      id: `tournament-${Date.now()}`
-    };
-    
-    const updatedTournaments = [...state.tournaments, newTournament];
-    localStorage.setItem(STORAGE_KEYS.tournaments, JSON.stringify(updatedTournaments));
-    setState(prev => ({ ...prev, tournaments: updatedTournaments }));
-    
-    return newTournament;
+    const response = await tournamentsApi.create(tournamentData);
+    if (response.success && response.data) {
+      await refreshData();
+      return response.data;
+    }
+    throw new Error(response.message || 'Failed to create tournament');
   };
 
   const updateTournament = async (id: string, updates: Partial<Tournament>): Promise<Tournament> => {
-    await delay();
-    const updatedTournaments = state.tournaments.map(tournament =>
-      tournament.id === id ? { ...tournament, ...updates } : tournament
-    );
-    
-    localStorage.setItem(STORAGE_KEYS.tournaments, JSON.stringify(updatedTournaments));
-    setState(prev => ({ ...prev, tournaments: updatedTournaments }));
-    
-    const updatedTournament = updatedTournaments.find(tournament => tournament.id === id)!;
-    return updatedTournament;
+    const response = await tournamentsApi.update(id, updates);
+    if (response.success && response.data) {
+      await refreshData();
+      return response.data;
+    }
+    throw new Error(response.message || 'Failed to update tournament');
   };
 
   const deleteTournament = async (id: string): Promise<boolean> => {
-    await delay();
-    const updatedTournaments = state.tournaments.filter(tournament => tournament.id !== id);
-    localStorage.setItem(STORAGE_KEYS.tournaments, JSON.stringify(updatedTournaments));
-    setState(prev => ({ ...prev, tournaments: updatedTournaments }));
-    return true;
+    const response = await tournamentsApi.delete(id);
+    if (response.success) {
+      await refreshData();
+      return true;
+    }
+    throw new Error(response.message || 'Failed to delete tournament');
   };
 
   // Announcements
   const getAnnouncements = async (): Promise<any[]> => {
-    await delay();
     return state.announcements;
   };
 
   // Data management
   const exportData = async (): Promise<any> => {
-    await delay();
-    const data = {
-      teams: state.teams,
-      players: state.players,
-      games: state.games,
-      tournaments: state.tournaments,
-      announcements: state.announcements,
-      exportDate: new Date().toISOString(),
-      version: '1.0'
-    };
-    return data;
+    const response = await dataApi.exportAll();
+    if (response.success) {
+      return response.data;
+    }
+    throw new Error(response.message || 'Failed to export data');
   };
 
   const importData = async (data: any): Promise<boolean> => {
-    await delay();
     try {
-      if (data.teams) {
-        localStorage.setItem(STORAGE_KEYS.teams, JSON.stringify(data.teams));
+      const response = await dataApi.importAll(data);
+      if (response.success) {
+        await loadAllData(); // Refresh state
+        return true;
       }
-      if (data.players) {
-        localStorage.setItem(STORAGE_KEYS.players, JSON.stringify(data.players));
-      }
-      if (data.games) {
-        localStorage.setItem(STORAGE_KEYS.games, JSON.stringify(data.games));
-      }
-      if (data.tournaments) {
-        localStorage.setItem(STORAGE_KEYS.tournaments, JSON.stringify(data.tournaments));
-      }
-      if (data.announcements) {
-        localStorage.setItem(STORAGE_KEYS.announcements, JSON.stringify(data.announcements));
-      }
-      
-      await loadAllData(); // Refresh state
-      return true;
+      throw new Error(response.message || 'Failed to import data');
     } catch (error) {
       console.error('Failed to import data:', error);
       return false;
@@ -559,17 +363,13 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const resetToDemo = async (): Promise<boolean> => {
-    await delay();
     try {
-      // Clear existing data
-      Object.values(STORAGE_KEYS).forEach(key => {
-        localStorage.removeItem(key);
-      });
-      
-      // Initialize with fresh demo data
-      initializeData();
-      await loadAllData();
-      return true;
+      const response = await dataApi.resetAll();
+      if (response.success) {
+        await loadAllData();
+        return true;
+      }
+      throw new Error(response.message || 'Failed to reset data');
     } catch (error) {
       console.error('Failed to reset data:', error);
       return false;

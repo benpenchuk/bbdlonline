@@ -10,11 +10,14 @@ export interface Team {
   players: string[]; // Player IDs
 }
 
+export type PlayerYear = 'freshman' | 'sophomore' | 'junior' | 'senior' | 'alumni';
+
 export interface Player {
   id: string;
   name: string;
   teamId: string;
   bio: string;
+  year?: PlayerYear;
   photoUrl?: string;
   stats: {
     wins: number;

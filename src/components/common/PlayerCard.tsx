@@ -1,5 +1,4 @@
 import React from 'react';
-import { Home, Shield, Target } from 'lucide-react';
 import { Player, Team } from '../../core/types';
 import TeamIcon from './TeamIcon';
 
@@ -18,58 +17,71 @@ const PlayerCard: React.FC<PlayerCardProps> = React.memo(({
   avgPoints,
   onClick 
 }) => {
+  const gamesPlayed = record ? record.wins + record.losses : 0;
+
   return (
     <div 
-      className={`player-card ${onClick ? 'player-card-clickable' : ''}`}
+      className={`bbdl-player-card ${onClick ? 'clickable' : ''}`}
       onClick={onClick}
       tabIndex={onClick ? 0 : -1}
-      onKeyPress={(e) => {
+      onKeyDown={(e) => {
         if (onClick && (e.key === 'Enter' || e.key === ' ')) {
+          e.preventDefault();
           onClick(e);
         }
       }}
+      role={onClick ? 'button' : undefined}
+      aria-label={onClick ? `View details for ${player.name}` : undefined}
     >
-      <div className="player-avatar">
+      {/* Avatar */}
+      <div className="bbdl-player-card-avatar">
         {player.photoUrl ? (
-          <img src={player.photoUrl} alt={player.name} className="player-photo" />
+          <img src={player.photoUrl} alt={player.name} />
         ) : (
-          <div className="player-initials">
+          <div className="bbdl-player-card-initials">
             {player.name.split(' ').map(n => n[0]).join('').toUpperCase()}
           </div>
         )}
       </div>
 
-      <div className="player-info">
-        <h3 className="player-name">{player.name || '—'}</h3>
-        
-        <div className="player-meta">
-          <div className="meta-item">
-            <Home size={14} />
-            <span>{player.bio || '—'}</span>
-          </div>
-          {team && (
-            <div className="meta-item player-team-badge">
-              <TeamIcon iconId={team.icon} color={team.color} size={12} />
-              <span>{team.name || '—'}</span>
-            </div>
-          )}
+      {/* Name */}
+      <h3 className="bbdl-player-card-name">{player.name}</h3>
+
+      {/* Team Badge */}
+      {team && (
+        <div 
+          className="bbdl-player-card-team-badge"
+          title={team.name}
+        >
+          <TeamIcon iconId={team.icon} color="#64748b" size={16} />
+          <span className="team-badge-text">{team.name}</span>
         </div>
-        
-        <div className="player-stats-compact">
-          <div className="stat-item-compact">
-            <Shield size={14} />
-            <span className="stat-label">Record</span>
-            <span className="stat-value">{record ? `${record.wins}–${record.losses}` : '—'}</span>
-          </div>
-          <div className="stat-item-compact">
-            <Target size={14} />
-            <span className="stat-label">Avg Pts</span>
-            <span className="stat-value">{avgPoints?.toFixed(1) ?? '—'}</span>
-          </div>
+      )}
+
+      {/* Stats Row */}
+      <div className="bbdl-player-card-stats">
+        <div className="bbdl-player-card-stat-box">
+          <span className="stat-label">Record</span>
+          <span className="stat-value">
+            {record ? `${record.wins}–${record.losses}` : '0–0'}
+          </span>
+        </div>
+        <div className="bbdl-player-card-stat-box">
+          <span className="stat-label">Avg Pts</span>
+          <span className="stat-value">
+            {avgPoints !== undefined ? avgPoints.toFixed(1) : '0.0'}
+          </span>
         </div>
       </div>
+
+      {/* Bio Snippet */}
+      {player.bio && (
+        <p className="bbdl-player-card-bio">{player.bio}</p>
+      )}
     </div>
   );
 });
+
+PlayerCard.displayName = 'PlayerCard';
 
 export default PlayerCard;

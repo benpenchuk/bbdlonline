@@ -1,5 +1,5 @@
 import React from 'react';
-import { Users, Trophy, Target, ChevronDown } from 'lucide-react';
+import { ChevronRight } from 'lucide-react';
 import { Team, Player } from '../../core/types';
 import PlayerCard from '../common/PlayerCard';
 import TeamIcon from '../common/TeamIcon';
@@ -14,8 +14,8 @@ interface TeamSectionProps {
     totalGames: number;
     averagePoints: number;
   };
-  isInitiallyCollapsed: boolean;
-  onToggleCollapse: () => void;
+  isCollapsed: boolean;
+  onToggle: () => void;
   onPlayerClick: (player: Player, e: React.MouseEvent<HTMLDivElement> | React.KeyboardEvent<HTMLDivElement>) => void;
   playerStats: PlayerStatsMap;
 }
@@ -24,43 +24,44 @@ const TeamSection: React.FC<TeamSectionProps> = ({
   team, 
   players, 
   teamStats, 
-  isInitiallyCollapsed, 
-  onToggleCollapse,
+  isCollapsed, 
+  onToggle,
   onPlayerClick,
   playerStats,
 }) => {
-  return (
-    <div className="team-section" data-collapsed={isInitiallyCollapsed}>
-      <div className="team-header" onClick={onToggleCollapse} aria-expanded={!isInitiallyCollapsed}>
-        <div className="team-info-left">
-          <TeamIcon iconId={team.icon} color={team.color} size={24} />
-          <h2 className="team-name">{team.name}</h2>
-        </div>
-        <div className="team-header-stats">
-            <div className="team-header-stat">
-              <Users size={16} />
-              <strong>{players.length}</strong>
-              <span>Players</span>
-            </div>
-            <div className="team-header-stat">
-              <Trophy size={16} />
-              <strong>{teamStats.totalWins}</strong>
-              <span>Wins</span>
-            </div>
-            <div className="team-header-stat">
-              <Target size={16} />
-              <strong>{teamStats.averagePoints.toFixed(1)}</strong>
-              <span>Avg Pts</span>
-            </div>
-        </div>
-        <button className="collapse-icon">
-          <ChevronDown size={24} style={{ transform: isInitiallyCollapsed ? 'rotate(0deg)' : 'rotate(180deg)', transition: 'transform 0.3s' }} />
-        </button>
-      </div>
+  const teamRecord = `${teamStats.totalWins}–${teamStats.totalGames - teamStats.totalWins}`;
 
-      <div className="team-players-container" data-collapsed={isInitiallyCollapsed}>
+  return (
+    <div className="bbdl-team-section">
+      {/* Team Header (Clickable to Expand/Collapse) */}
+      <button
+        className="bbdl-team-section-header"
+        onClick={onToggle}
+        aria-expanded={!isCollapsed}
+        aria-controls={`team-players-${team.id}`}
+      >
+        <ChevronRight 
+          size={20} 
+          className={`chevron-icon ${isCollapsed ? '' : 'expanded'}`}
+        />
+        <TeamIcon iconId={team.icon} color={team.color} size={24} />
+        <h2 className="team-section-title">{team.name}</h2>
+        <div 
+          className="team-section-record"
+          title={`${team.name}: ${teamRecord}`}
+        >
+          {teamRecord}
+        </div>
+      </button>
+
+      {/* Team Players Container */}
+      <div 
+        id={`team-players-${team.id}`}
+        className={`bbdl-team-players-container ${isCollapsed ? 'collapsed' : 'expanded'}`}
+        aria-hidden={isCollapsed}
+      >
         {players.length > 0 ? (
-          <div className="players-grid">
+          <div className="bbdl-team-players-grid">
             {players.map(player => {
               const stats = playerStats.get(player.id);
               return (
@@ -76,8 +77,8 @@ const TeamSection: React.FC<TeamSectionProps> = ({
             })}
           </div>
         ) : (
-          <div className="empty-state" style={{padding: 'var(--space-lg)', minHeight: '100px'}}>
-            <p>No players match the current filters.</p>
+          <div className="bbdl-empty-state">
+            <p>No players on this team.</p>
           </div>
         )}
       </div>

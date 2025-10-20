@@ -100,6 +100,7 @@ export const mockPlayers: Player[] = [
     name: 'Tate Booch',
     teamId: 'team-1',
     bio: 'Once arm-wrestled a cactus and lost. The cactus cheated.',
+    year: 'senior',
     photoUrl: '/images/players/Tate Booch.png',
     stats: {
       wins: 0,
@@ -119,6 +120,7 @@ export const mockPlayers: Player[] = [
     name: 'Diddy',
     teamId: 'team-1',
     bio: 'Claims to have invented the color blue. We have our doubts.',
+    year: 'junior',
     photoUrl: '/images/players/Diddy.png',
     stats: {
       wins: 0,
@@ -138,6 +140,7 @@ export const mockPlayers: Player[] = [
     name: 'Donald Trump',
     teamId: 'team-2',
     bio: "Thinks 'HTML' is a type of sandwich. A tremendous sandwich, the best.",
+    year: 'senior',
     photoUrl: '/images/players/Donald Trump.png',
     stats: {
       wins: 0,
@@ -157,6 +160,7 @@ export const mockPlayers: Player[] = [
     name: 'Yancy Longin',
     teamId: 'team-2',
     bio: 'His spirit animal is a slightly confused pigeon.',
+    year: 'sophomore',
     photoUrl: '/images/players/Yancy Longin.png',
     stats: {
       wins: 0,
@@ -176,6 +180,7 @@ export const mockPlayers: Player[] = [
     name: 'Kamala Harris',
     teamId: 'team-3',
     bio: 'Laughs at her own jokes, which is good because no one else does.',
+    year: 'alumni',
     photoUrl: '/images/players/Kamala Harris.png',
     stats: {
       wins: 0,
@@ -195,6 +200,7 @@ export const mockPlayers: Player[] = [
     name: 'Noah Biggers',
     teamId: 'team-3',
     bio: "Has a pet rock named 'Dwayne'. They have deep conversations.",
+    year: 'freshman',
     photoUrl: '/images/players/Noah Biggers.jpg',
     stats: {
       wins: 0,
@@ -214,6 +220,7 @@ export const mockPlayers: Player[] = [
     name: 'Craig Brandstetter',
     teamId: 'team-4',
     bio: "Believes that pineapple on pizza is a war crime, and he's willing to die on that hill.",
+    year: 'junior',
     photoUrl: '/images/players/Craig Brandstetter.png',
     stats: {
       wins: 0,
@@ -233,6 +240,7 @@ export const mockPlayers: Player[] = [
     name: 'Mason Esworthy',
     teamId: 'team-4',
     bio: 'Still uses a flip phone. Unironically.',
+    year: 'sophomore',
     photoUrl: '/images/players/Mason Esworthy.png',
     stats: {
       wins: 0,
@@ -252,6 +260,7 @@ export const mockPlayers: Player[] = [
     name: 'George Washington',
     teamId: 'team-5',
     bio: 'Wooden teeth? Please. These are artisanal, small-batch, gluten-free dentures.',
+    year: 'alumni',
     photoUrl: '/images/players/George Washington.png',
     stats: {
       wins: 0,
@@ -271,6 +280,7 @@ export const mockPlayers: Player[] = [
     name: 'Evan Eisman',
     teamId: 'team-5',
     bio: "Convinced he's a wizard, but his only trick is making beer disappear.",
+    year: 'senior',
     photoUrl: '/images/players/Evan Eisman.png',
     stats: {
       wins: 0,
@@ -290,6 +300,7 @@ export const mockPlayers: Player[] = [
     name: 'Adam Carey',
     teamId: 'team-6',
     bio: 'Wears socks with sandals and dares you to say something.',
+    year: 'freshman',
     photoUrl: '/images/players/Adam Carey.png',
     stats: {
       wins: 0,
@@ -309,6 +320,7 @@ export const mockPlayers: Player[] = [
     name: 'Ben Penchuk',
     teamId: 'team-6',
     bio: 'Once tried to pay for a burrito with a half-eaten granola bar. The cashier was not amused.',
+    year: 'junior',
     photoUrl: '/images/players/Ben Penchuk.png',
     stats: {
       wins: 0,
@@ -328,6 +340,7 @@ export const mockPlayers: Player[] = [
     name: 'Jack Silk',
     teamId: 'team-7',
     bio: 'His secret talent is being able to parallel park a unicycle.',
+    year: 'sophomore',
     photoUrl: '/images/players/Jack Silk.png',
     stats: {
       wins: 0,
@@ -347,6 +360,7 @@ export const mockPlayers: Player[] = [
     name: 'Colin Gross',
     teamId: 'team-7',
     bio: 'Speaks fluent sarcasm and broken English.',
+    year: 'senior',
     photoUrl: '/images/players/Colin Gross.png',
     stats: {
       wins: 0,
@@ -366,6 +380,7 @@ export const mockPlayers: Player[] = [
     name: 'John Ertel',
     teamId: 'team-8',
     bio: "Is currently in a staring contest with a garden gnome. It's been three days.",
+    year: 'junior',
     photoUrl: '/images/players/John Ertel.png',
     stats: {
       wins: 0,
@@ -385,6 +400,7 @@ export const mockPlayers: Player[] = [
     name: 'Matt Malarkey',
     teamId: 'team-8',
     bio: "His last name is not an invitation for shenanigans. Or is it?",
+    year: 'freshman',
     photoUrl: '/images/players/Matt Malarkey.png',
     stats: {
       wins: 0,
