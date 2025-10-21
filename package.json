@@ -1,6 +1,6 @@
 {
   "name": "bbdl-frontend",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "private": true,
   "dependencies": {
     "@supabase/supabase-js": "^2.75.1",
