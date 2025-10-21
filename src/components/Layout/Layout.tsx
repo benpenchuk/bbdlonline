@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Home, Calendar, Users, BarChart3, Trophy, Settings, Mail, Menu, X } from 'lucide-react';
+import { Home, Calendar, Users, BarChart3, Trophy, Settings, Mail, Menu, X, List } from 'lucide-react';
 import { getConfig } from '../../core/config/appConfig';
 import VersionBanner from '../common/VersionBanner';
 
@@ -17,6 +17,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     { name: 'Home', href: '/', icon: Home },
     { name: 'Games', href: '/games', icon: Calendar },
     { name: 'Players', href: '/players', icon: Users },
+    { name: 'Standings', href: '/standings', icon: List },
     { name: 'Stats', href: '/stats', icon: BarChart3 },
     { name: 'Tournament', href: '/tournament', icon: Trophy },
     { name: 'Admin', href: '/admin', icon: Settings },

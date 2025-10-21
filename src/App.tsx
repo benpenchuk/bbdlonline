@@ -5,6 +5,7 @@ import HomePage from './pages/HomePage';
 import GamesPageESPN from './pages/GamesPageESPN';
 import PlayersPage from './pages/PlayersPage';
 import StatsPage from './pages/StatsPage';
+import StandingsPage from './pages/StandingsPage';
 import TournamentPage from './pages/TournamentPage';
 import AdminPage from './pages/AdminPage';
 import ContactPage from './pages/ContactPage';
@@ -22,6 +23,7 @@ function App() {
                 <Route path="/" element={<HomePage />} />
                 <Route path="/games" element={<GamesPageESPN />} />
                 <Route path="/players" element={<PlayersPage />} />
+                <Route path="/standings" element={<StandingsPage />} />
                 <Route path="/stats" element={<StatsPage />} />
                 <Route path="/tournament" element={<TournamentPage />} />
                 <Route path="/admin" element={<AdminPage />} />

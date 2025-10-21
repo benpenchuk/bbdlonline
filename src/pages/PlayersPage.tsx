@@ -43,34 +43,36 @@ const PlayersPage: React.FC = () => {
   // --- Modal State ---
   const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
   
-  // --- Team Collapse State ---
-  const [expandedTeams, setExpandedTeams] = useLocalStorage<Set<string>>(
+  // --- Team Collapse State (store as array, use as Set) ---
+  const [expandedTeamsArray, setExpandedTeamsArray] = useLocalStorage<string[]>(
     'bbdl-expanded-teams', 
-    new Set(teams.map(t => t.id))
+    teams.map(t => t.id)
   );
 
-  // Convert Set to/from JSON for localStorage
+  // Clean up corrupted localStorage data on mount
   useEffect(() => {
-    const stored = localStorage.getItem('bbdl-expanded-teams');
-    if (stored) {
-      try {
-        const parsed = JSON.parse(stored);
-        setExpandedTeams(new Set(Array.isArray(parsed) ? parsed : Object.values(parsed)));
-      } catch {
-        setExpandedTeams(new Set(teams.map(t => t.id)));
-      }
+    if (!Array.isArray(expandedTeamsArray)) {
+      setExpandedTeamsArray(teams.map(t => t.id));
     }
-  }, [teams]);
+  }, []); // Only run once on mount
+
+  // Convert array to Set for easy .has() checks
+  // Ensure expandedTeamsArray is always an array (in case of corrupted localStorage)
+  const expandedTeams = useMemo(() => {
+    const safeArray = Array.isArray(expandedTeamsArray) ? expandedTeamsArray : teams.map(t => t.id);
+    return new Set(safeArray);
+  }, [expandedTeamsArray, teams]);
 
   const toggleTeamExpand = (teamId: string) => {
-    setExpandedTeams(prev => {
-      const newSet = new Set(prev);
+    setExpandedTeamsArray(prev => {
+      const safeArray = Array.isArray(prev) ? prev : [];
+      const newSet = new Set(safeArray);
       if (newSet.has(teamId)) {
         newSet.delete(teamId);
       } else {
         newSet.add(teamId);
       }
-      return newSet;
+      return Array.from(newSet);
     });
   };
 
@@ -81,9 +83,9 @@ const PlayersPage: React.FC = () => {
 
   const toggleAllTeams = () => {
     if (areAllExpanded) {
-      setExpandedTeams(new Set());
+      setExpandedTeamsArray([]);
     } else {
-      setExpandedTeams(new Set(teams.map(t => t.id)));
+      setExpandedTeamsArray(teams.map(t => t.id));
     }
   };
 
