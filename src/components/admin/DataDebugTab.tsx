@@ -3,7 +3,7 @@ import { Database, Users, Calendar, Trophy } from 'lucide-react';
 import { useData } from '../../state';
 
 const DataDebugTab: React.FC = () => {
-  const { teams, players, games, tournaments, loading } = useData();
+  const { teams, players, games, playoffs, loading } = useData();
 
   return (
     <div className="admin-tab-content">
@@ -35,7 +35,7 @@ const DataDebugTab: React.FC = () => {
             </div>
             <div className="debug-item">
               <Trophy size={24} />
-              <span>Tournaments: {tournaments.length}</span>
+              <span>Playoffs: {playoffs.length}</span>
             </div>
           </div>
         </div>
@@ -46,7 +46,7 @@ const DataDebugTab: React.FC = () => {
             <p>bbdl-teams: {localStorage.getItem('bbdl-teams') ? 'Present' : 'Missing'}</p>
             <p>bbdl-players: {localStorage.getItem('bbdl-players') ? 'Present' : 'Missing'}</p>
             <p>bbdl-games: {localStorage.getItem('bbdl-games') ? 'Present' : 'Missing'}</p>
-            <p>bbdl-tournaments: {localStorage.getItem('bbdl-tournaments') ? 'Present' : 'Missing'}</p>
+            <p>bbdl-playoffs: {localStorage.getItem('bbdl-playoffs') ? 'Present' : 'Missing'}</p>
             <p>bbdl-announcements: {localStorage.getItem('bbdl-announcements') ? 'Present' : 'Missing'}</p>
           </div>
         </div>
@@ -72,12 +72,12 @@ const DataDebugTab: React.FC = () => {
           <button 
             className="btn btn-secondary"
             onClick={() => {
-              console.log('Current state:', { teams, players, games, tournaments });
+              console.log('Current state:', { teams, players, games, playoffs });
               console.log('LocalStorage contents:', {
                 teams: localStorage.getItem('bbdl-teams'),
                 players: localStorage.getItem('bbdl-players'),
                 games: localStorage.getItem('bbdl-games'),
-                tournaments: localStorage.getItem('bbdl-tournaments'),
+                playoffs: localStorage.getItem('bbdl-playoffs'),
                 announcements: localStorage.getItem('bbdl-announcements')
               });
             }}

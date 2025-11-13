@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { BarChart3, Trophy, Target, Zap, Award, Users, Swords } from 'lucide-react';
 import { useData } from '../state';
-import { Player, Team, Game } from '../core/types';
 import { calculateSeasonStats, calculateHeadToHead } from '../core/utils/statsCalculations';
 import { getLeagueLeaders } from '../core/services/stats';
 import LoadingSpinner from '../components/common/LoadingSpinner';
@@ -12,7 +11,7 @@ import HeadToHeadComparison from '../components/stats/HeadToHeadComparison';
 import NotableRecords from '../components/stats/NotableRecords';
 
 const StatsPage: React.FC = () => {
-  const { players, teams, games, loading } = useData();
+  const { players, teams, games, playerTeams, loading } = useData();
   
   // Active tabs and selections
   const [activeLeaderboard, setActiveLeaderboard] = useState<'wins' | 'average' | 'shutouts' | 'blowouts' | 'clutch' | 'streak'>('wins');
@@ -128,6 +127,7 @@ const StatsPage: React.FC = () => {
             entries={leaderboards[activeLeaderboard]}
             players={players}
             teams={teams}
+            playerTeams={playerTeams}
             category={activeLeaderboard}
           />
         </section>
@@ -157,6 +157,7 @@ const StatsPage: React.FC = () => {
               teams={teams}
               games={games}
               players={players}
+              playerTeams={playerTeams}
             />
           )}
         </section>
@@ -213,6 +214,7 @@ const StatsPage: React.FC = () => {
             players={players}
             teams={teams}
             games={games}
+            playerTeams={playerTeams}
           />
         </section>
       </div>

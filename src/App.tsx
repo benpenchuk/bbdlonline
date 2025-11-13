@@ -6,7 +6,8 @@ import GamesPageESPN from './pages/GamesPageESPN';
 import PlayersPage from './pages/PlayersPage';
 import StatsPage from './pages/StatsPage';
 import StandingsPage from './pages/StandingsPage';
-import TournamentPage from './pages/TournamentPage';
+import TeamPage from './pages/TeamPage';
+import PlayoffsPage from './pages/PlayoffsPage';
 import AdminPage from './pages/AdminPage';
 import ContactPage from './pages/ContactPage';
 import { AppProvider, DataProvider, AuthProvider } from './state';
@@ -24,8 +25,9 @@ function App() {
                 <Route path="/games" element={<GamesPageESPN />} />
                 <Route path="/players" element={<PlayersPage />} />
                 <Route path="/standings" element={<StandingsPage />} />
+                <Route path="/team/:id" element={<TeamPage />} />
                 <Route path="/stats" element={<StatsPage />} />
-                <Route path="/tournament" element={<TournamentPage />} />
+                <Route path="/playoffs" element={<PlayoffsPage />} />
                 <Route path="/admin" element={<AdminPage />} />
                 <Route path="/contact" element={<ContactPage />} />
               </Routes>

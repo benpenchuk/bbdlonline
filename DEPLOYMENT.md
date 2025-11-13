@@ -6,6 +6,10 @@ This guide covers how to deploy updates to your BBDL application with versioning
 
 ### 1. Deploy with Version Tag
 ```bash
+
+FIRST:
+cd bbdl-frontend/
+
 # For patch updates (1.1.2 -> 1.1.3)
 npm run deploy:patch
 

@@ -1,91 +1,209 @@
 /* Import Fonts */
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Open+Sans:wght@400;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
 /* Design Tokens - CSS Variables */
 :root {
-  /* Colors */
-  --color-primary: #003366;
-  --color-primary-dark: #002244;
-  --color-accent: #A7BCD6;
-  --color-accent-hover: #9AB0C9;
-  --color-secondary: #984857;
+  /* =====================================================
+     COLOR SYSTEM - LIGHT MODE
+     ===================================================== */
   
-  --color-background: #F4F6F8;
-  --color-surface: #FFFFFF;
+  /* Primary - Deep Navy */
+  --color-primary: #0f172a;           /* Headlines, primary actions, navigation */
+  --color-primary-dark: #020617;     /* Hover states, active elements */
+  --color-primary-light: #1e293b;    /* Subtle backgrounds */
   
-  --color-text-primary: #2C3E50;
-  --color-text-secondary: #7F8C8D;
-  --color-text-light: #FFFFFF;
+  /* Secondary - Confident Crimson */
+  --color-secondary: #dc2626;         /* Key highlights, big moments, wins */
+  --color-secondary-light: #ef4444;   /* Hover states */
+  --color-secondary-dark: #b91c1c;   /* Pressed states */
   
-  --color-border: #D8E0E8;
-  --color-error: #E74C3C;
-  --color-success: #27ae60;
-  --color-warning: #f39c12;
-
-  --color-status-completed: #2ecc71;
-  --color-status-scheduled: #bdc3c7;
-  --color-status-cancelled: #e74c3c;
+  /* Accent - Warm Amber */
+  --color-accent: #f59e0b;            /* Leaderboards, badges, trending stats */
+  --color-accent-light: #fbbf24;      /* Highlights */
+  --color-accent-hover: #d97706;      /* Hover states */
   
-  --color-gold: #f1c40f;
-  --color-silver: #bdc3c7;
-  --color-bronze: #cd7f32;
-
-  /* Typography */
-  --font-heading: 'Montserrat', sans-serif;
-  --font-body: 'Open Sans', sans-serif;
-
-  --font-size-xs: 0.75rem;   /* 12px */
-  --font-size-sm: 0.875rem;  /* 14px */
-  --font-size-base: 1rem;     /* 16px */
-  --font-size-lg: 1.125rem;  /* 18px */
-  --font-size-xl: 1.25rem;   /* 20px */
+  /* Neutrals - Cool Slate/Blue-Gray */
+  --color-background: #f8fafc;        /* Page background */
+  --color-surface: #f1f5f9;           /* Card backgrounds */
+  --color-surface-elevated: #ffffff;  /* Elevated surfaces */
+  --color-border: #e2e8f0;            /* Borders */
+  --color-border-light: #f1f5f9;       /* Light borders */
+  --color-divider: #cbd5e1;           /* Dividers */
+  
+  /* Text Colors */
+  --color-text-primary: #0f172a;      /* Primary text */
+  --color-text-secondary: #64748b;     /* Secondary text */
+  --color-text-muted: #475569;         /* Muted text */
+  --color-text-light: #ffffff;         /* Light text on dark */
+  --color-text-on-primary: #ffffff;    /* Text on primary color */
+  
+  /* Status Colors */
+  --color-success: #10b981;            /* Win/Success */
+  --color-success-light: #34d399;      /* Success hover */
+  --color-error: #ef4444;               /* Loss/Error */
+  --color-error-light: #f87171;         /* Error hover */
+  --color-warning: #f59e0b;            /* Warning */
+  --color-info: #3b82f6;               /* Info */
+  
+  /* Status States */
+  --color-status-completed: #10b981;   /* Completed games */
+  --color-status-scheduled: #64748b;    /* Scheduled games */
+  --color-status-in-progress: #ef4444; /* Live/In-progress */
+  --color-status-cancelled: #ef4444;    /* Cancelled */
+  --color-status-live: #ef4444;        /* Live indicator */
+  
+  /* Rank Colors */
+  --color-gold: #fbbf24;               /* Gold - 1st place */
+  --color-silver: #94a3b8;             /* Silver - 2nd place */
+  --color-bronze: #d97706;             /* Bronze - 3rd place */
+  
+  /* =====================================================
+     TYPOGRAPHY
+     ===================================================== */
+  
+  --font-heading: 'Inter', 'System UI', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-body: 'Inter', 'System UI', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono: 'Inter', 'SF Mono', 'Monaco', 'Cascadia Code', 'Roboto Mono', monospace;
+  
+  --font-size-xs: 0.75rem;    /* 12px */
+  --font-size-sm: 0.875rem;   /* 14px */
+  --font-size-base: 1rem;      /* 16px */
+  --font-size-lg: 1.125rem;   /* 18px */
+  --font-size-xl: 1.25rem;    /* 20px */
   --font-size-2xl: 1.5rem;    /* 24px */
-  --font-size-3xl: 1.875rem; /* 30px */
+  --font-size-3xl: 1.875rem;  /* 30px */
   --font-size-4xl: 2.25rem;   /* 36px */
-
+  --font-size-5xl: 3rem;      /* 48px - Bold page titles */
+  
   --font-weight-regular: 400;
   --font-weight-medium: 500;
   --font-weight-semibold: 600;
   --font-weight-bold: 700;
-
+  
   --line-height-tight: 1.2;
   --line-height-normal: 1.5;
   --line-height-loose: 1.75;
-
-  /* Spacing */
-  --space-xs: 0.25rem;  /* 4px */
-  --space-sm: 0.5rem;   /* 8px */
-  --space-md: 1rem;     /* 16px */
-  --space-lg: 1.5rem;   /* 24px */
-  --space-xl: 2rem;     /* 32px */
-  --space-2xl: 3rem;    /* 48px */
-
-  /* Borders & Radii */
-  --border-radius-sm: 4px;
-  --border-radius-md: 8px;
+  
+  /* =====================================================
+     SPACING
+     ===================================================== */
+  
+  --space-xs: 0.25rem;    /* 4px */
+  --space-sm: 0.5rem;     /* 8px */
+  --space-md: 1rem;       /* 16px */
+  --space-lg: 1.5rem;     /* 24px */
+  --space-xl: 2rem;       /* 32px */
+  --space-2xl: 3rem;      /* 48px */
+  --space-3xl: 4rem;      /* 64px */
+  --space-4xl: 6rem;      /* 96px */
+  
+  /* =====================================================
+     BORDERS & RADII
+     ===================================================== */
+  
+  --border-radius-sm: 6px;
+  --border-radius-md: 12px;
   --border-radius-lg: 16px;
+  --border-radius-xl: 20px;
   --border-radius-full: 9999px;
   
   --border-width: 1px;
-  --border-style: solid;
-
-  /* Shadows (Elevation) */
+  --border-width-thick: 2px;
+  
+  /* =====================================================
+     SHADOWS
+     ===================================================== */
+  
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
-  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
-
-  /* Transitions */
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.05);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
+  --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  
+  /* =====================================================
+     TRANSITIONS & ANIMATIONS
+     ===================================================== */
+  
   --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-normal: 300ms cubic-bezier(0.4, 0, 0.2, 1);
-
-  /* Z-Index */
+  --transition-normal: 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: 250ms cubic-bezier(0.4, 0, 0.2, 1);
+  
+  /* =====================================================
+     Z-INDEX
+     ===================================================== */
+  
   --z-index-dropdown: 1000;
   --z-index-sticky: 1020;
   --z-index-modal-backdrop: 1040;
   --z-index-modal: 1050;
   --z-index-popover: 1060;
   --z-index-tooltip: 1070;
+  
+  /* =====================================================
+     FOCUS RINGS
+     ===================================================== */
+  
+  --focus-ring: 0 0 0 2px var(--color-surface-elevated), 0 0 0 4px var(--color-primary);
+  --focus-ring-offset: 2px;
+}
+
+/* =====================================================
+   DARK MODE
+   ===================================================== */
+
+[data-theme="dark"] {
+    /* Primary - Lightened Navy for Readability */
+    --color-primary: #3b82f6;
+    --color-primary-dark: #2563eb;
+    --color-primary-light: #60a5fa;
+    
+    /* Secondary - Crimson (Slightly Brighter) */
+    --color-secondary: #ef4444;
+    --color-secondary-light: #f87171;
+    --color-secondary-dark: #dc2626;
+    
+    /* Accent - Warmed Amber */
+    --color-accent: #fbbf24;
+    --color-accent-light: #fcd34d;
+    --color-accent-hover: #f59e0b;
+    
+    /* Neutrals - Softened Grays with Blue Tint */
+    --color-background: #020617;        /* Near black */
+    --color-surface: #0a0e1a;           /* Deep blue-black */
+    --color-surface-elevated: #1e293b; /* Elevated surfaces */
+    --color-border: #334155;            /* Borders */
+    --color-border-light: #1e293b;      /* Light borders */
+    --color-divider: #475569;           /* Dividers */
+    
+    /* Text Colors */
+    --color-text-primary: #cbd5e1;      /* Primary text */
+    --color-text-secondary: #64748b;    /* Secondary text */
+    --color-text-muted: #475569;        /* Muted text */
+    --color-text-light: #ffffff;        /* Light text */
+    --color-text-on-primary: #ffffff;   /* Text on primary */
+    
+    /* Status Colors - Adjusted for Dark Mode */
+    --color-success: #10b981;
+    --color-success-light: #34d399;
+    --color-error: #f87171;              /* Slightly brighter for dark */
+    --color-error-light: #fca5a5;
+    --color-warning: #fbbf24;            /* Warmed amber */
+    --color-info: #60a5fa;               /* Lighter blue */
+    
+    /* Status States */
+    --color-status-completed: #10b981;
+    --color-status-scheduled: #64748b;
+    --color-status-in-progress: #f87171;
+    --color-status-cancelled: #f87171;
+    --color-status-live: #f87171;
+    
+    /* Rank Colors */
+    --color-gold: #fcd34d;               /* Brightened gold */
+    --color-silver: #94a3b8;
+    --color-bronze: #f59e0b;             /* Warmed bronze */
+    
+    /* Focus Ring - Brightened for Dark Mode */
+    --focus-ring: 0 0 0 2px var(--color-surface-elevated), 0 0 0 4px var(--color-primary);
 }
 
 /* Base Styles */
@@ -102,6 +220,9 @@ body {
   color: var(--color-text-primary);
   background-color: var(--color-background);
   line-height: var(--line-height-normal);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  transition: background-color var(--transition-normal), color var(--transition-normal);
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -109,13 +230,34 @@ h1, h2, h3, h4, h5, h6 {
   font-weight: var(--font-weight-bold);
   line-height: var(--line-height-tight);
   margin-bottom: var(--space-md);
-  color: var(--color-primary-dark);
+  color: var(--color-text-primary);
+  letter-spacing: -0.025em;
 }
 
-h1 { font-size: var(--font-size-4xl); }
-h2 { font-size: var(--font-size-3xl); }
-h3 { font-size: var(--font-size-2xl); }
-h4 { font-size: var(--font-size-xl); }
+h1 { 
+  font-size: var(--font-size-5xl);
+  font-weight: var(--font-weight-bold);
+}
+h2 { 
+  font-size: var(--font-size-4xl);
+  font-weight: var(--font-weight-bold);
+}
+h3 { 
+  font-size: var(--font-size-3xl);
+  font-weight: var(--font-weight-bold);
+}
+h4 { 
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-semibold);
+}
+h5 { 
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-semibold);
+}
+h6 { 
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+}
 
 a {
   color: var(--color-primary);
@@ -128,33 +270,48 @@ a:hover {
   color: var(--color-primary-dark);
 }
 
+a:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+  border-radius: var(--border-radius-sm);
+}
+
 p {
   margin-bottom: var(--space-md);
   color: var(--color-text-secondary);
 }
 
+/* Tabular Numbers for Data */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+  font-family: var(--font-mono);
+}
+
 code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
-  background-color: var(--color-accent);
+  font-family: var(--font-mono);
+  background-color: var(--color-surface);
   padding: 0.2em 0.4em;
   border-radius: var(--border-radius-sm);
   font-size: 85%;
+  border: 1px solid var(--color-border);
 }
 
 /* Scrollbar styles */
 ::-webkit-scrollbar {
   width: 10px;
+  height: 10px;
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--color-background);
+  background: var(--color-surface);
+  border-radius: var(--border-radius-full);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--color-accent);
+  background: var(--color-border);
   border-radius: var(--border-radius-full);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--color-accent-hover);
+  background: var(--color-text-secondary);
 }

@@ -1,8 +1,11 @@
 import React, { useState, useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import { Search, Trophy, TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import { useData } from '../state';
-import { Team, Game } from '../core/types';
+import { Team, Game, Season, TeamSeasonStats } from '../core/types';
 import LoadingSpinner from '../components/common/LoadingSpinner';
+import { getWinnerId } from '../core/utils/gameHelpers';
+import TeamIcon from '../components/common/TeamIcon';
 
 // =====================================================
 // TYPES
@@ -24,34 +27,24 @@ interface TeamStanding {
   last5Games: ('W' | 'L')[];
 }
 
-interface HeadToHeadRecord {
-  [teamId: string]: { wins: number; losses: number };
-}
-
 // =====================================================
 // HELPER FUNCTIONS
 // =====================================================
 
-const getSeasonFromGame = (game: Game): string => {
-  const date = game.completedDate || game.scheduledDate;
-  const year = date.getFullYear();
-  return `${year}`;
-};
-
-const getAvailableSeasons = (games: Game[]): string[] => {
-  const seasons = new Set<string>();
+const getAvailableSeasons = (seasons: Season[], games: Game[]): string[] => {
+  // Get seasons that have completed games
+  const seasonsWithGames = new Set<string>();
   games.forEach(game => {
-    seasons.add(getSeasonFromGame(game));
+    if (game.status === 'completed' && game.seasonId) {
+      seasonsWithGames.add(game.seasonId);
+    }
   });
   
-  const sortedSeasons = Array.from(seasons).sort((a, b) => b.localeCompare(a));
+  const availableSeasons = seasons
+    .filter(s => seasonsWithGames.has(s.id))
+    .sort((a, b) => b.year - a.year);
   
-  // Add "Demo Data Season" if there are no specific seasons or as a catch-all
-  if (sortedSeasons.length === 0 || games.some(g => getSeasonFromGame(g) === new Date().getFullYear().toString())) {
-    return ['All Time', ...sortedSeasons];
-  }
-  
-  return ['All Time', ...sortedSeasons];
+  return ['All Time', ...availableSeasons.map(s => s.id)];
 };
 
 const calculateHeadToHead = (team1Id: string, team2Id: string, games: Game[]): { team1Wins: number; team2Wins: number } => {
@@ -61,13 +54,14 @@ const calculateHeadToHead = (team1Id: string, team2Id: string, games: Game[]): {
   games.forEach(game => {
     if (game.status !== 'completed') return;
     
-    const isMatchup = (game.team1Id === team1Id && game.team2Id === team2Id) ||
-                     (game.team1Id === team2Id && game.team2Id === team1Id);
+    const isMatchup = (game.homeTeamId === team1Id && game.awayTeamId === team2Id) ||
+                     (game.homeTeamId === team2Id && game.awayTeamId === team1Id);
     
     if (isMatchup) {
-      if (game.winnerId === team1Id) {
+      const winnerId = getWinnerId(game);
+      if (winnerId === team1Id) {
         team1Wins++;
-      } else if (game.winnerId === team2Id) {
+      } else if (winnerId === team2Id) {
         team2Wins++;
       }
     }
@@ -80,22 +74,22 @@ const calculateStreak = (teamId: string, games: Game[]): string => {
   const teamGames = games
     .filter(g => 
       g.status === 'completed' && 
-      (g.team1Id === teamId || g.team2Id === teamId)
+      (g.homeTeamId === teamId || g.awayTeamId === teamId)
     )
     .sort((a, b) => {
-      const dateA = (a.completedDate || a.scheduledDate).getTime();
-      const dateB = (b.completedDate || b.scheduledDate).getTime();
+      const dateA = a.gameDate ? a.gameDate.getTime() : 0;
+      const dateB = b.gameDate ? b.gameDate.getTime() : 0;
       return dateB - dateA; // Most recent first
     });
   
   if (teamGames.length === 0) return '-';
   
   const lastGame = teamGames[0];
-  const isWin = lastGame.winnerId === teamId;
+  const isWin = getWinnerId(lastGame) === teamId;
   let streakCount = 0;
   
   for (const game of teamGames) {
-    const gameIsWin = game.winnerId === teamId;
+    const gameIsWin = getWinnerId(game) === teamId;
     if (gameIsWin === isWin) {
       streakCount++;
     } else {
@@ -110,58 +104,71 @@ const calculateLast5 = (teamId: string, games: Game[]): { record: string; result
   const teamGames = games
     .filter(g => 
       g.status === 'completed' && 
-      (g.team1Id === teamId || g.team2Id === teamId)
+      (g.homeTeamId === teamId || g.awayTeamId === teamId)
     )
     .sort((a, b) => {
-      const dateA = (a.completedDate || a.scheduledDate).getTime();
-      const dateB = (b.completedDate || b.scheduledDate).getTime();
+      const dateA = a.gameDate ? a.gameDate.getTime() : 0;
+      const dateB = b.gameDate ? b.gameDate.getTime() : 0;
       return dateB - dateA; // Most recent first
     })
     .slice(0, 5);
   
   if (teamGames.length === 0) return { record: '0-0', results: [] };
   
-  const results = teamGames.map(game => game.winnerId === teamId ? 'W' : 'L') as ('W' | 'L')[];
+  const results = teamGames.map(game => getWinnerId(game) === teamId ? 'W' : 'L') as ('W' | 'L')[];
   const wins = results.filter(r => r === 'W').length;
   const losses = results.filter(r => r === 'L').length;
   
   return { record: `${wins}-${losses}`, results: results.reverse() }; // Reverse to show oldest to newest
 };
 
-const calculateTeamStandings = (teams: Team[], games: Game[]): TeamStanding[] => {
-  // Calculate basic stats for each team
+const calculateTeamStandings = (
+  teams: Team[],
+  games: Game[],
+  teamSeasonStats: TeamSeasonStats[],
+  selectedSeasonId: string | null
+): TeamStanding[] => {
+  // Get stats for the selected season (or aggregate all seasons if "All Time")
+  const statsForSeason = selectedSeasonId && selectedSeasonId !== 'All Time'
+    ? teamSeasonStats.filter(s => s.seasonId === selectedSeasonId)
+    : teamSeasonStats;
+
+  // Calculate basic stats for each team using database stats
   const standings: TeamStanding[] = teams.map(team => {
-    const teamGames = games.filter(g => 
-      g.status === 'completed' && 
-      (g.team1Id === team.id || g.team2Id === team.id)
-    );
-    
+    // Aggregate stats if "All Time", otherwise use single season stats
     let wins = 0;
     let losses = 0;
     let pointsFor = 0;
     let pointsAgainst = 0;
-    
-    teamGames.forEach(game => {
-      const isTeam1 = game.team1Id === team.id;
-      const teamScore = isTeam1 ? (game.team1Score || 0) : (game.team2Score || 0);
-      const opponentScore = isTeam1 ? (game.team2Score || 0) : (game.team1Score || 0);
-      
-      pointsFor += teamScore;
-      pointsAgainst += opponentScore;
-      
-      if (game.winnerId === team.id) {
-        wins++;
-      } else {
-        losses++;
+    let gamesPlayed = 0;
+
+    if (selectedSeasonId === 'All Time') {
+      // Aggregate across all seasons
+      const teamAllStats = teamSeasonStats.filter(s => s.teamId === team.id);
+      teamAllStats.forEach(stat => {
+        wins += stat.wins;
+        losses += stat.losses;
+        pointsFor += stat.pointsFor;
+        pointsAgainst += stat.pointsAgainst;
+        gamesPlayed += stat.gamesPlayed;
+      });
+    } else {
+      // Single season stats
+      const teamStat = statsForSeason.find(s => s.teamId === team.id);
+      if (teamStat) {
+        wins = teamStat.wins;
+        losses = teamStat.losses;
+        pointsFor = teamStat.pointsFor;
+        pointsAgainst = teamStat.pointsAgainst;
+        gamesPlayed = teamStat.gamesPlayed;
       }
-    });
-    
-    const gamesPlayed = wins + losses;
+    }
+
     const winPercentage = gamesPlayed > 0 ? wins / gamesPlayed : 0;
     const pointDifferential = pointsFor - pointsAgainst;
     const streak = calculateStreak(team.id, games);
     const last5Data = calculateLast5(team.id, games);
-    
+
     return {
       rank: 0, // Will be set after sorting
       team,
@@ -208,7 +215,6 @@ const calculateTeamStandings = (teams: Team[], games: Game[]): TeamStanding[] =>
   
   // Assign ranks and calculate games behind
   const leader = standings[0];
-  const leaderWinPct = leader ? leader.winPercentage : 0;
   
   standings.forEach((standing, index) => {
     standing.rank = index + 1;
@@ -231,37 +237,36 @@ const calculateTeamStandings = (teams: Team[], games: Game[]): TeamStanding[] =>
 // =====================================================
 
 const StandingsPage: React.FC = () => {
-  const { teams, games, loading } = useData();
+  const { teams, games, seasons, teamSeasonStats, loading } = useData();
   const [selectedSeason, setSelectedSeason] = useState<string>('All Time');
   const [searchQuery, setSearchQuery] = useState<string>('');
   
   // Get available seasons
   const availableSeasons = useMemo(() => {
-    return getAvailableSeasons(games);
-  }, [games]);
+    return getAvailableSeasons(seasons, games);
+  }, [seasons, games]);
   
   // Set default season on mount
   React.useEffect(() => {
     if (availableSeasons.length > 0 && !availableSeasons.includes(selectedSeason)) {
       setSelectedSeason(availableSeasons[0]);
     }
-  }, [availableSeasons]);
+  }, [availableSeasons, selectedSeason]);
   
-  // Filter games by selected season
+  // Filter games by selected season (for streak and last5 calculations)
   const filteredGames = useMemo(() => {
     if (selectedSeason === 'All Time') {
       return games.filter(g => g.status === 'completed');
     }
     return games.filter(g => {
-      const season = getSeasonFromGame(g);
-      return season === selectedSeason && g.status === 'completed';
+      return g.seasonId === selectedSeason && g.status === 'completed';
     });
   }, [games, selectedSeason]);
   
-  // Calculate standings
+  // Calculate standings using database stats
   const standings = useMemo(() => {
-    return calculateTeamStandings(teams, filteredGames);
-  }, [teams, filteredGames]);
+    return calculateTeamStandings(teams, filteredGames, teamSeasonStats, selectedSeason);
+  }, [teams, filteredGames, teamSeasonStats, selectedSeason]);
   
   // Filter standings by search query
   const filteredStandings = useMemo(() => {
@@ -300,11 +305,17 @@ const StandingsPage: React.FC = () => {
               onChange={(e) => setSelectedSeason(e.target.value)}
               className="season-dropdown"
             >
-              {availableSeasons.map(season => (
-                <option key={season} value={season}>
-                  {season}
-                </option>
-              ))}
+              {availableSeasons.map(seasonId => {
+                if (seasonId === 'All Time') {
+                  return <option key={seasonId} value={seasonId}>{seasonId}</option>;
+                }
+                const season = seasons.find(s => s.id === seasonId);
+                return (
+                  <option key={seasonId} value={seasonId}>
+                    {season ? season.name : seasonId}
+                  </option>
+                );
+              })}
             </select>
           </div>
         </div>
@@ -362,23 +373,18 @@ const StandingsPage: React.FC = () => {
                   <tr 
                     key={standing.team.id} 
                     className="standings-row"
-                    onClick={() => {
-                      // TODO: Navigate to team detail page if it exists
-                      console.log('Clicked team:', standing.team.name);
-                    }}
                   >
                     <td className="standings-td standings-td-rank">
                       {standing.rank === 1 && <Trophy size={16} className="rank-icon" />}
                       {standing.rank}
                     </td>
                     <td className="standings-td standings-td-team">
-                      <div className="team-cell">
-                        <div 
-                          className="team-color-indicator" 
-                          style={{ backgroundColor: standing.team.color }}
-                        />
-                        <span className="team-name">{standing.team.name}</span>
-                      </div>
+                      <Link to={`/team/${standing.team.id}`} className="team-cell-link">
+                        <div className="team-cell">
+                          <TeamIcon iconId={standing.team.abbreviation} color="#3b82f6" size={20} />
+                          <span className="team-name">{standing.team.name}</span>
+                        </div>
+                      </Link>
                     </td>
                     <td className="standings-td standings-td-record">
                       {standing.wins}-{standing.losses}
@@ -433,13 +439,10 @@ const StandingsPage: React.FC = () => {
           {/* Mobile Card View */}
           <div className="standings-cards-container">
             {filteredStandings.map(standing => (
-              <div 
+              <Link 
                 key={standing.team.id} 
+                to={`/team/${standing.team.id}`}
                 className="standings-card"
-                onClick={() => {
-                  // TODO: Navigate to team detail page if it exists
-                  console.log('Clicked team:', standing.team.name);
-                }}
               >
                 <div className="standings-card-header">
                   <div className="standings-card-rank">
@@ -447,10 +450,7 @@ const StandingsPage: React.FC = () => {
                     <span className="rank-number">#{standing.rank}</span>
                   </div>
                   <div className="standings-card-team">
-                    <div 
-                      className="team-color-indicator" 
-                      style={{ backgroundColor: standing.team.color }}
-                    />
+                    <TeamIcon iconId={standing.team.abbreviation} color="#3b82f6" size={20} />
                     <span className="team-name">{standing.team.name}</span>
                   </div>
                 </div>
@@ -508,7 +508,7 @@ const StandingsPage: React.FC = () => {
                     ))}
                   </div>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
         </>

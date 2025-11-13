@@ -1,166 +1,214 @@
-import React from 'react';
-import { Calendar, Trophy, TrendingUp, Users, Clock, Award } from 'lucide-react';
+import React, { useMemo } from 'react';
 import { useData } from '../state';
-import { getConfig } from '../core/config/appConfig';
-import { calculateSeasonStats, sortGames } from '../core/utils/statsCalculations';
-import { getLeagueLeaders } from '../core/services/stats';
+import { Game } from '../core/types';
 import LoadingSpinner from '../components/common/LoadingSpinner';
-import StatCard from '../components/common/StatCard';
-import GameCard from '../components/common/GameCard';
-import PlayerCard from '../components/common/PlayerCard';
-import HeroSection from '../components/common/HeroSection';
-import WeatherWidget from '../components/common/WeatherWidget';
+import CompactStandings from '../components/home/CompactStandings';
+import CompactScores from '../components/home/CompactScores';
+import CompactStatsLeaders from '../components/home/CompactStatsLeaders';
+import AnnouncementCard from '../components/home/AnnouncementCard';
+import PhotoCarousel from '../components/home/PhotoCarousel';
 import SponsorCarousel from '../components/common/SponsorCarousel';
 
 const HomePage: React.FC = () => {
-  const { games, players, teams, announcements, loading } = useData();
-  const config = getConfig();
+  const { 
+    games, 
+    players, 
+    teams, 
+    playerTeams, 
+    playerGameStats,
+    playerSeasonStats,
+    teamSeasonStats,
+    announcements,
+    photos,
+    activeSeason,
+    loading,
+    getActiveAnnouncement,
+    getFeaturedPhoto
+  } = useData();
+
+  // Filter data by active season
+  const seasonGames = useMemo(() => {
+    if (!activeSeason) return games;
+    return games.filter(game => game.seasonId === activeSeason.id);
+  }, [games, activeSeason]);
+
+  const seasonPlayerSeasonStats = useMemo(() => {
+    if (!activeSeason) return playerSeasonStats;
+    return playerSeasonStats.filter(stat => stat.seasonId === activeSeason.id);
+  }, [playerSeasonStats, activeSeason]);
+
+  const seasonTeamSeasonStats = useMemo(() => {
+    if (!activeSeason) return teamSeasonStats;
+    return teamSeasonStats.filter(stat => stat.seasonId === activeSeason.id);
+  }, [teamSeasonStats, activeSeason]);
+
+  const seasonPlayerTeams = useMemo(() => {
+    if (!activeSeason) return playerTeams;
+    return playerTeams.filter(pt => pt.seasonId === activeSeason.id && pt.status === 'active');
+  }, [playerTeams, activeSeason]);
+
+  const seasonPlayerGameStats = useMemo(() => {
+    if (!activeSeason) return playerGameStats;
+    return playerGameStats.filter(stat => stat.seasonId === activeSeason.id);
+  }, [playerGameStats, activeSeason]);
+
+  // Get active announcement for current season
+  const activeAnnouncement = useMemo(() => {
+    if (!activeSeason) return null;
+    return announcements.find(a => a.seasonId === activeSeason.id && a.active) || null;
+  }, [announcements, activeSeason]);
+
+  // Get featured photo and season photos
+  const featuredPhoto = useMemo(() => {
+    if (!activeSeason) return null;
+    return photos.find(p => p.seasonId === activeSeason.id && p.isFeatured) || null;
+  }, [photos, activeSeason]);
+
+  const seasonPhotos = useMemo(() => {
+    if (!activeSeason) return photos;
+    return photos.filter(p => p.seasonId === activeSeason.id);
+  }, [photos, activeSeason]);
+
+  // Filter teams to only those with players in the active season
+  const seasonTeams = useMemo(() => {
+    if (!activeSeason) return teams;
+    const seasonTeamIds = new Set(seasonPlayerTeams.map(pt => pt.teamId));
+    return teams.filter(team => seasonTeamIds.has(team.id));
+  }, [teams, seasonPlayerTeams, activeSeason]);
+
+  // Calculate current week: Sunday 12:00 PM to following Saturday 11:59 PM
+  const getCurrentWeekRange = () => {
+    const now = new Date();
+    const currentDay = now.getDay(); // 0 = Sunday, 6 = Saturday
+    const currentHour = now.getHours();
+    
+    // Find the most recent Sunday at 12:00 PM
+    let weekStart = new Date(now);
+    weekStart.setHours(12, 0, 0, 0);
+    
+    // If it's Sunday but before 12 PM, go back to previous Sunday
+    if (currentDay === 0 && currentHour < 12) {
+      weekStart.setDate(weekStart.getDate() - 7);
+    } else {
+      // Go back to the most recent Sunday
+      const daysToSubtract = currentDay === 0 ? 0 : currentDay;
+      weekStart.setDate(weekStart.getDate() - daysToSubtract);
+    }
+    
+    // Week ends on Saturday at 11:59 PM
+    const weekEnd = new Date(weekStart);
+    weekEnd.setDate(weekEnd.getDate() + 6);
+    weekEnd.setHours(23, 59, 59, 999);
+    
+    return { weekStart, weekEnd };
+  };
+
+  // Get current week games with fallback
+  const currentWeekGames = useMemo(() => {
+    const { weekStart, weekEnd } = getCurrentWeekRange();
+    
+    // First, try to get games from the current week
+    const weekGames = seasonGames.filter(game => {
+      if (!game.gameDate) {
+        // Unscheduled games are included if they're in the current week's status
+        return game.status === 'scheduled' || game.status === 'completed';
+      }
+      
+      const gameDate = new Date(game.gameDate);
+      return gameDate >= weekStart && gameDate <= weekEnd;
+    });
+
+    // If we have current week games, return them sorted
+    if (weekGames.length > 0) {
+      return weekGames.sort((a, b) => {
+        // If both have dates, sort by date
+        if (a.gameDate && b.gameDate) {
+          return new Date(a.gameDate).getTime() - new Date(b.gameDate).getTime();
+        }
+        
+        // If only one has a date, prioritize it
+        if (a.gameDate && !b.gameDate) return -1;
+        if (!a.gameDate && b.gameDate) return 1;
+        
+        // If neither has a date, prioritize scheduled over completed
+        if (a.status === 'scheduled' && b.status === 'completed') return -1;
+        if (a.status === 'completed' && b.status === 'scheduled') return 1;
+        
+        return 0;
+      });
+    }
+
+    // Fallback: Show upcoming scheduled games (next 10 games)
+    const upcomingGames = seasonGames
+      .filter(game => game.status === 'scheduled' && game.gameDate)
+      .sort((a, b) => {
+        if (!a.gameDate || !b.gameDate) return 0;
+        return new Date(a.gameDate).getTime() - new Date(b.gameDate).getTime();
+      })
+      .slice(0, 10);
+
+    if (upcomingGames.length > 0) {
+      return upcomingGames;
+    }
+
+    // Final fallback: Show recent completed games (most recent 10)
+    const recentGames = seasonGames
+      .filter(game => game.status === 'completed' && game.gameDate)
+      .sort((a, b) => {
+        if (!a.gameDate || !b.gameDate) return 0;
+        return new Date(b.gameDate).getTime() - new Date(a.gameDate).getTime();
+      })
+      .slice(0, 10);
+
+    return recentGames;
+  }, [seasonGames]);
 
   if (loading) {
     return <LoadingSpinner />;
   }
 
-  const seasonStats = calculateSeasonStats(games);
-  const upcomingGames = sortGames(
-    games.filter(game => game.status === 'scheduled'),
-    'upcoming'
-  ).slice(0, 5);
-  
-  const recentResults = sortGames(
-    games.filter(game => game.status === 'completed'),
-    'newest'
-  ).slice(0, 5);
-
-  const leagueLeaders = getLeagueLeaders(games, players);
-  const topPlayers = leagueLeaders.mostWins.slice(0, 5);
-
   return (
-    <div className="page-container">
-      {/* Hero Section */}
-      <HeroSection 
-        games={games}
-        players={players}
-        teams={teams}
-        seasonStats={seasonStats}
-      />
+    <div className="home-page-compact">
+      {/* Top Section: 3-Column Grid */}
+      <div className="home-boxes-container">
+        {/* Scores - Current Week Games */}
+        <CompactScores
+          games={currentWeekGames}
+          teams={seasonTeams}
+          limit={6}
+        />
 
-      {/* Dashboard Grid */}
-      <div className="dashboard-grid">
-        {/* Season Overview Stats */}
-        {config.homepage.sections.statCards && (
-          <section className="dashboard-section dashboard-section-stats">
-            <h2 className="section-title">{config.homepage.sectionTitles.statCards}</h2>
-            <div className="stat-cards-grid">
-              <StatCard
-                title="Total Games"
-                value={seasonStats.totalGames}
-                icon={Calendar}
-                color="blue"
-              />
-              <StatCard
-                title="Completed"
-                value={seasonStats.completedGames}
-                icon={Trophy}
-                color="green"
-              />
-              <StatCard
-                title="Average Score"
-                value={seasonStats.averageScore.toFixed(1)}
-                icon={TrendingUp}
-                color="purple"
-              />
-              <StatCard
-                title="Active Players"
-                value={players.length}
-                icon={Users}
-                color="orange"
-              />
-            </div>
-          </section>
-        )}
+        {/* Standings Table */}
+        <CompactStandings 
+          teams={seasonTeams}
+          games={seasonGames}
+          teamSeasonStats={seasonTeamSeasonStats}
+          limit={8}
+        />
 
-        {/* Upcoming Games */}
-        {config.homepage.sections.upcomingGames && upcomingGames.length > 0 && (
-          <section className="dashboard-section dashboard-section-upcoming">
-            <div className="section-header">
-              <h2 className="section-title">{config.homepage.sectionTitles.upcomingGames}</h2>
-              <Clock className="section-icon" size={20} />
-            </div>
-            <div className="games-list">
-              {upcomingGames.map(game => (
-                <GameCard key={game.id} game={game} teams={teams} compact />
-              ))}
-            </div>
-          </section>
-        )}
+        {/* League Leaders */}
+        <CompactStatsLeaders
+          players={players}
+          teams={seasonTeams}
+          playerTeams={seasonPlayerTeams}
+          playerGameStats={seasonPlayerGameStats}
+          playerSeasonStats={seasonPlayerSeasonStats}
+          limit={5}
+        />
+      </div>
 
-        {/* Recent Results */}
-        {config.homepage.sections.recentResults && recentResults.length > 0 && (
-          <section className="dashboard-section dashboard-section-recent">
-            <div className="section-header">
-              <h2 className="section-title">{config.homepage.sectionTitles.recentResults}</h2>
-              <Trophy className="section-icon" size={20} />
-            </div>
-            <div className="games-list">
-              {recentResults.map(game => (
-                <GameCard key={game.id} game={game} teams={teams} compact />
-              ))}
-            </div>
-          </section>
-        )}
+      {/* Bottom Section: 2-Column Grid */}
+      <div className="home-secondary-grid">
+        {/* Left Column: Announcements & Photos */}
+        <div className="home-secondary-left">
+          <AnnouncementCard announcement={activeAnnouncement} />
+          <PhotoCarousel photos={seasonPhotos} featuredPhoto={featuredPhoto} />
+        </div>
 
-        {/* Top Players */}
-        {config.homepage.sections.topPlayers && topPlayers.length > 0 && (
-          <section className="dashboard-section dashboard-section-players">
-            <div className="section-header">
-              <h2 className="section-title">{config.homepage.sectionTitles.topPlayers}</h2>
-              <Award className="section-icon" size={20} />
-            </div>
-            <div className="players-list">
-              {topPlayers.map((entry, index) => {
-                const player = players.find(p => p.id === entry.playerId);
-                const team = teams.find(t => t.id === player?.teamId);
-                return player ? (
-                  <PlayerCard 
-                    key={player.id} 
-                    player={player} 
-                    team={team}
-                  />
-                ) : null;
-              })}
-            </div>
-          </section>
-        )}
-
-        {/* League Announcements */}
-        {config.homepage.sections.announcements && announcements.length > 0 && (
-          <section className="dashboard-section dashboard-section-announcements">
-            <h2 className="section-title">{config.homepage.sectionTitles.announcements}</h2>
-            <div className="announcements-list">
-              {announcements.slice(0, 3).map(announcement => (
-                <div key={announcement.id} className={`announcement ${announcement.important ? 'announcement-important' : ''}`}>
-                  <h3 className="announcement-title">{announcement.title}</h3>
-                  <p className="announcement-content">{announcement.content}</p>
-                  <span className="announcement-date">
-                    {new Date(announcement.date).toLocaleDateString()}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </section>
-        )}
-
-        {/* Weather Widget */}
-        <section className="dashboard-section dashboard-section-weather">
-          <WeatherWidget />
-        </section>
-
-        {/* Sponsor Carousel */}
-        {config.homepage.sections.sponsors && (
-          <section className="dashboard-section dashboard-section-sponsors">
-            <SponsorCarousel />
-          </section>
-        )}
+        {/* Right Column: Sponsors */}
+        <div className="home-secondary-right">
+          <SponsorCarousel />
+        </div>
       </div>
     </div>
   );

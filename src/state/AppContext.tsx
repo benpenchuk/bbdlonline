@@ -1,11 +1,11 @@
 import React, { createContext, useContext, useReducer, ReactNode } from 'react';
-import { Team, Player, Game, Tournament } from '../core/types';
+import { Team, Player, Game, Playoff } from '../core/types';
 
 interface AppState {
   teams: Team[];
   players: Player[];
   games: Game[];
-  tournaments: Tournament[];
+  playoffs: Playoff[];
   loading: boolean;
   error: string | null;
 }
@@ -16,7 +16,7 @@ type AppAction =
   | { type: 'SET_TEAMS'; payload: Team[] }
   | { type: 'SET_PLAYERS'; payload: Player[] }
   | { type: 'SET_GAMES'; payload: Game[] }
-  | { type: 'SET_TOURNAMENTS'; payload: Tournament[] }
+  | { type: 'SET_PLAYOFFS'; payload: Playoff[] }
   | { type: 'ADD_TEAM'; payload: Team }
   | { type: 'UPDATE_TEAM'; payload: { id: string; updates: Partial<Team> } }
   | { type: 'DELETE_TEAM'; payload: string }
@@ -31,7 +31,7 @@ const initialState: AppState = {
   teams: [],
   players: [],
   games: [],
-  tournaments: [],
+  playoffs: [],
   loading: false,
   error: null,
 };
@@ -48,8 +48,8 @@ function appReducer(state: AppState, action: AppAction): AppState {
       return { ...state, players: action.payload };
     case 'SET_GAMES':
       return { ...state, games: action.payload };
-    case 'SET_TOURNAMENTS':
-      return { ...state, tournaments: action.payload };
+    case 'SET_PLAYOFFS':
+      return { ...state, playoffs: action.payload };
     case 'ADD_TEAM':
       return { ...state, teams: [...state.teams, action.payload] };
     case 'UPDATE_TEAM':

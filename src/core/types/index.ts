@@ -1,98 +1,203 @@
-export interface Team {
-  id: string;
-  name: string;
-  color: string;
-  icon: string; // Icon identifier (e.g., 'trophy', 'flame', 'shield')
-  wins: number;
-  losses: number;
-  totalPoints: number;
-  gamesPlayed: number;
-  players: string[]; // Player IDs
-}
+// =====================================================
+// ENUMS
+// =====================================================
+export type PlayerStatus = 'active' | 'inactive' | 'retired';
+export type TeamStatus = 'active' | 'inactive' | 'retired';
+export type SeasonStatus = 'upcoming' | 'active' | 'completed' | 'archived';
+export type RosterRole = 'starter_1' | 'starter_2' | 'sub';
+export type RosterStatus = 'active' | 'inactive' | 'ir';
+export type GameStatus = 'scheduled' | 'in_progress' | 'completed' | 'canceled';
 
-export type PlayerYear = 'freshman' | 'sophomore' | 'junior' | 'senior' | 'alumni';
+// =====================================================
+// CORE IDENTITY TYPES
+// =====================================================
 
 export interface Player {
-  id: string;
-  name: string;
-  teamId: string;
-  bio: string;
-  year?: PlayerYear;
-  photoUrl?: string;
-  stats: {
-    wins: number;
-    losses: number;
-    gamesPlayed: number;
-    totalPoints: number;
-    averagePoints: number;
-    shutouts: number;
-    blowoutWins: number; // wins by 7+ points
-    clutchWins: number; // wins by 1-2 points
-    longestWinStreak: number;
-    currentWinStreak: number;
-  };
+  id: string; // UUID
+  slug: string;
+  status: PlayerStatus;
+  firstName: string;
+  lastName: string;
+  nickname?: string;
+  avatarUrl?: string;
+  hometownCity?: string;
+  hometownState?: string;
+  dominantHand?: string;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
-export type GameStatus = 'scheduled' | 'completed' | 'cancelled';
+export interface Team {
+  id: string; // UUID
+  slug: string;
+  status: TeamStatus;
+  name: string;
+  abbreviation: string; // 2-4 characters
+  logoUrl?: string;
+  homeCity?: string;
+  homeState?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface Season {
+  id: string; // UUID
+  slug: string;
+  status: SeasonStatus;
+  name: string; // e.g., "Fall 2025"
+  year: number;
+  startDate: Date;
+  endDate: Date;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// =====================================================
+// ROSTER MEMBERSHIP
+// =====================================================
+
+export interface PlayerTeam {
+  id: string; // UUID
+  playerId: string;
+  teamId: string;
+  seasonId: string;
+  role: RosterRole;
+  status: RosterStatus;
+  isCaptain: boolean;
+  joinedAt?: Date;
+  leftAt?: Date;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// =====================================================
+// GAMES & MATCH RESULTS
+// =====================================================
 
 export interface Game {
-  id: string;
-  team1Id: string;
-  team2Id: string;
-  team1Score?: number;
-  team2Score?: number;
-  scheduledDate: Date;
-  completedDate?: Date;
+  id: string; // UUID
+  seasonId: string;
+  homeTeamId: string;
+  awayTeamId: string;
+  gameDate?: Date;
+  location?: string;
   status: GameStatus;
-  winnerId?: string;
-  isBlowout?: boolean; // 7+ point difference
-  isClutch?: boolean; // 1-2 point difference
-  isShutout?: boolean; // one team scored 0
+  homeScore: number;
+  awayScore: number;
+  winningTeamId?: string;
+  week?: number; // Week number (1-6) for regular season games
+  createdAt: Date;
+  updatedAt: Date;
 }
 
-export interface Tournament {
-  id: string;
+// =====================================================
+// INDIVIDUAL PERFORMANCE
+// =====================================================
+
+export interface PlayerGameStats {
+  id: string; // UUID
+  gameId: string;
+  playerId: string;
+  teamId: string;
+  seasonId: string;
+  pointsScored: number;
+  cupsHit: number;
+  sinks: number;
+  bounces: number;
+  tableHits: number;
+  throwsMissed: number;
+  isWinner: boolean;
+  mvp: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// =====================================================
+// PRECOMPUTED AGGREGATES
+// =====================================================
+
+export interface PlayerSeasonStats {
+  id: string; // UUID
+  playerId: string;
+  teamId: string;
+  seasonId: string;
+  gamesPlayed: number;
+  gamesWon: number;
+  pointsScoredTotal: number;
+  pointsPerGame: number;
+  cupsHitTotal: number;
+  winRate: number;
+  mvpAwards: number;
+  tableHitsTotal: number;
+  throwsMissedTotal: number;
+  tableHitPct: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface TeamSeasonStats {
+  id: string; // UUID
+  teamId: string;
+  seasonId: string;
+  gamesPlayed: number;
+  wins: number;
+  losses: number;
+  pointsFor: number;
+  pointsAgainst: number;
+  winPct: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// =====================================================
+// PLAYOFFS
+// =====================================================
+
+export interface Playoff {
+  id: string; // UUID
+  seasonId: string;
   name: string;
-  type: 'single-elimination' | 'double-elimination' | 'round-robin';
-  status: 'setup' | 'in-progress' | 'completed';
-  teams: string[]; // Team IDs
-  bracket: TournamentMatch[];
-  winnerId?: string;
-  createdDate: Date;
-  completedDate?: Date;
+  bracketType: string;
+  status: string;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
-export interface TournamentMatch {
-  id: string;
-  tournamentId: string;
-  round: number;
-  position: number;
-  team1Id?: string;
-  team2Id?: string;
-  team1Score?: number;
-  team2Score?: number;
-  winnerId?: string;
-  status: 'pending' | 'completed';
-  nextMatchId?: string; // For winner advancement
+// =====================================================
+// ANNOUNCEMENTS & PHOTOS
+// =====================================================
+
+export interface Announcement {
+  id: string; // UUID
+  seasonId: string;
+  title: string;
+  content: string;
+  active: boolean;
+  createdAt: Date;
+  updatedAt: Date;
 }
+
+export interface Photo {
+  id: string; // UUID
+  seasonId: string;
+  gameId?: string;
+  imageUrl: string;
+  caption?: string;
+  isFeatured: boolean;
+  uploadedBy?: string;
+  uploadedAt: Date;
+}
+
+// =====================================================
+// COMPUTED/DERIVED TYPES FOR UI
+// =====================================================
 
 export interface LeaderboardEntry {
   playerId: string;
   value: number;
   rank: number;
-}
-
-export interface TeamStats {
-  teamId: string;
-  record: { wins: number; losses: number };
-  averagePoints: number;
-  totalPoints: number;
-  shutouts: number;
-  blowoutWins: number;
-  clutchWins: number;
-  longestWinStreak: number;
-  currentWinStreak: number;
-  vsTeamRecords: Record<string, { wins: number; losses: number }>;
+  gamesPlayed?: number;
+  wins?: number;
 }
 
 export interface HeadToHeadComparison {
@@ -105,7 +210,7 @@ export interface HeadToHeadComparison {
   lastGame?: Game;
 }
 
-export interface SeasonStats {
+export interface ComputedSeasonStats {
   totalGames: number;
   completedGames: number;
   totalPoints: number;
@@ -116,10 +221,14 @@ export interface SeasonStats {
   clutchGames: number;
 }
 
-// Filter and sorting types
+// =====================================================
+// FILTER AND SORTING TYPES
+// =====================================================
+
 export type GameFilter = {
   status?: GameStatus[];
   teamId?: string;
+  seasonId?: string;
   dateRange?: { start: Date; end: Date };
 };
 

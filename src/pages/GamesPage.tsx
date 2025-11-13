@@ -37,11 +37,11 @@ const GamesPage: React.FC = () => {
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(game => {
-        const team1 = teams.find(t => t.id === game.team1Id);
-        const team2 = teams.find(t => t.id === game.team2Id);
+        const homeTeam = teams.find(t => t.id === game.homeTeamId);
+        const awayTeam = teams.find(t => t.id === game.awayTeamId);
         return (
-          team1?.name.toLowerCase().includes(query) ||
-          team2?.name.toLowerCase().includes(query)
+          homeTeam?.name.toLowerCase().includes(query) ||
+          awayTeam?.name.toLowerCase().includes(query)
         );
       });
     }

@@ -4,6 +4,8 @@ import { Game, Team } from '../../core/types';
 import { useData } from '../../state';
 import { format } from 'date-fns';
 import GameFormModal from './GameFormModal';
+import TeamIcon from '../common/TeamIcon';
+import { getWinnerId } from '../../core/utils/gameHelpers';
 
 interface GamesTabProps {
   games: Game[];
@@ -17,10 +19,6 @@ const GamesTab: React.FC<GamesTabProps> = ({ games, teams }) => {
 
   const getTeamName = (teamId: string) => {
     return teams.find(t => t.id === teamId)?.name || 'Unknown Team';
-  };
-
-  const getTeamColor = (teamId: string) => {
-    return teams.find(t => t.id === teamId)?.color || '#6B7280';
   };
 
   const handleDeleteGame = async (gameId: string) => {
@@ -43,9 +41,11 @@ const GamesTab: React.FC<GamesTabProps> = ({ games, teams }) => {
     await refreshData();
   };
 
-  const sortedGames = [...games].sort((a, b) => 
-    new Date(b.scheduledDate).getTime() - new Date(a.scheduledDate).getTime()
-  );
+  const sortedGames = [...games].sort((a, b) => {
+    const dateA = a.gameDate ? new Date(a.gameDate).getTime() : 0;
+    const dateB = b.gameDate ? new Date(b.gameDate).getTime() : 0;
+    return dateB - dateA;
+  });
 
   return (
     <div className="admin-tab-content">
@@ -61,78 +61,82 @@ const GamesTab: React.FC<GamesTabProps> = ({ games, teams }) => {
       </div>
 
       <div className="games-admin-list">
-        {sortedGames.map(game => (
-          <div key={game.id} className="game-admin-item">
-            <div className="game-info">
-              <div className="game-teams">
-                <div className="team-info">
-                  <div 
-                    className="team-color-dot"
-                    style={{ backgroundColor: getTeamColor(game.team1Id) }}
-                  />
-                  <span>{getTeamName(game.team1Id)}</span>
-                  {game.status === 'completed' && (
-                    <span className={`score ${game.winnerId === game.team1Id ? 'winner' : ''}`}>
-                      {game.team1Score}
-                    </span>
-                  )}
+        {sortedGames.map(game => {
+          const homeTeam = teams.find(t => t.id === game.homeTeamId);
+          const awayTeam = teams.find(t => t.id === game.awayTeamId);
+          const winnerId = getWinnerId(game);
+
+          return (
+            <div key={game.id} className="game-admin-item">
+              <div className="game-info">
+                <div className="game-teams">
+                  <div className="team-info">
+                    {homeTeam && (
+                      <TeamIcon iconId={homeTeam.abbreviation} color="#3b82f6" size={16} />
+                    )}
+                    <span>{getTeamName(game.homeTeamId)}</span>
+                    {game.status === 'completed' && (
+                      <span className={`score ${winnerId === game.homeTeamId ? 'winner' : ''}`}>
+                        {game.homeScore}
+                      </span>
+                    )}
+                  </div>
+                  
+                  <div className="vs">vs</div>
+                  
+                  <div className="team-info">
+                    {awayTeam && (
+                      <TeamIcon iconId={awayTeam.abbreviation} color="#ef4444" size={16} />
+                    )}
+                    <span>{getTeamName(game.awayTeamId)}</span>
+                    {game.status === 'completed' && (
+                      <span className={`score ${winnerId === game.awayTeamId ? 'winner' : ''}`}>
+                        {game.awayScore}
+                      </span>
+                    )}
+                  </div>
                 </div>
-                
-                <div className="vs">vs</div>
-                
-                <div className="team-info">
-                  <div 
-                    className="team-color-dot"
-                    style={{ backgroundColor: getTeamColor(game.team2Id) }}
-                  />
-                  <span>{getTeamName(game.team2Id)}</span>
-                  {game.status === 'completed' && (
-                    <span className={`score ${game.winnerId === game.team2Id ? 'winner' : ''}`}>
-                      {game.team2Score}
-                    </span>
-                  )}
+
+                <div className="game-meta">
+                  <div className={`game-status status-${game.status}`}>
+                    {game.status.charAt(0).toUpperCase() + game.status.slice(1).replace('_', ' ')}
+                  </div>
+                  <div className="game-date">
+                    {game.gameDate && format(game.gameDate, 'MMM d, yyyy h:mm a')}
+                  </div>
                 </div>
               </div>
 
-              <div className="game-meta">
-                <div className={`game-status status-${game.status}`}>
-                  {game.status.charAt(0).toUpperCase() + game.status.slice(1)}
-                </div>
-                <div className="game-date">
-                  {format(game.scheduledDate, 'MMM d, yyyy h:mm a')}
-                </div>
+              <div className="game-actions">
+                <button 
+                  className="btn btn-outline btn-small"
+                  onClick={() => setEditingGame(game)}
+                >
+                  <Edit size={14} />
+                  Edit
+                </button>
+                <button 
+                  className="btn btn-danger btn-small"
+                  onClick={() => handleDeleteGame(game.id)}
+                >
+                  <Trash2 size={14} />
+                  Delete
+                </button>
               </div>
             </div>
-
-            <div className="game-actions">
-              <button 
-                className="btn btn-outline btn-small"
-                onClick={() => setEditingGame(game)}
-              >
-                <Edit size={14} />
-                Edit
-              </button>
-              <button 
-                className="btn btn-danger btn-small"
-                onClick={() => handleDeleteGame(game.id)}
-              >
-                <Trash2 size={14} />
-                Delete
-              </button>
-            </div>
+          );
+        })}
+        
+        {sortedGames.length === 0 && (
+          <div className="empty-state">
+            <Calendar size={48} />
+            <h3>No games scheduled</h3>
+            <p>Click "Schedule Game" to add a new game.</p>
           </div>
-        ))}
+        )}
       </div>
 
-      {games.length === 0 && (
-        <div className="empty-state">
-          <Calendar size={48} />
-          <h3>No games scheduled</h3>
-          <p>Schedule your first game to get started</p>
-        </div>
-      )}
-
-      {/* Game Form Modal */}
+      {/* Modals */}
       {(showCreateForm || editingGame) && (
         <GameFormModal
           game={editingGame}

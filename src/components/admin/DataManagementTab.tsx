@@ -211,7 +211,7 @@ const DataManagementTab: React.FC = () => {
       <div className="data-info">
         <h4>Data Format Information</h4>
         <ul>
-          <li>Exported files contain teams, players, games, tournaments, and announcements</li>
+          <li>Exported files contain teams, players, games, playoffs, and announcements</li>
           <li>Files are in JSON format and can be opened in any text editor</li>
           <li>Import will replace all current data with the uploaded data</li>
           <li>Reset will restore the original demo teams and sample games</li>

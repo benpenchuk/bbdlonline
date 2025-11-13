@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Home, Calendar, Users, BarChart3, Trophy, Settings, Mail, Menu, X, List } from 'lucide-react';
+import { Home, Calendar, Users, BarChart3, Menu, X, List, Sun, Moon } from 'lucide-react';
 import { getConfig } from '../../core/config/appConfig';
 import VersionBanner from '../common/VersionBanner';
+import { useTheme } from '../../state/ThemeContext';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -12,6 +13,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const location = useLocation();
   const config = getConfig();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { theme, toggleTheme } = useTheme();
 
   const navigation = [
     { name: 'Home', href: '/', icon: Home },
@@ -19,9 +21,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     { name: 'Players', href: '/players', icon: Users },
     { name: 'Standings', href: '/standings', icon: List },
     { name: 'Stats', href: '/stats', icon: BarChart3 },
-    { name: 'Tournament', href: '/tournament', icon: Trophy },
-    { name: 'Admin', href: '/admin', icon: Settings },
-    { name: 'Contact', href: '/contact', icon: Mail },
+    // Hidden for now: Tournament, Admin, Contact
   ];
 
   const isActive = (href: string) => location.pathname === href;
@@ -49,13 +49,13 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       <header className="top-navigation">
         <div className="nav-container">
           {/* Logo/Brand */}
-          <div className="nav-brand">
-            <Trophy color="var(--color-accent)" size={32} />
-            <div className="brand-text">
-              <h1 className="brand-title">{config.league.name}</h1>
-              <p className="brand-subtitle">{config.league.season}</p>
-            </div>
-          </div>
+          <Link to="/" className="nav-brand">
+            <img 
+              src="/images/BBDL Logo.png" 
+              alt="BBDL Logo" 
+              className="nav-logo"
+            />
+          </Link>
           
           {/* Mobile Menu Toggle */}
           <button 
@@ -70,7 +70,6 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           {/* Navigation Links - Desktop */}
           <nav className={`nav-links ${mobileMenuOpen ? 'nav-links-mobile-open' : ''}`}>
             {navigation.map((item) => {
-              const Icon = item.icon;
               return (
                 <Link
                   key={item.name}
@@ -78,11 +77,18 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                   className={`nav-link ${isActive(item.href) ? 'nav-link-active' : ''}`}
                   onClick={() => setMobileMenuOpen(false)}
                 >
-                  <Icon size={18} />
-                  <span>{item.name}</span>
+                  {item.name}
                 </Link>
               );
             })}
+            {/* Theme Toggle Button */}
+            <button
+              className="theme-toggle-button"
+              onClick={toggleTheme}
+              aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
+            >
+              {theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}
+            </button>
           </nav>
         </div>
       </header>

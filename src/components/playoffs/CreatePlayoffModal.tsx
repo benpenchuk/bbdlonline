@@ -1,20 +1,20 @@
 import React, { useState } from 'react';
 import { X, Trophy, Users, AlertCircle } from 'lucide-react';
 import { Team } from '../../core/types';
-import { validateTournamentSetup } from '../../core/utils/tournamentUtils';
+import { validatePlayoffSetup } from '../../core/utils/playoffUtils';
 
-interface CreateTournamentModalProps {
+interface CreatePlayoffModalProps {
   teams: Team[];
   onClose: () => void;
-  onCreateTournament: (name: string, selectedTeams: Team[]) => void;
+  onCreatePlayoff: (name: string, selectedTeams: Team[]) => void;
 }
 
-const CreateTournamentModal: React.FC<CreateTournamentModalProps> = ({
+const CreatePlayoffModal: React.FC<CreatePlayoffModalProps> = ({
   teams,
   onClose,
-  onCreateTournament
+  onCreatePlayoff
 }) => {
-  const [tournamentName, setTournamentName] = useState('');
+  const [playoffName, setPlayoffName] = useState('');
   const [selectedTeamIds, setSelectedTeamIds] = useState<string[]>([]);
   const [error, setError] = useState('');
 
@@ -30,18 +30,18 @@ const CreateTournamentModal: React.FC<CreateTournamentModalProps> = ({
   };
 
   const handleCreate = () => {
-    if (!tournamentName.trim()) {
-      setError('Tournament name is required');
+    if (!playoffName.trim()) {
+      setError('Playoff name is required');
       return;
     }
 
-    const validation = validateTournamentSetup(selectedTeams);
+    const validation = validatePlayoffSetup(selectedTeams);
     if (!validation.valid) {
-      setError(validation.error || 'Invalid tournament setup');
+      setError(validation.message || 'Invalid playoff setup');
       return;
     }
 
-    onCreateTournament(tournamentName.trim(), selectedTeams);
+    onCreatePlayoff(playoffName.trim(), selectedTeams);
   };
 
   const getRecommendedBracketSize = () => {
@@ -61,7 +61,7 @@ const CreateTournamentModal: React.FC<CreateTournamentModalProps> = ({
         <div className="modal-header">
           <div className="modal-title">
             <Trophy size={24} />
-            <h2>Create Tournament</h2>
+            <h2>Create Playoff</h2>
           </div>
           <button className="modal-close-btn" onClick={onClose}>
             <X size={24} />
@@ -69,24 +69,24 @@ const CreateTournamentModal: React.FC<CreateTournamentModalProps> = ({
         </div>
 
         <div className="modal-body">
-          {/* Tournament Name */}
+          {/* Playoff Name */}
           <div className="form-group">
-            <label htmlFor="tournament-name">Tournament Name</label>
+            <label htmlFor="playoff-name">Playoff Name</label>
             <input
-              id="tournament-name"
+              id="playoff-name"
               type="text"
-              value={tournamentName}
-              onChange={(e) => setTournamentName(e.target.value)}
-              placeholder="Enter tournament name..."
+              value={playoffName}
+              onChange={(e) => setPlayoffName(e.target.value)}
+              placeholder="Enter playoff name..."
               className="form-input"
               maxLength={50}
             />
           </div>
 
-          {/* Tournament Type */}
+          {/* Playoff Type */}
           <div className="form-group">
-            <label>Tournament Type</label>
-            <div className="tournament-type-selection">
+            <label>Playoff Type</label>
+            <div className="playoff-type-selection">
               <div className="type-option selected">
                 <Trophy size={20} />
                 <div>
@@ -128,29 +128,25 @@ const CreateTournamentModal: React.FC<CreateTournamentModalProps> = ({
                   }`}
                   onClick={() => handleTeamToggle(team.id)}
                 >
-                  <div 
-                    className="team-color"
-                    style={{ backgroundColor: team.color }}
-                  />
                   <div className="team-info">
                     <div className="team-name">{team.name}</div>
                     <div className="team-record">
-                      {team.wins}W - {team.losses}L
+                      {/* Team record calculated from games */}
                     </div>
                   </div>
                   <div className="team-players">
                     <Users size={14} />
-                    <span>{team.players.length}</span>
+                    <span>Team</span>
                   </div>
                 </div>
               ))}
             </div>
           </div>
 
-          {/* Tournament Preview */}
+          {/* Playoff Preview */}
           {selectedTeamIds.length >= 2 && (
-            <div className="tournament-preview">
-              <h4>Tournament Preview</h4>
+            <div className="playoff-preview">
+              <h4>Playoff Preview</h4>
               <div className="preview-stats">
                 <div className="preview-stat">
                   <span className="stat-label">Teams:</span>
@@ -188,10 +184,10 @@ const CreateTournamentModal: React.FC<CreateTournamentModalProps> = ({
           <button 
             className="btn btn-primary"
             onClick={handleCreate}
-            disabled={!tournamentName.trim() || selectedTeamIds.length < 2}
+            disabled={!playoffName.trim() || selectedTeamIds.length < 2}
           >
             <Trophy size={16} />
-            Create Tournament
+            Create Playoff
           </button>
         </div>
       </div>
@@ -199,4 +195,4 @@ const CreateTournamentModal: React.FC<CreateTournamentModalProps> = ({
   );
 };
 
-export default CreateTournamentModal;
+export default CreatePlayoffModal;

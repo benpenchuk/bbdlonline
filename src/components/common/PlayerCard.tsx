@@ -18,6 +18,8 @@ const PlayerCard: React.FC<PlayerCardProps> = React.memo(({
   onClick 
 }) => {
   const gamesPlayed = record ? record.wins + record.losses : 0;
+  const fullName = `${player.firstName} ${player.lastName}`;
+  const initials = `${player.firstName[0]}${player.lastName[0]}`.toUpperCase();
 
   return (
     <div 
@@ -31,21 +33,22 @@ const PlayerCard: React.FC<PlayerCardProps> = React.memo(({
         }
       }}
       role={onClick ? 'button' : undefined}
-      aria-label={onClick ? `View details for ${player.name}` : undefined}
+      aria-label={onClick ? `View details for ${fullName}` : undefined}
     >
       {/* Avatar */}
       <div className="bbdl-player-card-avatar">
-        {player.photoUrl ? (
-          <img src={player.photoUrl} alt={player.name} />
+        {player.avatarUrl ? (
+          <img src={player.avatarUrl} alt={fullName} />
         ) : (
           <div className="bbdl-player-card-initials">
-            {player.name.split(' ').map(n => n[0]).join('').toUpperCase()}
+            {initials}
           </div>
         )}
       </div>
 
       {/* Name */}
-      <h3 className="bbdl-player-card-name">{player.name}</h3>
+      <h3 className="bbdl-player-card-name">{fullName}</h3>
+      {player.nickname && <p className="bbdl-player-card-nickname">"{player.nickname}"</p>}
 
       {/* Team Badge */}
       {team && (
@@ -53,7 +56,7 @@ const PlayerCard: React.FC<PlayerCardProps> = React.memo(({
           className="bbdl-player-card-team-badge"
           title={team.name}
         >
-          <TeamIcon iconId={team.icon} color="#64748b" size={16} />
+          <TeamIcon iconId={team.abbreviation} color="#64748b" size={16} />
           <span className="team-badge-text">{team.name}</span>
         </div>
       )}
@@ -74,9 +77,11 @@ const PlayerCard: React.FC<PlayerCardProps> = React.memo(({
         </div>
       </div>
 
-      {/* Bio Snippet */}
-      {player.bio && (
-        <p className="bbdl-player-card-bio">{player.bio}</p>
+      {/* Hometown */}
+      {(player.hometownCity || player.hometownState) && (
+        <p className="bbdl-player-card-hometown">
+          {player.hometownCity}, {player.hometownState}
+        </p>
       )}
     </div>
   );

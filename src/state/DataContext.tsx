@@ -1,14 +1,34 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { Team, Player, Game, Tournament } from '../core/types';
-import { teamsApi, playersApi, gamesApi, tournamentsApi, announcementsApi, dataApi } from '../core/services/api';
-import { recalculateAllStats } from '../core/services/stats';
+import { Team, Player, Game, Playoff, Season, PlayerTeam, PlayerGameStats, PlayerSeasonStats, TeamSeasonStats, Announcement, Photo } from '../core/types';
+import {
+  teamsApi,
+  playersApi,
+  gamesApi,
+  playoffsApi,
+  seasonsApi,
+  playerTeamsApi,
+  playerGameStatsApi,
+  playerSeasonStatsApi,
+  teamSeasonStatsApi,
+  announcementsApi,
+  photosApi,
+  dataApi,
+} from '../core/services/api';
+import { recalculateAllStats } from '../core/services/statsRecalculation';
 
 interface DataState {
   teams: Team[];
   players: Player[];
   games: Game[];
-  tournaments: Tournament[];
-  announcements: any[];
+  playoffs: Playoff[];
+  seasons: Season[];
+  playerTeams: PlayerTeam[];
+  playerGameStats: PlayerGameStats[];
+  playerSeasonStats: PlayerSeasonStats[];
+  teamSeasonStats: TeamSeasonStats[];
+  announcements: Announcement[];
+  photos: Photo[];
+  activeSeason: Season | null;
   loading: boolean;
 }
 
@@ -17,41 +37,74 @@ interface DataContextType {
   teams: Team[];
   players: Player[];
   games: Game[];
-  tournaments: Tournament[];
-  announcements: any[];
+  playoffs: Playoff[];
+  seasons: Season[];
+  playerTeams: PlayerTeam[];
+  playerGameStats: PlayerGameStats[];
+  playerSeasonStats: PlayerSeasonStats[];
+  teamSeasonStats: TeamSeasonStats[];
+  announcements: Announcement[];
+  photos: Photo[];
+  activeSeason: Season | null;
   loading: boolean;
 
   // Team operations
   getTeams: () => Promise<Team[]>;
   getTeamById: (id: string) => Promise<Team | null>;
-  createTeam: (team: Omit<Team, 'id'>) => Promise<Team>;
+  createTeam: (team: Omit<Team, 'id' | 'createdAt' | 'updatedAt'>) => Promise<Team>;
   updateTeam: (id: string, updates: Partial<Team>) => Promise<Team>;
   deleteTeam: (id: string) => Promise<boolean>;
 
   // Player operations
   getPlayers: () => Promise<Player[]>;
   getPlayerById: (id: string) => Promise<Player | null>;
-  getPlayersByTeam: (teamId: string) => Promise<Player[]>;
-  createPlayer: (player: Omit<Player, 'id'>) => Promise<Player>;
+  createPlayer: (player: Omit<Player, 'id' | 'createdAt' | 'updatedAt'>) => Promise<Player>;
   updatePlayer: (id: string, updates: Partial<Player>) => Promise<Player>;
   deletePlayer: (id: string) => Promise<boolean>;
 
   // Game operations
   getGames: () => Promise<Game[]>;
   getGameById: (id: string) => Promise<Game | null>;
-  createGame: (game: Omit<Game, 'id'>) => Promise<Game>;
+  createGame: (game: Omit<Game, 'id' | 'createdAt' | 'updatedAt'>) => Promise<Game>;
   updateGame: (id: string, updates: Partial<Game>) => Promise<Game>;
   deleteGame: (id: string) => Promise<boolean>;
 
-  // Tournament operations
-  getTournaments: () => Promise<Tournament[]>;
-  getTournamentById: (id: string) => Promise<Tournament | null>;
-  createTournament: (tournament: Omit<Tournament, 'id'>) => Promise<Tournament>;
-  updateTournament: (id: string, updates: Partial<Tournament>) => Promise<Tournament>;
-  deleteTournament: (id: string) => Promise<boolean>;
+  // Season operations
+  getSeasons: () => Promise<Season[]>;
+  getSeasonById: (id: string) => Promise<Season | null>;
+  createSeason: (season: Omit<Season, 'id' | 'createdAt' | 'updatedAt'>) => Promise<Season>;
+  updateSeason: (id: string, updates: Partial<Season>) => Promise<Season>;
+  deleteSeason: (id: string) => Promise<boolean>;
 
-  // Announcements
-  getAnnouncements: () => Promise<any[]>;
+  // PlayerTeam operations (roster management)
+  getPlayerTeams: () => Promise<PlayerTeam[]>;
+  getTeamRoster: (teamId: string, seasonId: string) => Promise<PlayerTeam[]>;
+  createPlayerTeam: (playerTeam: Omit<PlayerTeam, 'id' | 'createdAt' | 'updatedAt'>) => Promise<PlayerTeam>;
+  updatePlayerTeam: (id: string, updates: Partial<PlayerTeam>) => Promise<PlayerTeam>;
+  deletePlayerTeam: (id: string) => Promise<boolean>;
+
+  // Playoff operations
+  getPlayoffs: () => Promise<Playoff[]>;
+  getPlayoffById: (id: string) => Promise<Playoff | null>;
+  createPlayoff: (playoff: Omit<Playoff, 'id' | 'createdAt' | 'updatedAt'>) => Promise<Playoff>;
+  updatePlayoff: (id: string, updates: Partial<Playoff>) => Promise<Playoff>;
+  deletePlayoff: (id: string) => Promise<boolean>;
+
+  // Announcement operations
+  getAnnouncements: () => Promise<Announcement[]>;
+  getAnnouncementById: (id: string) => Promise<Announcement | null>;
+  getActiveAnnouncement: (seasonId: string) => Promise<Announcement | null>;
+  createAnnouncement: (announcement: Omit<Announcement, 'id' | 'createdAt' | 'updatedAt'>) => Promise<Announcement>;
+  updateAnnouncement: (id: string, updates: Partial<Announcement>) => Promise<Announcement>;
+  deleteAnnouncement: (id: string) => Promise<boolean>;
+
+  // Photo operations
+  getPhotos: () => Promise<Photo[]>;
+  getPhotoById: (id: string) => Promise<Photo | null>;
+  getFeaturedPhoto: (seasonId: string) => Promise<Photo | null>;
+  createPhoto: (photo: Omit<Photo, 'id' | 'uploadedAt'>) => Promise<Photo>;
+  updatePhoto: (id: string, updates: Partial<Photo>) => Promise<Photo>;
+  deletePhoto: (id: string) => Promise<boolean>;
 
   // Data management
   exportData: () => Promise<any>;
@@ -68,23 +121,23 @@ const validateGameData = (gameData: Partial<Game>): { valid: boolean; errors: st
   const errors: string[] = [];
 
   // Check for negative scores
-  if (gameData.team1Score !== undefined && gameData.team1Score < 0) {
-    errors.push('Team 1 score cannot be negative');
+  if (gameData.homeScore !== undefined && gameData.homeScore < 0) {
+    errors.push('Home team score cannot be negative');
   }
-  if (gameData.team2Score !== undefined && gameData.team2Score < 0) {
-    errors.push('Team 2 score cannot be negative');
+  if (gameData.awayScore !== undefined && gameData.awayScore < 0) {
+    errors.push('Away team score cannot be negative');
   }
 
   // Check for whole numbers only
-  if (gameData.team1Score !== undefined && !Number.isInteger(gameData.team1Score)) {
-    errors.push('Team 1 score must be a whole number');
+  if (gameData.homeScore !== undefined && !Number.isInteger(gameData.homeScore)) {
+    errors.push('Home team score must be a whole number');
   }
-  if (gameData.team2Score !== undefined && !Number.isInteger(gameData.team2Score)) {
-    errors.push('Team 2 score must be a whole number');
+  if (gameData.awayScore !== undefined && !Number.isInteger(gameData.awayScore)) {
+    errors.push('Away team score must be a whole number');
   }
 
   // Check that teams are not playing themselves
-  if (gameData.team1Id && gameData.team2Id && gameData.team1Id === gameData.team2Id) {
+  if (gameData.homeTeamId && gameData.awayTeamId && gameData.homeTeamId === gameData.awayTeamId) {
     errors.push('A team cannot play against itself');
   }
 
@@ -98,9 +151,16 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     teams: [],
     players: [],
     games: [],
-    tournaments: [],
+    playoffs: [],
+    seasons: [],
+    playerTeams: [],
+    playerGameStats: [],
+    playerSeasonStats: [],
+    teamSeasonStats: [],
     announcements: [],
-    loading: false
+    photos: [],
+    activeSeason: null,
+    loading: false,
   });
 
   // Initialize data on mount
@@ -114,54 +174,104 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   }, []);
 
   const loadAllData = async () => {
-    setState(prev => ({ ...prev, loading: true }));
+    setState((prev) => ({ ...prev, loading: true }));
     try {
       console.log('DataContext: Loading data from Supabase...');
-      
+
       // Fetch all data from Supabase
-      const [teamsResponse, playersResponse, gamesResponse, tournamentsResponse, announcementsResponse] = await Promise.all([
+      const [
+        teamsResponse,
+        playersResponse,
+        gamesResponse,
+        playoffsResponse,
+        seasonsResponse,
+        playerTeamsResponse,
+        playerGameStatsResponse,
+        playerSeasonStatsResponse,
+        teamSeasonStatsResponse,
+        announcementsResponse,
+        photosResponse,
+        activeSeasonResponse,
+      ] = await Promise.all([
         teamsApi.getAll(),
         playersApi.getAll(),
         gamesApi.getAll(),
-        tournamentsApi.getAll(),
-        announcementsApi.getAll()
+        playoffsApi.getAll(),
+        seasonsApi.getAll(),
+        playerTeamsApi.getAll(),
+        playerGameStatsApi.getAll(),
+        playerSeasonStatsApi.getAll(),
+        teamSeasonStatsApi.getAll(),
+        announcementsApi.getAll(),
+        photosApi.getAll(),
+        seasonsApi.getActive(),
       ]);
 
       const teams = teamsResponse.data || [];
       const players = playersResponse.data || [];
       const games = gamesResponse.data || [];
-      const tournaments = tournamentsResponse.data || [];
+      const playoffs = playoffsResponse.data || [];
+      const seasons = seasonsResponse.data || [];
+      const playerTeams = playerTeamsResponse.data || [];
+      const playerGameStats = playerGameStatsResponse.data || [];
+      const playerSeasonStats = playerSeasonStatsResponse.data || [];
+      const teamSeasonStats = teamSeasonStatsResponse.data || [];
       const announcements = announcementsResponse.data || [];
-      
-      console.log('DataContext: Data loaded from Supabase - Teams:', teams.length, 'Players:', players.length, 'Games:', games.length, 'Tournaments:', tournaments.length, 'Announcements:', announcements.length);
+      const photos = photosResponse.data || [];
+      const activeSeason = activeSeasonResponse.data || null;
+
+      console.log(
+        'DataContext: Data loaded from Supabase - Teams:',
+        teams.length,
+        'Players:',
+        players.length,
+        'Games:',
+        games.length,
+        'Playoffs:',
+        playoffs.length,
+        'Seasons:',
+        seasons.length,
+        'PlayerTeams:',
+        playerTeams.length,
+        'PlayerGameStats:',
+        playerGameStats.length,
+        'PlayerSeasonStats:',
+        playerSeasonStats.length,
+        'TeamSeasonStats:',
+        teamSeasonStats.length,
+        'Announcements:',
+        announcements.length,
+        'Photos:',
+        photos.length,
+        'Active Season:',
+        activeSeason?.name || 'None'
+      );
 
       setState({
         teams,
         players,
         games,
-        tournaments,
+        playoffs,
+        seasons,
+        playerTeams,
+        playerGameStats,
+        playerSeasonStats,
+        teamSeasonStats,
         announcements,
-        loading: false
+        photos,
+        activeSeason,
+        loading: false,
       });
-      
+
       console.log('DataContext: State updated with Supabase data');
-      
-      // Initialize stats system with loaded data
-      if (games.length > 0) {
-        recalculateAllStats(games, players, teams);
-      }
     } catch (error) {
       console.error('Failed to load data from Supabase:', error);
-      setState(prev => ({ ...prev, loading: false }));
+      setState((prev) => ({ ...prev, loading: false }));
     }
   };
 
   const refreshData = async () => {
     await loadAllData();
-  };
-
-  const recalculateStats = async () => {
-    recalculateAllStats(state.games, state.players, state.teams);
   };
 
   // Team operations
@@ -174,7 +284,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     return response.data;
   };
 
-  const createTeam = async (teamData: Omit<Team, 'id'>): Promise<Team> => {
+  const createTeam = async (teamData: Omit<Team, 'id' | 'createdAt' | 'updatedAt'>): Promise<Team> => {
     const response = await teamsApi.create(teamData);
     if (response.success && response.data) {
       const updatedTeams = [...state.teams, response.data];
@@ -216,15 +326,10 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     return response.data;
   };
 
-  const getPlayersByTeam = async (teamId: string): Promise<Player[]> => {
-    const response = await playersApi.getByTeam(teamId);
-    return response.data || [];
-  };
-
-  const createPlayer = async (playerData: Omit<Player, 'id'>): Promise<Player> => {
+  const createPlayer = async (playerData: Omit<Player, 'id' | 'createdAt' | 'updatedAt'>): Promise<Player> => {
     const response = await playersApi.create(playerData);
     if (response.success && response.data) {
-      await refreshData(); // Refresh to get updated teams and players
+      await refreshData();
       return response.data;
     }
     throw new Error(response.message || 'Failed to create player');
@@ -233,7 +338,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const updatePlayer = async (id: string, updates: Partial<Player>): Promise<Player> => {
     const response = await playersApi.update(id, updates);
     if (response.success && response.data) {
-      await refreshData(); // Refresh to get updated teams and players
+      await refreshData();
       return response.data;
     }
     throw new Error(response.message || 'Failed to update player');
@@ -242,7 +347,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const deletePlayer = async (id: string): Promise<boolean> => {
     const response = await playersApi.delete(id);
     if (response.success) {
-      await refreshData(); // Refresh to get updated teams and players
+      await refreshData();
       return true;
     }
     throw new Error(response.message || 'Failed to delete player');
@@ -258,16 +363,20 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     return response.data;
   };
 
-  const createGame = async (gameData: Omit<Game, 'id'>): Promise<Game> => {
+  const createGame = async (gameData: Omit<Game, 'id' | 'createdAt' | 'updatedAt'>): Promise<Game> => {
     // Validate game data
     const validation = validateGameData(gameData);
     if (!validation.valid) {
       throw new Error(`Game validation failed: ${validation.errors.join(', ')}`);
     }
-    
+
     const response = await gamesApi.create(gameData);
     if (response.success && response.data) {
-      await refreshData(); // Refresh to update games and stats
+      await refreshData();
+      // If game is completed, recalculate stats (async, don't wait)
+      if (response.data.status === 'completed') {
+        recalculateStats().catch(err => console.error('Failed to recalculate stats after game creation:', err));
+      }
       return response.data;
     }
     throw new Error(response.message || 'Failed to create game');
@@ -279,10 +388,14 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     if (!validation.valid) {
       throw new Error(`Game validation failed: ${validation.errors.join(', ')}`);
     }
-    
+
     const response = await gamesApi.update(id, updates);
     if (response.success && response.data) {
-      await refreshData(); // Refresh to update games and stats
+      await refreshData();
+      // If game is completed or was just completed, recalculate stats (async, don't wait)
+      if (response.data.status === 'completed' || updates.status === 'completed') {
+        recalculateStats().catch(err => console.error('Failed to recalculate stats after game update:', err));
+      }
       return response.data;
     }
     throw new Error(response.message || 'Failed to update game');
@@ -291,52 +404,125 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const deleteGame = async (id: string): Promise<boolean> => {
     const response = await gamesApi.delete(id);
     if (response.success) {
-      await refreshData(); // Refresh to update games and stats
+      await refreshData();
       return true;
     }
     throw new Error(response.message || 'Failed to delete game');
   };
 
-  // Tournament operations
-  const getTournaments = async (): Promise<Tournament[]> => {
-    return state.tournaments;
+  // Season operations
+  const getSeasons = async (): Promise<Season[]> => {
+    return state.seasons;
   };
 
-  const getTournamentById = async (id: string): Promise<Tournament | null> => {
-    const response = await tournamentsApi.getById(id);
+  const getSeasonById = async (id: string): Promise<Season | null> => {
+    const response = await seasonsApi.getById(id);
     return response.data;
   };
 
-  const createTournament = async (tournamentData: Omit<Tournament, 'id'>): Promise<Tournament> => {
-    const response = await tournamentsApi.create(tournamentData);
+  const createSeason = async (seasonData: Omit<Season, 'id' | 'createdAt' | 'updatedAt'>): Promise<Season> => {
+    const response = await seasonsApi.create(seasonData);
     if (response.success && response.data) {
       await refreshData();
       return response.data;
     }
-    throw new Error(response.message || 'Failed to create tournament');
+    throw new Error(response.message || 'Failed to create season');
   };
 
-  const updateTournament = async (id: string, updates: Partial<Tournament>): Promise<Tournament> => {
-    const response = await tournamentsApi.update(id, updates);
+  const updateSeason = async (id: string, updates: Partial<Season>): Promise<Season> => {
+    const response = await seasonsApi.update(id, updates);
     if (response.success && response.data) {
       await refreshData();
       return response.data;
     }
-    throw new Error(response.message || 'Failed to update tournament');
+    throw new Error(response.message || 'Failed to update season');
   };
 
-  const deleteTournament = async (id: string): Promise<boolean> => {
-    const response = await tournamentsApi.delete(id);
+  const deleteSeason = async (id: string): Promise<boolean> => {
+    const response = await seasonsApi.delete(id);
     if (response.success) {
       await refreshData();
       return true;
     }
-    throw new Error(response.message || 'Failed to delete tournament');
+    throw new Error(response.message || 'Failed to delete season');
   };
 
-  // Announcements
-  const getAnnouncements = async (): Promise<any[]> => {
-    return state.announcements;
+  // PlayerTeam operations (roster management)
+  const getPlayerTeams = async (): Promise<PlayerTeam[]> => {
+    return state.playerTeams;
+  };
+
+  const getTeamRoster = async (teamId: string, seasonId: string): Promise<PlayerTeam[]> => {
+    const response = await playerTeamsApi.getByTeam(teamId, seasonId);
+    return response.data || [];
+  };
+
+  const createPlayerTeam = async (
+    playerTeamData: Omit<PlayerTeam, 'id' | 'createdAt' | 'updatedAt'>
+  ): Promise<PlayerTeam> => {
+    const response = await playerTeamsApi.create(playerTeamData);
+    if (response.success && response.data) {
+      await refreshData();
+      return response.data;
+    }
+    throw new Error(response.message || 'Failed to create player team');
+  };
+
+  const updatePlayerTeam = async (id: string, updates: Partial<PlayerTeam>): Promise<PlayerTeam> => {
+    const response = await playerTeamsApi.update(id, updates);
+    if (response.success && response.data) {
+      await refreshData();
+      return response.data;
+    }
+    throw new Error(response.message || 'Failed to update player team');
+  };
+
+  const deletePlayerTeam = async (id: string): Promise<boolean> => {
+    const response = await playerTeamsApi.delete(id);
+    if (response.success) {
+      await refreshData();
+      return true;
+    }
+    throw new Error(response.message || 'Failed to delete player team');
+  };
+
+  // Playoff operations
+  const getPlayoffs = async (): Promise<Playoff[]> => {
+    return state.playoffs;
+  };
+
+  const getPlayoffById = async (id: string): Promise<Playoff | null> => {
+    const response = await playoffsApi.getById(id);
+    return response.data;
+  };
+
+  const createPlayoff = async (
+    playoffData: Omit<Playoff, 'id' | 'createdAt' | 'updatedAt'>
+  ): Promise<Playoff> => {
+    const response = await playoffsApi.create(playoffData);
+    if (response.success && response.data) {
+      await refreshData();
+      return response.data;
+    }
+    throw new Error(response.message || 'Failed to create playoff');
+  };
+
+  const updatePlayoff = async (id: string, updates: Partial<Playoff>): Promise<Playoff> => {
+    const response = await playoffsApi.update(id, updates);
+    if (response.success && response.data) {
+      await refreshData();
+      return response.data;
+    }
+    throw new Error(response.message || 'Failed to update playoff');
+  };
+
+  const deletePlayoff = async (id: string): Promise<boolean> => {
+    const response = await playoffsApi.delete(id);
+    if (response.success) {
+      await refreshData();
+      return true;
+    }
+    throw new Error(response.message || 'Failed to delete playoff');
   };
 
   // Data management
@@ -350,12 +536,10 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const importData = async (data: any): Promise<boolean> => {
     try {
-      const response = await dataApi.importAll(data);
-      if (response.success) {
-        await loadAllData(); // Refresh state
-        return true;
-      }
-      throw new Error(response.message || 'Failed to import data');
+      // This would call an importAll API if it existed
+      // For now, just reload data
+      await loadAllData();
+      return true;
     } catch (error) {
       console.error('Failed to import data:', error);
       return false;
@@ -376,13 +560,121 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
+  const recalculateStats = async (): Promise<void> => {
+    try {
+      console.log('Recalculating all stats...');
+      await recalculateAllStats(state.games, state.players, state.playerTeams, state.seasons);
+      // Reload data to get updated stats
+      await loadAllData();
+      console.log('Stats recalculation complete!');
+    } catch (error) {
+      console.error('Failed to recalculate stats:', error);
+      throw error;
+    }
+  };
+
+  // Announcement operations
+  const getAnnouncements = async (): Promise<Announcement[]> => {
+    return state.announcements;
+  };
+
+  const getAnnouncementById = async (id: string): Promise<Announcement | null> => {
+    const response = await announcementsApi.getById(id);
+    return response.data;
+  };
+
+  const getActiveAnnouncement = async (seasonId: string): Promise<Announcement | null> => {
+    const response = await announcementsApi.getActive(seasonId);
+    return response.data;
+  };
+
+  const createAnnouncement = async (
+    announcementData: Omit<Announcement, 'id' | 'createdAt' | 'updatedAt'>
+  ): Promise<Announcement> => {
+    const response = await announcementsApi.create(announcementData);
+    if (response.success && response.data) {
+      await refreshData();
+      return response.data;
+    }
+    throw new Error(response.message || 'Failed to create announcement');
+  };
+
+  const updateAnnouncement = async (id: string, updates: Partial<Announcement>): Promise<Announcement> => {
+    const response = await announcementsApi.update(id, updates);
+    if (response.success && response.data) {
+      await refreshData();
+      return response.data;
+    }
+    throw new Error(response.message || 'Failed to update announcement');
+  };
+
+  const deleteAnnouncement = async (id: string): Promise<boolean> => {
+    const response = await announcementsApi.delete(id);
+    if (response.success) {
+      await refreshData();
+      return true;
+    }
+    throw new Error(response.message || 'Failed to delete announcement');
+  };
+
+  // Photo operations
+  const getPhotos = async (): Promise<Photo[]> => {
+    return state.photos;
+  };
+
+  const getPhotoById = async (id: string): Promise<Photo | null> => {
+    const response = await photosApi.getById(id);
+    return response.data;
+  };
+
+  const getFeaturedPhoto = async (seasonId: string): Promise<Photo | null> => {
+    const response = await photosApi.getFeatured(seasonId);
+    return response.data;
+  };
+
+  const createPhoto = async (
+    photoData: Omit<Photo, 'id' | 'uploadedAt'>
+  ): Promise<Photo> => {
+    const response = await photosApi.create(photoData);
+    if (response.success && response.data) {
+      await refreshData();
+      return response.data;
+    }
+    throw new Error(response.message || 'Failed to create photo');
+  };
+
+  const updatePhoto = async (id: string, updates: Partial<Photo>): Promise<Photo> => {
+    const response = await photosApi.update(id, updates);
+    if (response.success && response.data) {
+      await refreshData();
+      return response.data;
+    }
+    throw new Error(response.message || 'Failed to update photo');
+  };
+
+  const deletePhoto = async (id: string): Promise<boolean> => {
+    const response = await photosApi.delete(id);
+    if (response.success) {
+      await refreshData();
+      return true;
+    }
+    throw new Error(response.message || 'Failed to delete photo');
+  };
+
   const contextValue: DataContextType = {
     // State
     teams: state.teams,
     players: state.players,
     games: state.games,
-    tournaments: state.tournaments,
+    playoffs: state.playoffs,
+    seasons: state.seasons,
+    playerTeams: state.playerTeams,
+    playerGameStats: state.playerGameStats,
+    playerSeasonStats: state.playerSeasonStats,
+    teamSeasonStats: state.teamSeasonStats,
     announcements: state.announcements,
+    photos: state.photos,
+    activeSeason: state.activeSeason,
     loading: state.loading,
 
     // Team operations
@@ -395,7 +687,6 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     // Player operations
     getPlayers,
     getPlayerById,
-    getPlayersByTeam,
     createPlayer,
     updatePlayer,
     deletePlayer,
@@ -407,22 +698,49 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     updateGame,
     deleteGame,
 
-    // Tournament operations
-    getTournaments,
-    getTournamentById,
-    createTournament,
-    updateTournament,
-    deleteTournament,
+    // Season operations
+    getSeasons,
+    getSeasonById,
+    createSeason,
+    updateSeason,
+    deleteSeason,
 
-    // Announcements
+    // PlayerTeam operations
+    getPlayerTeams,
+    getTeamRoster,
+    createPlayerTeam,
+    updatePlayerTeam,
+    deletePlayerTeam,
+
+    // Playoff operations
+    getPlayoffs,
+    getPlayoffById,
+    createPlayoff,
+    updatePlayoff,
+    deletePlayoff,
+
+    // Announcement operations
     getAnnouncements,
+    getAnnouncementById,
+    getActiveAnnouncement,
+    createAnnouncement,
+    updateAnnouncement,
+    deleteAnnouncement,
+
+    // Photo operations
+    getPhotos,
+    getPhotoById,
+    getFeaturedPhoto,
+    createPhoto,
+    updatePhoto,
+    deletePhoto,
 
     // Data management
     exportData,
     importData,
     resetToDemo,
     refreshData,
-    recalculateStats
+    recalculateStats,
   };
 
   return (

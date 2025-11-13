@@ -2,6 +2,8 @@ import React from 'react';
 import { Trophy, Target, Calendar } from 'lucide-react';
 import { HeadToHeadComparison as H2HType, Team } from '../../core/types';
 import { format } from 'date-fns';
+import TeamIcon from '../common/TeamIcon';
+import { getWinnerId } from '../../core/utils/gameHelpers';
 
 interface HeadToHeadComparisonProps {
   comparison: H2HType;
@@ -47,10 +49,7 @@ const HeadToHeadComparison: React.FC<HeadToHeadComparisonProps> = ({
             <div className="team-comparison">
               <div className="team-side">
                 <div className="team-header">
-                  <div 
-                    className="team-color-large"
-                    style={{ backgroundColor: team1.color }}
-                  />
+                  <TeamIcon iconId={team1.abbreviation} color="#3b82f6" size={32} />
                   <h3 className="team-name">{team1.name}</h3>
                 </div>
                 <div className="team-record">
@@ -82,10 +81,7 @@ const HeadToHeadComparison: React.FC<HeadToHeadComparisonProps> = ({
 
               <div className="team-side">
                 <div className="team-header">
-                  <div 
-                    className="team-color-large"
-                    style={{ backgroundColor: team2.color }}
-                  />
+                  <TeamIcon iconId={team2.abbreviation} color="#ef4444" size={32} />
                   <h3 className="team-name">{team2.name}</h3>
                 </div>
                 <div className="team-record">
@@ -114,31 +110,29 @@ const HeadToHeadComparison: React.FC<HeadToHeadComparisonProps> = ({
                 <div className="game-date">
                   <Calendar size={14} />
                   <span>
-                    {format(
-                      comparison.lastGame.completedDate || comparison.lastGame.scheduledDate,
-                      'MMM d, yyyy'
-                    )}
+                    {comparison.lastGame.gameDate && format(comparison.lastGame.gameDate, 'MMM d, yyyy')}
                   </span>
                 </div>
                 
                 <div className="game-score">
-                  <span className={comparison.lastGame.winnerId === team1.id ? 'winner-score' : ''}>
-                    {comparison.lastGame.team1Id === team1.id 
-                      ? comparison.lastGame.team1Score 
-                      : comparison.lastGame.team2Score}
+                  {/* Determine which team was home/away and show their score */}
+                  <span className={getWinnerId(comparison.lastGame) === team1.id ? 'winner-score' : ''}>
+                    {comparison.lastGame.homeTeamId === team1.id 
+                      ? comparison.lastGame.homeScore 
+                      : comparison.lastGame.awayScore}
                   </span>
                   <span className="score-separator">-</span>
-                  <span className={comparison.lastGame.winnerId === team2.id ? 'winner-score' : ''}>
-                    {comparison.lastGame.team1Id === team2.id 
-                      ? comparison.lastGame.team1Score 
-                      : comparison.lastGame.team2Score}
+                  <span className={getWinnerId(comparison.lastGame) === team2.id ? 'winner-score' : ''}>
+                    {comparison.lastGame.homeTeamId === team2.id 
+                      ? comparison.lastGame.homeScore 
+                      : comparison.lastGame.awayScore}
                   </span>
                 </div>
 
                 <div className="game-winner">
                   <Trophy size={14} />
                   <span>
-                    {teams.find(t => t.id === comparison.lastGame?.winnerId)?.name} won
+                    {teams.find(t => t.id === getWinnerId(comparison.lastGame!))?.name} won
                   </span>
                 </div>
               </div>

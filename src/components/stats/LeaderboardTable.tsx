@@ -1,11 +1,15 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { Trophy, Target, Award, Zap, Users, BarChart3 } from 'lucide-react';
-import { LeaderboardEntry, Player, Team } from '../../core/types';
+import { LeaderboardEntry, Player, Team, PlayerTeam } from '../../core/types';
+import TeamIcon from '../common/TeamIcon';
+import { getPlayerFullName, getPlayerInitials } from '../../core/utils/playerHelpers';
 
 interface LeaderboardTableProps {
   entries: LeaderboardEntry[];
   players: Player[];
   teams: Team[];
+  playerTeams: PlayerTeam[];
   category: 'wins' | 'average' | 'shutouts' | 'blowouts' | 'clutch' | 'streak';
 }
 
@@ -13,6 +17,7 @@ const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
   entries,
   players,
   teams,
+  playerTeams,
   category
 }) => {
   const getCategoryIcon = () => {
@@ -68,12 +73,16 @@ const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
           <tbody>
             {entries.slice(0, 10).map((entry, index) => {
               const player = players.find(p => p.id === entry.playerId);
-              const team = teams.find(t => t.id === player?.teamId);
-              
-              if (!player || !team) return null;
+              if (!player) return null;
 
-              const winPercentage = player.stats.gamesPlayed > 0 
-                ? Math.round((player.stats.wins / player.stats.gamesPlayed) * 100)
+              const playerTeamEntry = playerTeams.find(pt => pt.playerId === player.id && pt.status === 'active');
+              const team = playerTeamEntry ? teams.find(t => t.id === playerTeamEntry.teamId) : undefined;
+
+              // LeaderboardEntry should have stats, but provide fallback
+              const gamesPlayed = entry.gamesPlayed || 0;
+              const wins = entry.wins || 0;
+              const winPercentage = gamesPlayed > 0 
+                ? Math.round((wins / gamesPlayed) * 100)
                 : 0;
 
               return (
@@ -92,26 +101,29 @@ const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
                   <td>
                     <div className="player-cell">
                       <div className="player-avatar-small">
-                        {player.photoUrl ? (
-                          <img src={player.photoUrl} alt={player.name} />
+                        {player.avatarUrl ? (
+                          <img src={player.avatarUrl} alt={getPlayerFullName(player)} />
                         ) : (
                           <div className="player-initials-small">
-                            {player.name.split(' ').map(n => n[0]).join('').toUpperCase()}
+                            {getPlayerInitials(player)}
                           </div>
                         )}
                       </div>
-                      <span className="player-name">{player.name}</span>
+                      <span className="player-name">{getPlayerFullName(player)}</span>
                     </div>
                   </td>
                   
                   <td>
-                    <div className="team-cell">
-                      <div 
-                        className="team-color-dot"
-                        style={{ backgroundColor: team.color }}
-                      />
-                      <span>{team.name}</span>
-                    </div>
+                    {team ? (
+                      <Link to={`/team/${team.id}`} className="team-cell-link">
+                        <div className="team-cell">
+                          <TeamIcon iconId={team.abbreviation} color="#3b82f6" size={16} />
+                          <span>{team.name}</span>
+                        </div>
+                      </Link>
+                    ) : (
+                      <span className="text-muted">No team</span>
+                    )}
                   </td>
                   
                   <td>
@@ -119,7 +131,7 @@ const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
                   </td>
                   
                   <td>
-                    <span className="games-played">{player.stats.gamesPlayed}</span>
+                    <span className="games-played">{gamesPlayed}</span>
                   </td>
                   
                   <td>

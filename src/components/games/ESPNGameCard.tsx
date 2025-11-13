@@ -1,8 +1,10 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { MapPin, Trophy, Calendar } from 'lucide-react';
 import { Game, Team } from '../../core/types';
 import { format } from 'date-fns';
 import TeamIcon from '../common/TeamIcon';
+import { getGameTags, getWinnerId } from '../../core/utils/gameHelpers';
 
 interface ESPNGameCardProps {
   game: Game;
@@ -11,17 +13,15 @@ interface ESPNGameCardProps {
 }
 
 const ESPNGameCard: React.FC<ESPNGameCardProps> = ({ game, teams, onClick }) => {
-  const team1 = teams.find(t => t.id === game.team1Id);
-  const team2 = teams.find(t => t.id === game.team2Id);
+  const homeTeam = teams.find(t => t.id === game.homeTeamId);
+  const awayTeam = teams.find(t => t.id === game.awayTeamId);
   
-  if (!team1 || !team2) {
+  if (!homeTeam || !awayTeam) {
     return null;
   }
 
-  const handleTeamClick = (e: React.MouseEvent, teamId: string) => {
+  const handleTeamClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    // Future: navigate(`/team/${teamId}`);
-    console.log('Navigate to team page:', teamId);
   };
 
   const getStatusDisplay = () => {
@@ -29,9 +29,11 @@ const ESPNGameCard: React.FC<ESPNGameCardProps> = ({ game, teams, onClick }) => 
       case 'completed':
         return { text: 'Final', color: 'completed' };
       case 'scheduled':
-        return { text: format(game.scheduledDate, 'h:mm a'), color: 'scheduled' };
-      case 'cancelled':
-        return { text: 'Cancelled', color: 'cancelled' };
+        return { text: game.gameDate ? format(game.gameDate, 'h:mm a') : 'TBD', color: 'scheduled' };
+      case 'in_progress':
+        return { text: 'Live', color: 'in_progress' };
+      case 'canceled':
+        return { text: 'Canceled', color: 'canceled' };
       default:
         return { text: '', color: '' };
     }
@@ -39,6 +41,8 @@ const ESPNGameCard: React.FC<ESPNGameCardProps> = ({ game, teams, onClick }) => 
 
   const status = getStatusDisplay();
   const isCompleted = game.status === 'completed';
+  const winnerId = getWinnerId(game);
+  const tags = getGameTags(game);
 
   return (
     <div 
@@ -49,75 +53,74 @@ const ESPNGameCard: React.FC<ESPNGameCardProps> = ({ game, teams, onClick }) => 
         <span className={`espn-status-badge status-${status.color}`}>
           {status.text}
         </span>
-        {game.status === 'scheduled' && (
+        {!isCompleted && game.gameDate && (
           <div className="espn-game-date">
             <Calendar size={14} />
-            <span>{format(game.scheduledDate, 'MMM d')}</span>
+            <span>{format(game.gameDate, 'MMM d')}</span>
           </div>
         )}
       </div>
 
-      <div className="espn-game-matchup">
-        {/* Team 1 */}
-        <div 
-          className={`espn-team ${isCompleted && game.winnerId === team1.id ? 'espn-team-winner' : ''}`}
-          onClick={(e) => handleTeamClick(e, team1.id)}
+      <div className="espn-game-body">
+        {/* Home Team */}
+        <Link 
+          to={`/team/${homeTeam.id}`}
+          className={`espn-team ${isCompleted && winnerId === homeTeam.id ? 'espn-team-winner' : ''}`}
+          onClick={handleTeamClick}
         >
           <div className="espn-team-info">
-            <TeamIcon iconId={team1.icon} color={team1.color} size={28} />
+            <TeamIcon iconId={homeTeam.abbreviation} color="#3b82f6" size={28} />
             <div className="espn-team-details">
-              <span className="espn-team-name">{team1.name}</span>
-              <span className="espn-team-record">{team1.wins}-{team1.losses}</span>
+              <span className="espn-team-name">{homeTeam.name}</span>
             </div>
           </div>
           {isCompleted && (
             <div className="espn-team-score">
-              {game.team1Score}
+              {game.homeScore}
             </div>
           )}
-        </div>
+        </Link>
 
-        {/* VS Divider */}
         <div className="espn-vs-divider">
-          <span>VS</span>
+          {isCompleted ? 'FINAL' : 'VS'}
         </div>
 
-        {/* Team 2 */}
-        <div 
-          className={`espn-team ${isCompleted && game.winnerId === team2.id ? 'espn-team-winner' : ''}`}
-          onClick={(e) => handleTeamClick(e, team2.id)}
+        {/* Away Team */}
+        <Link 
+          to={`/team/${awayTeam.id}`}
+          className={`espn-team ${isCompleted && winnerId === awayTeam.id ? 'espn-team-winner' : ''}`}
+          onClick={handleTeamClick}
         >
           <div className="espn-team-info">
-            <TeamIcon iconId={team2.icon} color={team2.color} size={28} />
+            <TeamIcon iconId={awayTeam.abbreviation} color="#ef4444" size={28} />
             <div className="espn-team-details">
-              <span className="espn-team-name">{team2.name}</span>
-              <span className="espn-team-record">{team2.wins}-{team2.losses}</span>
+              <span className="espn-team-name">{awayTeam.name}</span>
             </div>
           </div>
           {isCompleted && (
             <div className="espn-team-score">
-              {game.team2Score}
+              {game.awayScore}
             </div>
           )}
-        </div>
+        </Link>
       </div>
 
       {/* Game Tags */}
-      {isCompleted && (game.isShutout || game.isBlowout || game.isClutch) && (
+      {isCompleted && (tags.isShutout || tags.isBlowout || tags.isClutch) && (
         <div className="espn-game-tags">
-          {game.isShutout && <span className="espn-tag tag-shutout">Shutout</span>}
-          {game.isBlowout && <span className="espn-tag tag-blowout">Blowout</span>}
-          {game.isClutch && <span className="espn-tag tag-clutch">Clutch</span>}
+          {tags.isShutout && <span className="espn-tag tag-shutout">Shutout</span>}
+          {tags.isBlowout && <span className="espn-tag tag-blowout">Blowout</span>}
+          {tags.isClutch && <span className="espn-tag tag-clutch">Clutch</span>}
         </div>
       )}
 
-      {/* Venue/Location */}
-      <div className="espn-game-footer">
-        <div className="espn-venue">
+      {/* Location */}
+      <div className="espn-game-location">
+        <div className="espn-location">
           <MapPin size={14} />
           <span>Bando Backyard</span>
         </div>
-        {isCompleted && game.winnerId === team1.id && (
+        {isCompleted && winnerId === homeTeam.id && (
           <Trophy size={14} className="winner-trophy" />
         )}
       </div>
@@ -126,4 +129,3 @@ const ESPNGameCard: React.FC<ESPNGameCardProps> = ({ game, teams, onClick }) => 
 };
 
 export default ESPNGameCard;
-

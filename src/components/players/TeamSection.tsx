@@ -44,7 +44,7 @@ const TeamSection: React.FC<TeamSectionProps> = ({
           size={20} 
           className={`chevron-icon ${isCollapsed ? '' : 'expanded'}`}
         />
-        <TeamIcon iconId={team.icon} color={team.color} size={24} />
+        <TeamIcon iconId={team.abbreviation} color="#3b82f6" size={24} />
         <h2 className="team-section-title">{team.name}</h2>
         <div 
           className="team-section-record"

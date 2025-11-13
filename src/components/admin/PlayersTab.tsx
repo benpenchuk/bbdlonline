@@ -1,25 +1,21 @@
 import React, { useState } from 'react';
 import { Plus, Edit, Trash2, UserPlus } from 'lucide-react';
-import { Player, Team } from '../../core/types';
+import { Player, Team, PlayerTeam, Game } from '../../core/types';
 import { useData } from '../../state';
+import { getPlayerFullName, getPlayerInitials, getPlayerTeam } from '../../core/utils/playerHelpers';
+import TeamIcon from '../common/TeamIcon';
 
 interface PlayersTabProps {
   players: Player[];
   teams: Team[];
+  playerTeams: PlayerTeam[];
+  games: Game[];
 }
 
-const PlayersTab: React.FC<PlayersTabProps> = ({ players, teams }) => {
-  const { deletePlayer, refreshData } = useData();
+const PlayersTab: React.FC<PlayersTabProps> = ({ players, teams, playerTeams, games }) => {
+  const { deletePlayer, refreshData, activeSeason } = useData();
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [editingPlayer, setEditingPlayer] = useState<Player | null>(null);
-
-  const getTeamName = (teamId: string) => {
-    return teams.find(t => t.id === teamId)?.name || 'Unknown Team';
-  };
-
-  const getTeamColor = (teamId: string) => {
-    return teams.find(t => t.id === teamId)?.color || '#6B7280';
-  };
 
   const handleDeletePlayer = async (playerId: string) => {
     if (window.confirm('Are you sure you want to delete this player?')) {
@@ -30,6 +26,26 @@ const PlayersTab: React.FC<PlayersTabProps> = ({ players, teams }) => {
         console.error('Failed to delete player:', error);
       }
     }
+  };
+
+  // Calculate player stats from games
+  const getPlayerStats = (playerId: string) => {
+    // Find player's team(s)
+    const playerTeamEntries = playerTeams.filter(pt => pt.playerId === playerId && pt.status === 'active');
+    if (playerTeamEntries.length === 0) return { wins: 0, losses: 0, gamesPlayed: 0 };
+
+    const teamIds = playerTeamEntries.map(pt => pt.teamId);
+    
+    const playerGames = games.filter(g => 
+      g.status === 'completed' &&
+      (teamIds.includes(g.homeTeamId) || teamIds.includes(g.awayTeamId))
+    );
+
+    const wins = playerGames.filter(g => teamIds.includes(g.winningTeamId || '')).length;
+    const gamesPlayed = playerGames.length;
+    const losses = gamesPlayed - wins;
+
+    return { wins, losses, gamesPlayed };
   };
 
   return (
@@ -46,70 +62,108 @@ const PlayersTab: React.FC<PlayersTabProps> = ({ players, teams }) => {
       </div>
 
       <div className="players-grid">
-        {players.map(player => (
-          <div key={player.id} className="player-admin-card">
-            <div className="player-header">
-              <div className="player-avatar-small">
-                {player.photoUrl ? (
-                  <img src={player.photoUrl} alt={player.name} />
-                ) : (
-                  <div className="player-initials-small">
-                    {player.name.split(' ').map(n => n[0]).join('').toUpperCase()}
-                  </div>
-                )}
-              </div>
-              <div className="player-info">
-                <h3>{player.name}</h3>
-                <div className="player-team">
-                  <div 
-                    className="team-color-dot"
-                    style={{ backgroundColor: getTeamColor(player.teamId) }}
-                  />
-                  <span>{getTeamName(player.teamId)}</span>
+        {players.map(player => {
+          const playerTeam = getPlayerTeam(player, teams, playerTeams, activeSeason?.id);
+          const stats = getPlayerStats(player.id);
+
+          return (
+            <div key={player.id} className="player-admin-card">
+              <div className="player-header">
+                <div className="player-avatar-small">
+                  {player.avatarUrl ? (
+                    <img src={player.avatarUrl} alt={getPlayerFullName(player)} />
+                  ) : (
+                    <div className="player-initials-small">
+                      {getPlayerInitials(player)}
+                    </div>
+                  )}
+                </div>
+                <div className="player-info">
+                  <h3>{getPlayerFullName(player)}</h3>
+                  {playerTeam && (
+                    <div className="player-team">
+                      <TeamIcon iconId={playerTeam.abbreviation} color="#64748b" size={14} />
+                      <span>{playerTeam.name}</span>
+                    </div>
+                  )}
+                  {!playerTeam && (
+                    <div className="player-team">
+                      <span className="text-muted">No team assigned</span>
+                    </div>
+                  )}
                 </div>
               </div>
-            </div>
 
-            <div className="player-stats-summary">
-              <div className="stat-item">
-                <span className="stat-value">{player.stats.wins}</span>
-                <span className="stat-label">Wins</span>
+              <div className="player-stats-summary">
+                <div className="stat-item">
+                  <span className="stat-value">{stats.wins}</span>
+                  <span className="stat-label">Wins</span>
+                </div>
+                <div className="stat-item">
+                  <span className="stat-value">{stats.gamesPlayed}</span>
+                  <span className="stat-label">Games</span>
+                </div>
+                <div className="stat-item">
+                  <span className="stat-value">{stats.losses}</span>
+                  <span className="stat-label">Losses</span>
+                </div>
               </div>
-              <div className="stat-item">
-                <span className="stat-value">{player.stats.gamesPlayed}</span>
-                <span className="stat-label">Games</span>
-              </div>
-              <div className="stat-item">
-                <span className="stat-value">{player.stats.averagePoints.toFixed(1)}</span>
-                <span className="stat-label">Avg</span>
-              </div>
-            </div>
 
-            <div className="player-actions">
-              <button 
-                className="btn btn-outline btn-small"
-                onClick={() => setEditingPlayer(player)}
-              >
-                <Edit size={14} />
-                Edit
-              </button>
-              <button 
-                className="btn btn-danger btn-small"
-                onClick={() => handleDeletePlayer(player.id)}
-              >
-                <Trash2 size={14} />
-                Delete
-              </button>
+              <div className="player-actions">
+                <button 
+                  className="btn btn-outline btn-small"
+                  onClick={() => setEditingPlayer(player)}
+                >
+                  <Edit size={14} />
+                  Edit
+                </button>
+                <button 
+                  className="btn btn-danger btn-small"
+                  onClick={() => handleDeletePlayer(player.id)}
+                >
+                  <Trash2 size={14} />
+                  Delete
+                </button>
+              </div>
             </div>
+          );
+        })}
+        
+        {players.length === 0 && (
+          <div className="empty-state">
+            <UserPlus size={48} />
+            <h3>No players</h3>
+            <p>Click "Add Player" to create a new player.</p>
           </div>
-        ))}
+        )}
       </div>
 
-      {players.length === 0 && (
-        <div className="empty-state">
-          <UserPlus size={48} />
-          <h3>No players yet</h3>
-          <p>Add players to start building your league</p>
+      {/* TODO: Add Player Form Modal */}
+      {showCreateForm && (
+        <div className="modal-overlay" onClick={() => setShowCreateForm(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>Add Player</h2>
+              <button onClick={() => setShowCreateForm(false)}>×</button>
+            </div>
+            <div className="modal-body">
+              <p>Player creation form coming soon...</p>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {editingPlayer && (
+        <div className="modal-overlay" onClick={() => setEditingPlayer(null)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>Edit Player</h2>
+              <button onClick={() => setEditingPlayer(null)}>×</button>
+            </div>
+            <div className="modal-body">
+              <p>Player editing form coming soon...</p>
+            </div>
+          </div>
         </div>
       )}
     </div>

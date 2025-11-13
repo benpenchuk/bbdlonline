@@ -1,12 +1,16 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { Calendar, Trophy, Users, TrendingUp, Target } from 'lucide-react';
-import { Game, Player, Team } from '../../core/types';
+import { Game, Player, Team, PlayerTeam } from '../../core/types';
 import { getConfig } from '../../core/config/appConfig';
+import { getPlayerFullName, getPlayerInitials } from '../../core/utils/playerHelpers';
+import TeamIcon from './TeamIcon';
 
 interface HeroSectionProps {
   games: Game[];
   players: Player[];
   teams: Team[];
+  playerTeams: PlayerTeam[];
   seasonStats: {
     totalGames: number;
     completedGames: number;
@@ -18,7 +22,8 @@ interface HeroSectionProps {
 const HeroSection: React.FC<HeroSectionProps> = ({ 
   games, 
   players, 
-  teams, 
+  teams,
+  playerTeams,
   seasonStats 
 }) => {
   const config = getConfig();
@@ -31,18 +36,21 @@ const HeroSection: React.FC<HeroSectionProps> = ({
   // Get next upcoming game
   const upcomingGames = games
     .filter(game => game.status === 'scheduled')
-    .sort((a, b) => new Date(a.scheduledDate).getTime() - new Date(b.scheduledDate).getTime());
+    .sort((a, b) => {
+      const dateA = a.gameDate ? new Date(a.gameDate).getTime() : 0;
+      const dateB = b.gameDate ? new Date(b.gameDate).getTime() : 0;
+      return dateA - dateB;
+    });
   
   const nextGame = upcomingGames[0];
-  const nextGameTeam1 = nextGame ? teams.find(t => t.id === nextGame.team1Id) : null;
-  const nextGameTeam2 = nextGame ? teams.find(t => t.id === nextGame.team2Id) : null;
+  const nextGameHomeTeam = nextGame ? teams.find(t => t.id === nextGame.homeTeamId) : null;
+  const nextGameAwayTeam = nextGame ? teams.find(t => t.id === nextGame.awayTeamId) : null;
 
-  // Get top performer
-  const topPlayer = players.reduce((prev, current) => {
-    return (current.stats.wins > prev.stats.wins) ? current : prev;
-  }, players[0]);
-  
-  const topPlayerTeam = topPlayer ? teams.find(t => t.id === topPlayer.teamId) : null;
+  // For top player, we'd need to compute stats from games
+  // For now, just show the first active player (this should be improved with actual stats calculation)
+  const topPlayer = players[0];
+  const topPlayerTeamEntry = topPlayer ? playerTeams.find(pt => pt.playerId === topPlayer.id && pt.status === 'active') : null;
+  const topPlayerTeam = topPlayerTeamEntry ? teams.find(t => t.id === topPlayerTeamEntry.teamId) : null;
 
   return (
     <div className="hero-section">
@@ -81,14 +89,14 @@ const HeroSection: React.FC<HeroSectionProps> = ({
 
               {/* Quick Actions */}
               <div className="hero-actions">
-                <button className="btn btn-primary">
+                <Link to="/games" className="btn btn-primary">
                   <Calendar size={16} />
                   View Schedule
-                </button>
-                <button className="btn btn-outline">
+                </Link>
+                <Link to="/standings" className="btn btn-secondary">
                   <Trophy size={16} />
                   Standings
-                </button>
+                </Link>
               </div>
             </div>
 
@@ -139,7 +147,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({
           {/* Side Info Cards */}
           <div className="hero-sidebar">
             {/* Next Game Card */}
-            {nextGame && nextGameTeam1 && nextGameTeam2 && (
+            {nextGame && nextGameHomeTeam && nextGameAwayTeam && (
               <div className="hero-info-card">
                 <h3 className="info-card-title">
                   <Calendar size={16} />
@@ -148,30 +156,28 @@ const HeroSection: React.FC<HeroSectionProps> = ({
                 <div className="next-game">
                   <div className="game-teams-preview">
                     <div className="team-preview">
-                      <div 
-                        className="team-color-preview" 
-                        style={{ backgroundColor: nextGameTeam1.color }}
-                      />
-                      <span>{nextGameTeam1.name}</span>
+                      <TeamIcon iconId={nextGameHomeTeam.abbreviation} color="#3b82f6" size={16} />
+                      <span>{nextGameHomeTeam.name}</span>
                     </div>
                     <span className="vs-text">vs</span>
                     <div className="team-preview">
-                      <div 
-                        className="team-color-preview" 
-                        style={{ backgroundColor: nextGameTeam2.color }}
-                      />
-                      <span>{nextGameTeam2.name}</span>
+                      <TeamIcon iconId={nextGameAwayTeam.abbreviation} color="#ef4444" size={16} />
+                      <span>{nextGameAwayTeam.name}</span>
                     </div>
                   </div>
                   <div className="game-date-time">
-                    {new Date(nextGame.scheduledDate).toLocaleDateString('en-US', {
-                      weekday: 'short',
-                      month: 'short',
-                      day: 'numeric'
-                    })} at {new Date(nextGame.scheduledDate).toLocaleTimeString('en-US', {
-                      hour: 'numeric',
-                      minute: '2-digit'
-                    })}
+                    {nextGame.gameDate && (
+                      <>
+                        {new Date(nextGame.gameDate).toLocaleDateString('en-US', {
+                          weekday: 'short',
+                          month: 'short',
+                          day: 'numeric'
+                        })} at {new Date(nextGame.gameDate).toLocaleTimeString('en-US', {
+                          hour: 'numeric',
+                          minute: '2-digit'
+                        })}
+                      </>
+                    )}
                   </div>
                 </div>
               </div>
@@ -186,27 +192,25 @@ const HeroSection: React.FC<HeroSectionProps> = ({
                 </h3>
                 <div className="top-performer">
                   <div className="performer-avatar">
-                    {topPlayer.photoUrl ? (
-                      <img src={topPlayer.photoUrl} alt={topPlayer.name} />
+                    {topPlayer.avatarUrl ? (
+                      <img src={topPlayer.avatarUrl} alt={getPlayerFullName(topPlayer)} />
                     ) : (
                       <div className="performer-initials">
-                        {topPlayer.name.split(' ').map(n => n[0]).join('').toUpperCase()}
+                        {getPlayerInitials(topPlayer)}
                       </div>
                     )}
                   </div>
                   <div className="performer-info">
-                    <div className="performer-name">{topPlayer.name}</div>
+                    <div className="performer-name">{getPlayerFullName(topPlayer)}</div>
                     {topPlayerTeam && (
                       <div className="performer-team">
-                        <div 
-                          className="team-color-dot" 
-                          style={{ backgroundColor: topPlayerTeam.color }}
-                        />
+                        <TeamIcon iconId={topPlayerTeam.abbreviation} color="#64748b" size={14} />
                         <span>{topPlayerTeam.name}</span>
                       </div>
                     )}
                     <div className="performer-stats">
-                      {topPlayer.stats.wins} wins • {topPlayer.stats.averagePoints.toFixed(1)} avg
+                      {/* Stats would need to be computed from games */}
+                      Season leader
                     </div>
                   </div>
                 </div>

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Lock, Users, UserPlus, Calendar, Settings, Database, LogOut, Shield } from 'lucide-react';
+import { Lock, Users, UserPlus, Calendar, Settings, Database, LogOut, Shield, MessageSquare, Image } from 'lucide-react';
 import { getConfig } from '../core/config/appConfig';
 import { useData } from '../state';
 import { useAuth } from '../state';
@@ -11,13 +11,15 @@ import GamesTab from '../components/admin/GamesTab';
 import SettingsTab from '../components/admin/SettingsTab';
 import DataManagementTab from '../components/admin/DataManagementTab';
 import DataDebugTab from '../components/admin/DataDebugTab';
+import AnnouncementsTab from '../components/admin/AnnouncementsTab';
+import PhotosTab from '../components/admin/PhotosTab';
 
-type AdminTab = 'teams' | 'players' | 'games' | 'settings' | 'data' | 'debug';
+type AdminTab = 'teams' | 'players' | 'games' | 'announcements' | 'photos' | 'settings' | 'data' | 'debug';
 
 const AdminPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<AdminTab>('teams');
   
-  const { teams, players, games, loading } = useData();
+  const { teams, players, games, playerTeams, loading } = useData();
   const { isAuthenticated, logout, demoMode, toggleDemoMode } = useAuth();
   const config = getConfig();
 
@@ -42,6 +44,8 @@ const AdminPage: React.FC = () => {
     { id: 'teams', label: 'Teams', icon: Users },
     { id: 'players', label: 'Players', icon: UserPlus },
     { id: 'games', label: 'Games', icon: Calendar },
+    { id: 'announcements', label: 'Announcements', icon: MessageSquare },
+    { id: 'photos', label: 'Photos', icon: Image },
     { id: 'settings', label: 'Settings', icon: Settings },
     { id: 'data', label: 'Data Tools', icon: Database },
     { id: 'debug', label: 'Debug', icon: Settings }
@@ -102,6 +106,8 @@ const AdminPage: React.FC = () => {
           <TeamsTab 
             teams={teams} 
             players={players}
+            playerTeams={playerTeams}
+            games={games}
           />
         )}
         
@@ -109,6 +115,8 @@ const AdminPage: React.FC = () => {
           <PlayersTab 
             players={players} 
             teams={teams}
+            playerTeams={playerTeams}
+            games={games}
           />
         )}
         
@@ -117,6 +125,14 @@ const AdminPage: React.FC = () => {
             games={games} 
             teams={teams}
           />
+        )}
+        
+        {activeTab === 'announcements' && (
+          <AnnouncementsTab />
+        )}
+        
+        {activeTab === 'photos' && (
+          <PhotosTab />
         )}
         
         {activeTab === 'settings' && (

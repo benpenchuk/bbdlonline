@@ -11,18 +11,18 @@ interface GameFormModalProps {
 }
 
 const GameFormModal: React.FC<GameFormModalProps> = ({ game, teams, onClose, onSave }) => {
-  const { createGame, updateGame } = useData();
+  const { createGame, updateGame, activeSeason } = useData();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   
   // Form state
-  const [team1Id, setTeam1Id] = useState(game?.team1Id || '');
-  const [team2Id, setTeam2Id] = useState(game?.team2Id || '');
-  const [scheduledDate, setScheduledDate] = useState(
-    game?.scheduledDate ? new Date(game.scheduledDate).toISOString().slice(0, 16) : ''
+  const [homeTeamId, setHomeTeamId] = useState(game?.homeTeamId || '');
+  const [awayTeamId, setAwayTeamId] = useState(game?.awayTeamId || '');
+  const [gameDate, setGameDate] = useState(
+    game?.gameDate ? new Date(game.gameDate).toISOString().slice(0, 16) : ''
   );
-  const [team1Score, setTeam1Score] = useState(game?.team1Score?.toString() || '');
-  const [team2Score, setTeam2Score] = useState(game?.team2Score?.toString() || '');
+  const [homeScore, setHomeScore] = useState(game?.homeScore?.toString() || '');
+  const [awayScore, setAwayScore] = useState(game?.awayScore?.toString() || '');
   const [status, setStatus] = useState(game?.status || 'scheduled');
 
   const isEditing = !!game;
@@ -32,18 +32,19 @@ const GameFormModal: React.FC<GameFormModalProps> = ({ game, teams, onClose, onS
   const validateForm = (): string[] => {
     const errors: string[] = [];
     
-    if (!team1Id) errors.push('Team 1 is required');
-    if (!team2Id) errors.push('Team 2 is required');
-    if (team1Id === team2Id) errors.push('Teams cannot play against themselves');
-    if (!scheduledDate) errors.push('Scheduled date is required');
+    if (!homeTeamId) errors.push('Home team is required');
+    if (!awayTeamId) errors.push('Away team is required');
+    if (homeTeamId === awayTeamId) errors.push('Teams cannot play against themselves');
+    if (!gameDate) errors.push('Game date is required');
+    if (!activeSeason) errors.push('No active season found');
     
     // Score validation for completed games
     if (status === 'completed') {
-      if (!team1Score || !team2Score) {
+      if (!homeScore || !awayScore) {
         errors.push('Scores are required for completed games');
       } else {
-        const score1 = parseInt(team1Score);
-        const score2 = parseInt(team2Score);
+        const score1 = parseInt(homeScore);
+        const score2 = parseInt(awayScore);
         
         if (isNaN(score1) || isNaN(score2)) {
           errors.push('Scores must be valid numbers');
@@ -67,28 +68,41 @@ const GameFormModal: React.FC<GameFormModalProps> = ({ game, teams, onClose, onS
       return;
     }
 
+    if (!activeSeason) {
+      setError('No active season found');
+      return;
+    }
+
     setLoading(true);
     setError('');
 
     try {
       const gameData: Partial<Game> = {
-        team1Id,
-        team2Id,
-        scheduledDate: new Date(scheduledDate),
-        status: status as Game['status']
+        homeTeamId,
+        awayTeamId,
+        gameDate: new Date(gameDate),
+        status: status as Game['status'],
+        seasonId: activeSeason.id,
+        homeScore: status === 'completed' ? parseInt(homeScore) : 0,
+        awayScore: status === 'completed' ? parseInt(awayScore) : 0,
       };
 
-      // Add scores if the game is completed
+      // Calculate winner if completed
       if (status === 'completed') {
-        gameData.team1Score = parseInt(team1Score);
-        gameData.team2Score = parseInt(team2Score);
-        gameData.completedDate = new Date();
+        const h = parseInt(homeScore);
+        const a = parseInt(awayScore);
+        if (h > a) {
+          gameData.winningTeamId = homeTeamId;
+        } else if (a > h) {
+          gameData.winningTeamId = awayTeamId;
+        }
+        // If tied, winningTeamId stays null
       }
 
       if (isEditing && game) {
         await updateGame(game.id, gameData);
       } else {
-        await createGame(gameData as Omit<Game, 'id'>);
+        await createGame(gameData as Omit<Game, 'id' | 'createdAt' | 'updatedAt'>);
       }
 
       onSave();
@@ -101,154 +115,181 @@ const GameFormModal: React.FC<GameFormModalProps> = ({ game, teams, onClose, onS
     }
   };
 
-
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+        {/* Modal Header */}
         <div className="modal-header">
-          <div className="modal-title">
-            <Trophy size={24} />
-            <h2>{title}</h2>
-          </div>
-          <button className="modal-close-btn" onClick={onClose}>
-            <X size={24} />
+          <h2 className="modal-title">
+            <Calendar size={20} />
+            {title}
+          </h2>
+          <button
+            onClick={onClose}
+            className="modal-close"
+            aria-label="Close modal"
+          >
+            <X size={20} />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="modal-body">
-          {/* Team Selection */}
-          <div className="form-row">
+        {/* Error Message */}
+        {error && (
+          <div className="alert alert-error">
+            <AlertCircle size={16} />
+            <span>{error}</span>
+          </div>
+        )}
+
+        {/* Form */}
+        <form onSubmit={handleSubmit} className="modal-form">
+          <div className="form-grid">
+            {/* Home Team */}
             <div className="form-group">
-              <label htmlFor="team1">Team 1</label>
+              <label htmlFor="homeTeam" className="form-label">
+                Home Team *
+              </label>
               <select
-                id="team1"
-                value={team1Id}
-                onChange={(e) => setTeam1Id(e.target.value)}
-                className="form-select"
+                id="homeTeam"
+                value={homeTeamId}
+                onChange={(e) => setHomeTeamId(e.target.value)}
+                className="form-input"
                 required
+                disabled={loading}
               >
-                <option value="">Select Team 1...</option>
+                <option value="">Select home team</option>
                 {teams.map(team => (
-                  <option key={team.id} value={team.id} disabled={team.id === team2Id}>
+                  <option key={team.id} value={team.id}>
                     {team.name}
                   </option>
                 ))}
               </select>
             </div>
 
-            <div className="vs-indicator">VS</div>
-
+            {/* Away Team */}
             <div className="form-group">
-              <label htmlFor="team2">Team 2</label>
+              <label htmlFor="awayTeam" className="form-label">
+                Away Team *
+              </label>
               <select
-                id="team2"
-                value={team2Id}
-                onChange={(e) => setTeam2Id(e.target.value)}
-                className="form-select"
+                id="awayTeam"
+                value={awayTeamId}
+                onChange={(e) => setAwayTeamId(e.target.value)}
+                className="form-input"
                 required
+                disabled={loading}
               >
-                <option value="">Select Team 2...</option>
+                <option value="">Select away team</option>
                 {teams.map(team => (
-                  <option key={team.id} value={team.id} disabled={team.id === team1Id}>
+                  <option key={team.id} value={team.id}>
                     {team.name}
                   </option>
                 ))}
               </select>
             </div>
+
+            {/* Game Date */}
+            <div className="form-group">
+              <label htmlFor="gameDate" className="form-label">
+                Game Date & Time *
+              </label>
+              <input
+                type="datetime-local"
+                id="gameDate"
+                value={gameDate}
+                onChange={(e) => setGameDate(e.target.value)}
+                className="form-input"
+                required
+                disabled={loading}
+              />
+            </div>
+
+            {/* Status */}
+            <div className="form-group">
+              <label htmlFor="status" className="form-label">
+                Status *
+              </label>
+              <select
+                id="status"
+                value={status}
+                onChange={(e) => setStatus(e.target.value as Game['status'])}
+                className="form-input"
+                required
+                disabled={loading}
+              >
+                <option value="scheduled">Scheduled</option>
+                <option value="in_progress">In Progress</option>
+                <option value="completed">Completed</option>
+                <option value="canceled">Canceled</option>
+              </select>
+            </div>
+
+            {/* Scores (only for completed games) */}
+            {status === 'completed' && (
+              <>
+                <div className="form-group">
+                  <label htmlFor="homeScore" className="form-label">
+                    Home Team Score *
+                  </label>
+                  <input
+                    type="number"
+                    id="homeScore"
+                    value={homeScore}
+                    onChange={(e) => setHomeScore(e.target.value)}
+                    className="form-input"
+                    min="0"
+                    step="1"
+                    required
+                    disabled={loading}
+                    placeholder="0"
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="awayScore" className="form-label">
+                    Away Team Score *
+                  </label>
+                  <input
+                    type="number"
+                    id="awayScore"
+                    value={awayScore}
+                    onChange={(e) => setAwayScore(e.target.value)}
+                    className="form-input"
+                    min="0"
+                    step="1"
+                    required
+                    disabled={loading}
+                    placeholder="0"
+                  />
+                </div>
+              </>
+            )}
           </div>
 
-          {/* Date and Time */}
-          <div className="form-group">
-            <label htmlFor="scheduledDate">
-              <Calendar size={16} />
-              Scheduled Date & Time
-            </label>
-            <input
-              id="scheduledDate"
-              type="datetime-local"
-              value={scheduledDate}
-              onChange={(e) => setScheduledDate(e.target.value)}
-              className="form-input"
-              required
-            />
-          </div>
-
-          {/* Game Status */}
-          <div className="form-group">
-            <label htmlFor="status">Game Status</label>
-            <select
-              id="status"
-              value={status}
-              onChange={(e) => setStatus(e.target.value as Game['status'])}
-              className="form-select"
+          {/* Footer Actions */}
+          <div className="modal-footer">
+            <button
+              type="button"
+              onClick={onClose}
+              className="btn btn-outline"
+              disabled={loading}
             >
-              <option value="scheduled">Scheduled</option>
-              <option value="completed">Completed</option>
-              <option value="cancelled">Cancelled</option>
-            </select>
-          </div>
-
-          {/* Scores (only show if completed) */}
-          {status === 'completed' && (
-            <div className="form-row">
-              <div className="form-group">
-                <label htmlFor="team1Score">
-                  {teams.find(t => t.id === team1Id)?.name || 'Team 1'} Score
-                </label>
-                <input
-                  id="team1Score"
-                  type="number"
-                  min="0"
-                  step="1"
-                  value={team1Score}
-                  onChange={(e) => setTeam1Score(e.target.value)}
-                  className="form-input"
-                  placeholder="0"
-                />
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="team2Score">
-                  {teams.find(t => t.id === team2Id)?.name || 'Team 2'} Score
-                </label>
-                <input
-                  id="team2Score"
-                  type="number"
-                  min="0"
-                  step="1"
-                  value={team2Score}
-                  onChange={(e) => setTeam2Score(e.target.value)}
-                  className="form-input"
-                  placeholder="0"
-                />
-              </div>
-            </div>
-          )}
-
-          {/* Error Message */}
-          {error && (
-            <div className="error-message">
-              <AlertCircle size={16} />
-              <span>{error}</span>
-            </div>
-          )}
-
-          {/* Form Actions */}
-          <div className="modal-actions">
-            <button type="button" className="btn btn-outline" onClick={onClose}>
               Cancel
             </button>
-            <button 
-              type="submit" 
+            <button
+              type="submit"
               className="btn btn-primary"
               disabled={loading}
             >
               {loading ? (
-                <div className="loading-spinner small" />
+                <>
+                  <div className="spinner-small" />
+                  Saving...
+                </>
               ) : (
                 <>
                   <Trophy size={16} />
-                  {isEditing ? 'Update Game' : 'Schedule Game'}
+                  {isEditing ? 'Update Game' : 'Create Game'}
                 </>
               )}
             </button>

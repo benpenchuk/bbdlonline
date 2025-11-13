@@ -21,7 +21,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
 // Helper function to check connection
 export const testSupabaseConnection = async () => {
   try {
-    const { data, error } = await supabase.from('teams').select('count').single();
+    const { error } = await supabase.from('teams').select('count').single();
     if (error) throw error;
     console.log('✅ Supabase connection successful!');
     return true;
@@ -33,12 +33,17 @@ export const testSupabaseConnection = async () => {
 
 // Database table names (for type safety)
 export const TABLES = {
-  TEAMS: 'teams',
   PLAYERS: 'players',
+  TEAMS: 'teams',
+  SEASONS: 'seasons',
+  PLAYER_TEAMS: 'player_teams',
   GAMES: 'games',
-  TOURNAMENTS: 'tournaments',
-  TOURNAMENT_MATCHES: 'tournament_matches',
+  PLAYER_GAME_STATS: 'player_game_stats',
+  PLAYER_SEASON_STATS: 'player_season_stats',
+  TEAM_SEASON_STATS: 'team_season_stats',
+  PLAYOFFS: 'playoffs',
   ANNOUNCEMENTS: 'announcements',
+  PHOTOS: 'photos',
 } as const;
 
 

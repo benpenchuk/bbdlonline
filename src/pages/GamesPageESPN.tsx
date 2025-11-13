@@ -1,251 +1,220 @@
 import React, { useState, useMemo } from 'react';
-import { Calendar, Grid, Star } from 'lucide-react';
+import { Calendar, ChevronDown } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { useData } from '../state';
-import { Game } from '../core/types';
-import { format, startOfDay, isSameDay, addDays, subDays } from 'date-fns';
+import { Game, Team } from '../core/types';
+import { format } from 'date-fns';
 import LoadingSpinner from '../components/common/LoadingSpinner';
-import DateNavigator from '../components/games/DateNavigator';
-import ESPNGameCard from '../components/games/ESPNGameCard';
 import GameModal from '../components/games/GameModal';
-
-type ViewMode = 'daily' | 'multi-day';
-type QuickFilter = 'all' | 'my-team' | 'completed' | 'upcoming';
+import TeamIcon from '../components/common/TeamIcon';
+import { getWinnerId } from '../core/utils/gameHelpers';
 
 const GamesPageESPN: React.FC = () => {
-  const { games, teams, loading } = useData();
-  const [selectedDate, setSelectedDate] = useState(startOfDay(new Date()));
-  const [viewMode, setViewMode] = useState<ViewMode>('daily');
-  const [quickFilter, setQuickFilter] = useState<QuickFilter>('all');
+  const { games, teams, activeSeason, loading } = useData();
+  const [selectedWeek, setSelectedWeek] = useState<number | null>(null);
   const [selectedGame, setSelectedGame] = useState<Game | null>(null);
-  const [myTeamId] = useState<string>('team-1'); // TODO: Get from user preferences
 
-  // Group games by date
-  const gamesByDate = useMemo(() => {
-    const grouped = new Map<string, Game[]>();
-    
-    games.forEach(game => {
-      const date = startOfDay(game.scheduledDate);
-      const dateKey = format(date, 'yyyy-MM-dd');
-      
-      if (!grouped.has(dateKey)) {
-        grouped.set(dateKey, []);
+  // Filter games by active season
+  const seasonGames = useMemo(() => {
+    if (!activeSeason) return games;
+    return games.filter(game => game.seasonId === activeSeason.id);
+  }, [games, activeSeason]);
+
+  // Determine default week (most recent week with games, or current week)
+  const defaultWeek = useMemo(() => {
+    const weeksWithGames = new Set<number>();
+    seasonGames.forEach(game => {
+      if (game.week) {
+        weeksWithGames.add(game.week);
       }
-      grouped.get(dateKey)!.push(game);
     });
-
-    // Sort games within each day
-    grouped.forEach((dayGames) => {
-      dayGames.sort((a, b) => a.scheduledDate.getTime() - b.scheduledDate.getTime());
-    });
-
-    return grouped;
-  }, [games]);
-
-  // Get game counts by date
-  const gameCountsByDate = useMemo(() => {
-    const counts = new Map<string, number>();
-    gamesByDate.forEach((games, dateKey) => {
-      counts.set(dateKey, games.length);
-    });
-    return counts;
-  }, [gamesByDate]);
-
-  // Filter games based on quick filter
-  const filterGames = (games: Game[]): Game[] => {
-    switch (quickFilter) {
-      case 'my-team':
-        return games.filter(g => g.team1Id === myTeamId || g.team2Id === myTeamId);
-      case 'completed':
-        return games.filter(g => g.status === 'completed');
-      case 'upcoming':
-        return games.filter(g => g.status === 'scheduled');
-      default:
-        return games;
-    }
-  };
-
-  // Get games to display
-  const displayGames = useMemo(() => {
-    if (viewMode === 'daily') {
-      const dateKey = format(selectedDate, 'yyyy-MM-dd');
-      const dayGames = gamesByDate.get(dateKey) || [];
-      return filterGames(dayGames);
-    } else {
-      // Multi-day: show 3 days (yesterday, today, tomorrow)
-      const days: { date: Date; games: Game[] }[] = [];
-      
-      for (let i = -1; i <= 1; i++) {
-        const date = addDays(selectedDate, i);
-        const dateKey = format(date, 'yyyy-MM-dd');
-        const dayGames = gamesByDate.get(dateKey) || [];
-        days.push({ date, games: filterGames(dayGames) });
-      }
-      
-      return days;
-    }
-  }, [viewMode, selectedDate, gamesByDate, quickFilter, myTeamId]);
-
-  // Touch/swipe handlers for mobile
-  const [touchStart, setTouchStart] = useState<number | null>(null);
-  const [touchEnd, setTouchEnd] = useState<number | null>(null);
-
-  const minSwipeDistance = 50;
-
-  const onTouchStart = (e: React.TouchEvent) => {
-    setTouchEnd(null);
-    setTouchStart(e.targetTouches[0].clientX);
-  };
-
-  const onTouchMove = (e: React.TouchEvent) => {
-    setTouchEnd(e.targetTouches[0].clientX);
-  };
-
-  const onTouchEnd = () => {
-    if (!touchStart || !touchEnd) return;
     
-    const distance = touchStart - touchEnd;
-    const isLeftSwipe = distance > minSwipeDistance;
-    const isRightSwipe = distance < -minSwipeDistance;
+    if (weeksWithGames.size === 0) return null;
+    
+    // Get the highest week number that has games
+    return Math.max(...Array.from(weeksWithGames));
+  }, [seasonGames]);
 
-    if (isLeftSwipe) {
-      setSelectedDate(prev => addDays(prev, 1));
+  // Set default week on mount
+  React.useEffect(() => {
+    if (selectedWeek === null && defaultWeek !== null) {
+      setSelectedWeek(defaultWeek);
     }
-    if (isRightSwipe) {
-      setSelectedDate(prev => subDays(prev, 1));
-    }
-  };
+  }, [defaultWeek, selectedWeek]);
+
+  // Filter games by selected week
+  const weekGames = useMemo(() => {
+    if (selectedWeek === null) return [];
+    return seasonGames
+      .filter(game => game.week === selectedWeek)
+      .sort((a, b) => {
+        // Sort by date, then by status (completed first)
+        const dateA = a.gameDate ? a.gameDate.getTime() : 0;
+        const dateB = b.gameDate ? b.gameDate.getTime() : 0;
+        if (dateA !== dateB) return dateA - dateB;
+        
+        // If same date, completed games first
+        if (a.status === 'completed' && b.status !== 'completed') return -1;
+        if (a.status !== 'completed' && b.status === 'completed') return 1;
+        return 0;
+      });
+  }, [seasonGames, selectedWeek]);
+
+  // Get available weeks (all weeks 1-6, but mark which ones have games)
+  const availableWeeks = useMemo(() => {
+    return [1, 2, 3, 4, 5, 6];
+  }, []);
 
   if (loading) {
     return <LoadingSpinner message="Loading games..." />;
   }
 
+  const getTeam = (teamId: string): Team | undefined => {
+    return teams.find(t => t.id === teamId);
+  };
+
+  const getStatusText = (game: Game): string => {
+    switch (game.status) {
+      case 'completed':
+        return 'Completed';
+      case 'scheduled':
+        return 'Scheduled';
+      case 'in_progress':
+        return 'In Progress';
+      case 'canceled':
+        return 'Canceled';
+      default:
+        return 'Unknown';
+    }
+  };
+
+  const formatDateTime = (game: Game): string => {
+    if (!game.gameDate) return 'TBD';
+    const date = format(game.gameDate, 'MMM d, yyyy');
+    const time = format(game.gameDate, 'h:mm a');
+    return `${date} at ${time}`;
+  };
+
   return (
-    <div className="espn-games-page">
+    <div className="games-page-week">
       {/* Header */}
-      <div className="espn-page-header">
-        <div className="espn-header-left">
-          <h1>Games & Schedule</h1>
-          <p className="espn-subtitle">Live scores, schedules, and standings</p>
+      <div className="games-page-header">
+        <div className="games-header-left">
+          <h1>Games</h1>
         </div>
         
-        <div className="espn-header-actions">
-          {/* View Mode Toggle */}
-          <div className="view-mode-toggle">
-            <button
-              className={`view-mode-btn ${viewMode === 'daily' ? 'active' : ''}`}
-              onClick={() => setViewMode('daily')}
-              title="Daily view"
+        {/* Week Selector */}
+        <div className="week-selector-container">
+          <label htmlFor="week-select" className="week-select-label">Week</label>
+          <div className="week-select-wrapper">
+            <select
+              id="week-select"
+              className="week-select"
+              value={selectedWeek || ''}
+              onChange={(e) => setSelectedWeek(e.target.value ? parseInt(e.target.value) : null)}
             >
-              <Calendar size={18} />
-              <span>Daily</span>
-            </button>
-            <button
-              className={`view-mode-btn ${viewMode === 'multi-day' ? 'active' : ''}`}
-              onClick={() => setViewMode('multi-day')}
-              title="Multi-day view"
-            >
-              <Grid size={18} />
-              <span>Multi-day</span>
-            </button>
+              {availableWeeks.length === 0 && (
+                <option value="">No weeks available</option>
+              )}
+              {availableWeeks.map(week => (
+                <option key={week} value={week}>
+                  Week {week}
+                </option>
+              ))}
+            </select>
+            <ChevronDown size={18} className="week-select-chevron" />
           </div>
         </div>
       </div>
 
-      {/* Date Navigator */}
-      <DateNavigator
-        selectedDate={selectedDate}
-        onDateChange={setSelectedDate}
-        gameCountsByDate={gameCountsByDate}
-      />
-
-      {/* Quick Filters */}
-      <div className="espn-quick-filters">
-        <button
-          className={`quick-filter-btn ${quickFilter === 'all' ? 'active' : ''}`}
-          onClick={() => setQuickFilter('all')}
-        >
-          All Games
-        </button>
-        <button
-          className={`quick-filter-btn ${quickFilter === 'my-team' ? 'active' : ''}`}
-          onClick={() => setQuickFilter('my-team')}
-        >
-          <Star size={16} />
-          My Team
-        </button>
-        <button
-          className={`quick-filter-btn ${quickFilter === 'completed' ? 'active' : ''}`}
-          onClick={() => setQuickFilter('completed')}
-        >
-          Completed
-        </button>
-        <button
-          className={`quick-filter-btn ${quickFilter === 'upcoming' ? 'active' : ''}`}
-          onClick={() => setQuickFilter('upcoming')}
-        >
-          Upcoming
-        </button>
-      </div>
-
-      {/* Games Display */}
-      <div 
-        className="espn-games-content"
-        onTouchStart={onTouchStart}
-        onTouchMove={onTouchMove}
-        onTouchEnd={onTouchEnd}
-      >
-        {viewMode === 'daily' ? (
-          // Daily View
-          <div className="espn-daily-games">
-            {displayGames.length === 0 ? (
-              <div className="espn-no-games">
-                <Calendar size={48} />
-                <h3>No games scheduled</h3>
-                <p>Check back later or select a different date</p>
-              </div>
-            ) : (
-              <div className="espn-games-grid">
-                {(displayGames as Game[]).map(game => (
-                  <ESPNGameCard
-                    key={game.id}
-                    game={game}
-                    teams={teams}
-                    onClick={() => setSelectedGame(game)}
-                  />
-                ))}
-              </div>
-            )}
+      {/* Games List */}
+      <div className="games-week-content">
+        {selectedWeek === null ? (
+          <div className="games-empty-state">
+            <Calendar size={48} />
+            <h3>No week selected</h3>
+            <p>Select a week to view games</p>
+          </div>
+        ) : weekGames.length === 0 ? (
+          <div className="games-empty-state">
+            <Calendar size={48} />
+            <h3>No games scheduled</h3>
+            <p>No games found for Week {selectedWeek}</p>
           </div>
         ) : (
-          // Multi-day View
-          <div className="espn-multiday-games">
-            {(displayGames as { date: Date; games: Game[] }[]).map(({ date, games: dayGames }) => (
-              <div key={format(date, 'yyyy-MM-dd')} className="espn-day-section">
-                <div className="espn-day-header">
-                  <h3>{format(date, 'EEEE, MMM d')}</h3>
-                  <span className="espn-game-count">
-                    {dayGames.length} {dayGames.length === 1 ? 'game' : 'games'}
-                  </span>
+          <div className="games-week-list">
+            {weekGames.map(game => {
+              const homeTeam = getTeam(game.homeTeamId);
+              const awayTeam = getTeam(game.awayTeamId);
+              
+              if (!homeTeam || !awayTeam) return null;
+
+              const winnerId = getWinnerId(game);
+              const isCompleted = game.status === 'completed';
+
+              return (
+                <div key={game.id} className="game-week-card">
+                  {/* Status Badge */}
+                  <div className="game-week-status">
+                    <span className={`status-badge status-${game.status}`}>
+                      {getStatusText(game)}
+                    </span>
+                  </div>
+
+                  {/* Teams and Scores */}
+                  <div className="game-week-teams">
+                    {/* Home Team */}
+                    <div className={`game-week-team ${isCompleted && winnerId === homeTeam.id ? 'winner' : ''}`}>
+                      <TeamIcon iconId={homeTeam.abbreviation} color="#3b82f6" size={24} />
+                      <Link 
+                        to={`/team/${homeTeam.id}`} 
+                        className="game-week-team-name"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        {homeTeam.name}
+                      </Link>
+                      {isCompleted && (
+                        <span className={`game-week-score ${winnerId === homeTeam.id ? 'winner-score' : ''}`}>
+                          {game.homeScore}
+                        </span>
+                      )}
+                    </div>
+
+                    {/* VS Divider */}
+                    <div className="game-week-vs">vs</div>
+
+                    {/* Away Team */}
+                    <div className={`game-week-team ${isCompleted && winnerId === awayTeam.id ? 'winner' : ''}`}>
+                      <TeamIcon iconId={awayTeam.abbreviation} color="#ef4444" size={24} />
+                      <Link 
+                        to={`/team/${awayTeam.id}`} 
+                        className="game-week-team-name"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        {awayTeam.name}
+                      </Link>
+                      {isCompleted && (
+                        <span className={`game-week-score ${winnerId === awayTeam.id ? 'winner-score' : ''}`}>
+                          {game.awayScore}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Date and Time */}
+                  <div className="game-week-datetime">
+                    <Calendar size={14} />
+                    <span>{formatDateTime(game)}</span>
+                  </div>
+
+                  {/* Click handler for modal */}
+                  <div 
+                    className="game-week-card-overlay"
+                    onClick={() => setSelectedGame(game)}
+                  />
                 </div>
-                
-                {dayGames.length === 0 ? (
-                  <div className="espn-day-no-games">
-                    <p>No games scheduled</p>
-                  </div>
-                ) : (
-                  <div className="espn-games-grid">
-                    {dayGames.map(game => (
-                      <ESPNGameCard
-                        key={game.id}
-                        game={game}
-                        teams={teams}
-                        onClick={() => setSelectedGame(game)}
-                      />
-                    ))}
-                  </div>
-                )}
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
@@ -263,4 +232,3 @@ const GamesPageESPN: React.FC = () => {
 };
 
 export default GamesPageESPN;
-

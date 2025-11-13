@@ -3,6 +3,8 @@ import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import { Player, Team, Game } from '../../core/types';
 import TeamIcon from '../common/TeamIcon';
+import { getPlayerFullName, getPlayerInitials } from '../../core/utils/playerHelpers';
+import { getWinnerId } from '../../core/utils/gameHelpers';
 
 interface PlayerModalProps {
   player: Player;
@@ -58,6 +60,9 @@ const PlayerModal: React.FC<PlayerModalProps> = ({
 
   if (!isOpen) return null;
 
+  const fullName = getPlayerFullName(player);
+  const initials = getPlayerInitials(player);
+
   const modalContent = (
     <div 
       className={`bbdl-modal-backdrop ${isOpen ? 'open' : ''}`}
@@ -84,24 +89,24 @@ const PlayerModal: React.FC<PlayerModalProps> = ({
         {/* Header with Avatar and Name */}
         <div className="bbdl-modal-header">
           <div className="bbdl-modal-avatar">
-            {player.photoUrl ? (
-              <img src={player.photoUrl} alt={player.name} />
+            {player.avatarUrl ? (
+              <img src={player.avatarUrl} alt={fullName} />
             ) : (
               <div className="bbdl-modal-initials">
-                {player.name.split(' ').map(n => n[0]).join('').toUpperCase()}
+                {initials}
               </div>
             )}
           </div>
           <div className="bbdl-modal-header-info">
             <h2 id="player-modal-title" className="bbdl-modal-title">
-              {player.name}
+              {fullName}
             </h2>
             {team && (
               <div 
                 className="bbdl-modal-team-badge"
                 title={team.name}
               >
-                <TeamIcon iconId={team.icon} color="#64748b" size={18} />
+                <TeamIcon iconId={team.abbreviation} color="#64748b" size={18} />
                 <span className="team-badge-text">{team.name}</span>
               </div>
             )}
@@ -130,25 +135,31 @@ const PlayerModal: React.FC<PlayerModalProps> = ({
           </div>
         </div>
 
-        {/* Bio Section */}
-        {player.bio && (
+        {/* Bio Section - Use hometown instead */}
+        {(player.hometownCity || player.hometownState) && (
           <div className="bbdl-modal-bio">
-            <h3>About</h3>
-            <p>{player.bio}</p>
+            <h3>Hometown</h3>
+            <p>{player.hometownCity}{player.hometownCity && player.hometownState ? ', ' : ''}{player.hometownState}</p>
           </div>
         )}
 
         {/* Recent Games */}
-        {recentGames.length > 0 && (
+        {recentGames.length > 0 && team && (
           <div className="bbdl-modal-recent-games">
             <h3>Recent Games</h3>
             <div className="bbdl-modal-games-list">
               {recentGames.slice(0, 5).map((game) => {
-                const isTeam1 = game.team1Id === player.teamId;
-                const opponent = teams.find(t => t.id === (isTeam1 ? game.team2Id : game.team1Id));
-                const isWin = game.winnerId === player.teamId;
-                const playerScore = isTeam1 ? game.team1Score : game.team2Score;
-                const opponentScore = isTeam1 ? game.team2Score : game.team1Score;
+                const isHome = game.homeTeamId === team.id;
+                const isAway = game.awayTeamId === team.id;
+                
+                if (!isHome && !isAway) return null;
+                
+                const opponentId = isHome ? game.awayTeamId : game.homeTeamId;
+                const opponent = teams.find(t => t.id === opponentId);
+                const winnerId = getWinnerId(game);
+                const isWin = winnerId === team.id;
+                const playerScore = isHome ? game.homeScore : game.awayScore;
+                const opponentScore = isHome ? game.awayScore : game.homeScore;
 
                 return (
                   <div key={game.id} className="bbdl-modal-game-item">
@@ -159,7 +170,7 @@ const PlayerModal: React.FC<PlayerModalProps> = ({
                       {isWin ? 'W' : 'L'}
                     </div>
                     <div className="game-score">
-                      {playerScore ?? 0} – {opponentScore ?? 0}
+                      {playerScore} – {opponentScore}
                     </div>
                   </div>
                 );
@@ -175,4 +186,3 @@ const PlayerModal: React.FC<PlayerModalProps> = ({
 };
 
 export default PlayerModal;
-

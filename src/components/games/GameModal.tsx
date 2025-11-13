@@ -1,7 +1,10 @@
 import React from 'react';
-import { X, Calendar, Clock, Trophy, Users, Target } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { X, Calendar, MapPin, Trophy, Users, Clock } from 'lucide-react';
 import { Game, Team } from '../../core/types';
 import { format } from 'date-fns';
+import TeamIcon from '../common/TeamIcon';
+import { getGameTags, getWinnerId } from '../../core/utils/gameHelpers';
 
 interface GameModalProps {
   game: Game;
@@ -10,12 +13,16 @@ interface GameModalProps {
 }
 
 const GameModal: React.FC<GameModalProps> = ({ game, teams, onClose }) => {
-  const team1 = teams.find(t => t.id === game.team1Id);
-  const team2 = teams.find(t => t.id === game.team2Id);
+  const homeTeam = teams.find(t => t.id === game.homeTeamId);
+  const awayTeam = teams.find(t => t.id === game.awayTeamId);
 
-  if (!team1 || !team2) {
+  if (!homeTeam || !awayTeam) {
     return null;
   }
+
+  const winnerId = getWinnerId(game);
+  const tags = getGameTags(game);
+  const isCompleted = game.status === 'completed';
 
   const formatDate = (date: Date) => {
     return format(date, 'EEEE, MMMM d, yyyy');
@@ -26,110 +33,98 @@ const GameModal: React.FC<GameModalProps> = ({ game, teams, onClose }) => {
   };
 
   const getScoreDifference = () => {
-    if (game.status === 'completed' && game.team1Score !== undefined && game.team2Score !== undefined) {
-      return Math.abs(game.team1Score - game.team2Score);
+    if (game.status === 'completed') {
+      return Math.abs(game.homeScore - game.awayScore);
     }
     return 0;
   };
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+      <div className="game-modal" onClick={(e) => e.stopPropagation()}>
+        {/* Header */}
         <div className="modal-header">
-          <h2>Game Details</h2>
-          <button className="modal-close-btn" onClick={onClose}>
+          <div className="modal-title-group">
+            <Trophy size={24} />
+            <h2>Game Details</h2>
+          </div>
+          <button onClick={onClose} className="modal-close" aria-label="Close modal">
             <X size={24} />
           </button>
         </div>
 
-        <div className="modal-body">
-          {/* Game Status */}
-          <div className="game-status-section">
-            <div className={`status-badge status-${game.status}`}>
-              {game.status.charAt(0).toUpperCase() + game.status.slice(1)}
-            </div>
-            
-            <div className="game-date-info">
-              <div className="date-item">
-                <Calendar size={16} />
-                <span>{formatDate(game.scheduledDate)}</span>
+        {/* Game Info */}
+        <div className="game-modal-content">
+          <div className="game-info-section">
+            <div className="game-meta">
+              <div className="meta-group">
+                {game.gameDate && (
+                  <div className="date-item">
+                    <Calendar size={16} />
+                    <span>{formatDate(game.gameDate)}</span>
+                  </div>
+                )}
+                {game.status === 'scheduled' && game.gameDate && (
+                  <div className="date-item">
+                    <Clock size={16} />
+                    <span>{formatTime(game.gameDate)}</span>
+                  </div>
+                )}
               </div>
-              {game.status === 'scheduled' && (
-                <div className="date-item">
-                  <Clock size={16} />
-                  <span>{formatTime(game.scheduledDate)}</span>
+              
+              <div className="meta-group">
+                <div className="status-badge status-{game.status}">
+                  {game.status.charAt(0).toUpperCase() + game.status.slice(1).replace('_', ' ')}
                 </div>
-              )}
-              {game.status === 'completed' && game.completedDate && (
-                <div className="date-item">
-                  <Trophy size={16} />
-                  <span>Completed {formatTime(game.completedDate)}</span>
-                </div>
-              )}
+              </div>
             </div>
           </div>
 
-          {/* Teams and Score */}
-          <div className="teams-section">
-            <div className="team-info">
-              <div className="team-header">
-                <div 
-                  className="team-color-large"
-                  style={{ backgroundColor: team1.color }}
-                />
+          {/* Teams */}
+          <div className="game-matchup">
+            {/* Home Team */}
+            <Link to={`/team/${homeTeam.id}`} className="team-display" onClick={(e) => e.stopPropagation()}>
+              <div className="team-header-display">
+                <TeamIcon iconId={homeTeam.abbreviation} color="#3b82f6" size={48} />
                 <div className="team-details">
-                  <h3 className="team-name">{team1.name}</h3>
-                  <div className="team-stats">
-                    <Users size={14} />
-                    <span>{team1.players.length} players</span>
-                  </div>
+                  <h3 className="team-name">{homeTeam.name}</h3>
                 </div>
               </div>
               
               {game.status === 'completed' && (
-                <div className={`team-score ${game.winnerId === team1.id ? 'winner' : ''}`}>
-                  {game.team1Score}
+                <div className={`team-score ${winnerId === homeTeam.id ? 'winner' : ''}`}>
+                  {game.homeScore}
                 </div>
               )}
+            </Link>
+
+            <div className="vs-divider">
+              {isCompleted ? 'FINAL' : 'VS'}
             </div>
 
-            <div className="vs-section">
-              {game.status === 'completed' ? (
-                <div className="final-indicator">FINAL</div>
-              ) : (
-                <div className="vs-text">VS</div>
-              )}
-            </div>
-
-            <div className="team-info">
-              <div className="team-header">
-                <div 
-                  className="team-color-large"
-                  style={{ backgroundColor: team2.color }}
-                />
+            {/* Away Team */}
+            <Link to={`/team/${awayTeam.id}`} className="team-display" onClick={(e) => e.stopPropagation()}>
+              <div className="team-header-display">
+                <TeamIcon iconId={awayTeam.abbreviation} color="#ef4444" size={48} />
                 <div className="team-details">
-                  <h3 className="team-name">{team2.name}</h3>
-                  <div className="team-stats">
-                    <Users size={14} />
-                    <span>{team2.players.length} players</span>
-                  </div>
+                  <h3 className="team-name">{awayTeam.name}</h3>
                 </div>
               </div>
               
               {game.status === 'completed' && (
-                <div className={`team-score ${game.winnerId === team2.id ? 'winner' : ''}`}>
-                  {game.team2Score}
+                <div className={`team-score ${winnerId === awayTeam.id ? 'winner' : ''}`}>
+                  {game.awayScore}
                 </div>
               )}
-            </div>
+            </Link>
           </div>
 
           {/* Winner */}
-          {game.status === 'completed' && game.winnerId && (
+          {game.status === 'completed' && winnerId && (
             <div className="winner-section">
               <Trophy size={20} />
               <span className="winner-text">
-                Winner: {teams.find(t => t.id === game.winnerId)?.name}
+                Winner: {teams.find(t => t.id === winnerId)?.name}
               </span>
             </div>
           )}
@@ -140,26 +135,25 @@ const GameModal: React.FC<GameModalProps> = ({ game, teams, onClose }) => {
               <h4>Game Statistics</h4>
               <div className="stats-grid">
                 <div className="stat-item">
-                  <Target size={16} />
                   <span className="stat-label">Score Difference</span>
-                  <span className="stat-value">{getScoreDifference()} points</span>
+                  <span className="stat-value">{getScoreDifference()}</span>
                 </div>
                 
-                {game.isShutout && (
+                {tags.isShutout && (
                   <div className="stat-highlight">
                     <span className="highlight-badge shutout">Shutout Game</span>
                     <span className="highlight-text">One team scored 0 points</span>
                   </div>
                 )}
                 
-                {game.isBlowout && (
+                {tags.isBlowout && (
                   <div className="stat-highlight">
                     <span className="highlight-badge blowout">Blowout Victory</span>
                     <span className="highlight-text">Won by 7+ points</span>
                   </div>
                 )}
                 
-                {game.isClutch && (
+                {tags.isClutch && (
                   <div className="stat-highlight">
                     <span className="highlight-badge clutch">Clutch Game</span>
                     <span className="highlight-text">Won by 1-2 points</span>
@@ -169,21 +163,20 @@ const GameModal: React.FC<GameModalProps> = ({ game, teams, onClose }) => {
             </div>
           )}
 
-          {/* Actions */}
-          <div className="modal-actions">
-            {game.status === 'scheduled' && (
-              <>
-                <button className="btn btn-outline">Edit Game</button>
-                <button className="btn btn-danger">Cancel Game</button>
-              </>
-            )}
-            {game.status === 'completed' && (
-              <button className="btn btn-outline">Edit Score</button>
-            )}
-            <button className="btn btn-primary" onClick={onClose}>
-              Close
-            </button>
+          {/* Location */}
+          <div className="location-section">
+            <div className="location-info">
+              <MapPin size={16} />
+              <span>Bando Backyard</span>
+            </div>
           </div>
+        </div>
+
+        {/* Footer */}
+        <div className="modal-footer">
+          <button onClick={onClose} className="btn btn-primary">
+            Close
+          </button>
         </div>
       </div>
     </div>

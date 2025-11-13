@@ -7,6 +7,8 @@ import PlayerCard from '../components/common/PlayerCard';
 import TeamSection from '../components/players/TeamSection';
 import ViewToggle, { ViewMode } from '../components/players/ViewToggle';
 import PlayerModal from '../components/players/PlayerModal';
+import { getPlayerFullName, getTeamPlayers } from '../core/utils/playerHelpers';
+import { getWinnerId } from '../core/utils/gameHelpers';
 
 // --- Helper Hook for localStorage ---
 const useLocalStorage = <T,>(key: string, initialValue: T): [T, React.Dispatch<React.SetStateAction<T>>] => {
@@ -35,7 +37,7 @@ const useLocalStorage = <T,>(key: string, initialValue: T): [T, React.Dispatch<R
 
 // --- Main Component ---
 const PlayersPage: React.FC = () => {
-  const { players, teams, games, loading } = useData();
+  const { players, teams, games, playerTeams, loading } = useData();
 
   // --- View State ---
   const [view, setView] = useLocalStorage<ViewMode>('bbdl-players-view', 'player');
@@ -54,6 +56,7 @@ const PlayersPage: React.FC = () => {
     if (!Array.isArray(expandedTeamsArray)) {
       setExpandedTeamsArray(teams.map(t => t.id));
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Only run once on mount
 
   // Convert array to Set for easy .has() checks
@@ -99,21 +102,28 @@ const PlayersPage: React.FC = () => {
       let totalPoints = 0;
       let gamesPlayed = 0;
 
-      games.forEach(g => {
-        const isTeam1 = g.team1Id === p.teamId;
-        const isTeam2 = g.team2Id === p.teamId;
-        
-        if ((isTeam1 || isTeam2) && g.status === 'completed' && g.team1Score !== undefined && g.team2Score !== undefined) {
-          gamesPlayed++;
-          totalPoints += isTeam1 ? g.team1Score : g.team2Score;
+      // Find player's team
+      const playerTeamEntry = playerTeams.find(pt => pt.playerId === p.id && pt.status === 'active');
+      const playerTeamId = playerTeamEntry?.teamId;
+
+      if (playerTeamId) {
+        games.forEach(g => {
+          const isHome = g.homeTeamId === playerTeamId;
+          const isAway = g.awayTeamId === playerTeamId;
           
-          if (g.winnerId === p.teamId) {
-            wins++;
-          } else {
-            losses++;
+          if ((isHome || isAway) && g.status === 'completed') {
+            gamesPlayed++;
+            totalPoints += isHome ? g.homeScore : g.awayScore;
+            
+            const winnerId = getWinnerId(g);
+            if (winnerId === playerTeamId) {
+              wins++;
+            } else {
+              losses++;
+            }
           }
-        }
-      });
+        });
+      }
 
       statsMap.set(p.id, {
         record: { wins, losses },
@@ -124,7 +134,7 @@ const PlayersPage: React.FC = () => {
     });
 
     return statsMap;
-  }, [players, games]);
+  }, [players, games, playerTeams]);
 
   // --- Calculate Team Stats ---
   const teamStats = useMemo(() => {
@@ -132,23 +142,24 @@ const PlayersPage: React.FC = () => {
     teams.forEach(t => teamStatsMap.set(t.id, { totalWins: 0, totalGames: 0, totalPoints: 0 }));
 
     games.forEach(g => {
-      if (g.status === 'completed' && g.team1Score !== undefined && g.team2Score !== undefined) {
-        const team1Stats = teamStatsMap.get(g.team1Id);
-        const team2Stats = teamStatsMap.get(g.team2Id);
+      if (g.status === 'completed') {
+        const homeStats = teamStatsMap.get(g.homeTeamId);
+        const awayStats = teamStatsMap.get(g.awayTeamId);
+        const winnerId = getWinnerId(g);
 
-        if (team1Stats) {
-          team1Stats.totalGames++;
-          team1Stats.totalPoints += g.team1Score;
-          if (g.winnerId === g.team1Id) {
-            team1Stats.totalWins++;
+        if (homeStats) {
+          homeStats.totalGames++;
+          homeStats.totalPoints += g.homeScore;
+          if (winnerId === g.homeTeamId) {
+            homeStats.totalWins++;
           }
         }
 
-        if (team2Stats) {
-          team2Stats.totalGames++;
-          team2Stats.totalPoints += g.team2Score;
-          if (g.winnerId === g.team2Id) {
-            team2Stats.totalWins++;
+        if (awayStats) {
+          awayStats.totalGames++;
+          awayStats.totalPoints += g.awayScore;
+          if (winnerId === g.awayTeamId) {
+            awayStats.totalWins++;
           }
         }
       }
@@ -170,27 +181,33 @@ const PlayersPage: React.FC = () => {
   const playersByTeam = useMemo(() => {
     const grouped: Record<string, Player[]> = {};
     teams.forEach(team => {
-      grouped[team.id] = players.filter(player => player.teamId === team.id);
+      grouped[team.id] = getTeamPlayers(team.id, players, playerTeams);
     });
     return grouped;
-  }, [teams, players]);
+  }, [teams, players, playerTeams]);
 
   // --- Get Recent Games for Selected Player ---
   const selectedPlayerRecentGames = useMemo(() => {
     if (!selectedPlayer) return [];
     
+    // Find player's team
+    const playerTeamEntry = playerTeams.find(pt => pt.playerId === selectedPlayer.id && pt.status === 'active');
+    const playerTeamId = playerTeamEntry?.teamId;
+    
+    if (!playerTeamId) return [];
+    
     return games
       .filter(g => 
-        (g.team1Id === selectedPlayer.teamId || g.team2Id === selectedPlayer.teamId) && 
+        (g.homeTeamId === playerTeamId || g.awayTeamId === playerTeamId) && 
         g.status === 'completed'
       )
       .sort((a, b) => {
-        const dateA = a.completedDate ? new Date(a.completedDate).getTime() : 0;
-        const dateB = b.completedDate ? new Date(b.completedDate).getTime() : 0;
+        const dateA = a.gameDate ? new Date(a.gameDate).getTime() : 0;
+        const dateB = b.gameDate ? new Date(b.gameDate).getTime() : 0;
         return dateB - dateA;
       })
       .slice(0, 5);
-  }, [selectedPlayer, games]);
+  }, [selectedPlayer, games, playerTeams]);
 
   // --- Modal Logic ---
   const openModal = (player: Player) => {
@@ -237,9 +254,10 @@ const PlayersPage: React.FC = () => {
           // BY PLAYER VIEW
           <div className="bbdl-players-grid">
             {players
-              .sort((a, b) => a.name.localeCompare(b.name))
+              .sort((a, b) => getPlayerFullName(a).localeCompare(getPlayerFullName(b)))
               .map(player => {
-                const team = teams.find(t => t.id === player.teamId);
+                const playerTeamEntry = playerTeams.find(pt => pt.playerId === player.id && pt.status === 'active');
+                const team = playerTeamEntry ? teams.find(t => t.id === playerTeamEntry.teamId) : undefined;
                 const stats = playerStats.get(player.id);
                 return (
                   <PlayerCard
@@ -285,7 +303,7 @@ const PlayersPage: React.FC = () => {
       {selectedPlayer && (
         <PlayerModal
           player={selectedPlayer}
-          team={teams.find(t => t.id === selectedPlayer.teamId)}
+          team={teams.find(t => playerTeams.find(pt => pt.playerId === selectedPlayer.id && pt.teamId === t.id && pt.status === 'active'))}
           isOpen={!!selectedPlayer}
           onClose={closeModal}
           stats={playerStats.get(selectedPlayer.id)}

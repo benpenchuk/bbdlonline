@@ -1,82 +1,153 @@
 import React from 'react';
 import { Trophy, Target, Zap, Award, Star, TrendingUp } from 'lucide-react';
-import { Player, Team, Game } from '../../core/types';
+import { Player, Team, Game, PlayerTeam } from '../../core/types';
+import TeamIcon from '../common/TeamIcon';
+import { getPlayerFullName } from '../../core/utils/playerHelpers';
+import { getWinnerId, getGameTags } from '../../core/utils/gameHelpers';
+import { calculateTeamStatsForGames } from '../../core/utils/statsCalculations';
 
 interface NotableRecordsProps {
   players: Player[];
   teams: Team[];
   games: Game[];
+  playerTeams: PlayerTeam[];
 }
 
-const NotableRecords: React.FC<NotableRecordsProps> = ({ players, teams, games }) => {
+const NotableRecords: React.FC<NotableRecordsProps> = ({ players, teams, games, playerTeams }) => {
   // Calculate notable records
   const getNotableRecords = () => {
     const completedGames = games.filter(g => g.status === 'completed');
     
     // Highest single game score
     let highestScore = 0;
-    let highestScorePlayer = '';
+    let highestScoreTeamId = '';
     let highestScoreGame: Game | null = null;
 
     completedGames.forEach(game => {
-      if (game.team1Score! > highestScore) {
-        highestScore = game.team1Score!;
-        highestScorePlayer = game.team1Id;
+      if (game.homeScore > highestScore) {
+        highestScore = game.homeScore;
+        highestScoreTeamId = game.homeTeamId;
         highestScoreGame = game;
       }
-      if (game.team2Score! > highestScore) {
-        highestScore = game.team2Score!;
-        highestScorePlayer = game.team2Id;
+      if (game.awayScore > highestScore) {
+        highestScore = game.awayScore;
+        highestScoreTeamId = game.awayTeamId;
         highestScoreGame = game;
       }
     });
+
+    // Calculate stats for all players
+    const playersWithStats = players.map(player => {
+      const playerTeamEntry = playerTeams.find(pt => pt.playerId === player.id && pt.status === 'active');
+      const team = playerTeamEntry ? teams.find(t => t.id === playerTeamEntry.teamId) : undefined;
+      
+      if (!playerTeamEntry) {
+        return { player, stats: null, team };
+      }
+
+      // Compute stats for this player
+      const playerGames = completedGames.filter(g => 
+        g.homeTeamId === playerTeamEntry.teamId || g.awayTeamId === playerTeamEntry.teamId
+      );
+
+      let wins = 0, losses = 0, totalPoints = 0, shutouts = 0, blowoutWins = 0, clutchWins = 0;
+      let currentStreak = 0, longestWinStreak = 0;
+      let lastWasWin = false;
+
+      playerGames.forEach(game => {
+        const isHome = game.homeTeamId === playerTeamEntry.teamId;
+        const teamScore = isHome ? game.homeScore : game.awayScore;
+        const oppScore = isHome ? game.awayScore : game.homeScore;
+        const winnerId = getWinnerId(game);
+        const isWin = winnerId === playerTeamEntry.teamId;
+        const tags = getGameTags(game);
+
+        totalPoints += teamScore;
+        if (isWin) {
+          wins++;
+          if (lastWasWin) {
+            currentStreak++;
+          } else {
+            currentStreak = 1;
+            lastWasWin = true;
+          }
+          longestWinStreak = Math.max(longestWinStreak, currentStreak);
+          
+          if (tags.isShutout) shutouts++;
+          if (tags.isBlowout) blowoutWins++;
+          if (tags.isClutch) clutchWins++;
+        } else {
+          losses++;
+          currentStreak = 0;
+          lastWasWin = false;
+        }
+      });
+
+      const gamesPlayed = wins + losses;
+      const stats = {
+        record: { wins, losses },
+        avgPoints: gamesPlayed > 0 ? totalPoints / gamesPlayed : 0,
+        gamesPlayed,
+        shutouts,
+        blowoutWins,
+        clutchWins,
+        longestWinStreak
+      };
+
+      return { player, stats, team };
+    }).filter(p => p.stats !== null) as Array<{ player: Player; stats: any; team?: Team }>;
 
     // Most wins
-    const mostWinsPlayer = players.reduce((max, player) => 
-      player.stats.wins > max.stats.wins ? player : max
-    );
+    const mostWinsEntry = playersWithStats.reduce((max, current) => 
+      current.stats.record.wins > max.stats.record.wins ? current : max
+    , playersWithStats[0] || { player: players[0], stats: { record: { wins: 0 } }, team: undefined });
 
     // Highest average
-    const highestAveragePlayer = players.reduce((max, player) => 
-      player.stats.averagePoints > max.stats.averagePoints ? player : max
-    );
+    const highestAverageEntry = playersWithStats.reduce((max, current) => 
+      current.stats.avgPoints > max.stats.avgPoints ? current : max
+    , playersWithStats[0] || { player: players[0], stats: { avgPoints: 0 }, team: undefined });
 
     // Longest win streak
-    const longestStreakPlayer = players.reduce((max, player) => 
-      player.stats.longestWinStreak > max.stats.longestWinStreak ? player : max
-    );
+    const longestStreakEntry = playersWithStats.reduce((max, current) => 
+      current.stats.longestWinStreak > max.stats.longestWinStreak ? current : max
+    , playersWithStats[0] || { player: players[0], stats: { longestWinStreak: 0 }, team: undefined });
 
     // Most shutouts
-    const mostShutoutsPlayer = players.reduce((max, player) => 
-      player.stats.shutouts > max.stats.shutouts ? player : max
-    );
+    const mostShutoutsEntry = playersWithStats.reduce((max, current) => 
+      current.stats.shutouts > max.stats.shutouts ? current : max
+    , playersWithStats[0] || { player: players[0], stats: { shutouts: 0 }, team: undefined });
 
     // Most blowouts
-    const mostBlowoutsPlayer = players.reduce((max, player) => 
-      player.stats.blowoutWins > max.stats.blowoutWins ? player : max
-    );
+    const mostBlowoutsEntry = playersWithStats.reduce((max, current) => 
+      current.stats.blowoutWins > max.stats.blowoutWins ? current : max
+    , playersWithStats[0] || { player: players[0], stats: { blowoutWins: 0 }, team: undefined });
 
     // Most clutch wins
-    const mostClutchPlayer = players.reduce((max, player) => 
-      player.stats.clutchWins > max.stats.clutchWins ? player : max
-    );
+    const mostClutchEntry = playersWithStats.reduce((max, current) => 
+      current.stats.clutchWins > max.stats.clutchWins ? current : max
+    , playersWithStats[0] || { player: players[0], stats: { clutchWins: 0 }, team: undefined });
 
     // Team with best record
-    const bestTeam = teams.reduce((max, team) => {
-      const maxWinRate = max.wins + max.losses > 0 ? max.wins / (max.wins + max.losses) : 0;
-      const teamWinRate = team.wins + team.losses > 0 ? team.wins / (team.wins + team.losses) : 0;
-      return teamWinRate > maxWinRate ? team : max;
+    const teamsWithStats = teams.map(team => {
+      const stats = calculateTeamStatsForGames(team.id, games);
+      return { team, stats };
     });
 
+    const bestTeamEntry = teamsWithStats.reduce((max, current) => {
+      const maxWinRate = max.stats.gamesPlayed > 0 ? max.stats.wins / max.stats.gamesPlayed : 0;
+      const currentWinRate = current.stats.gamesPlayed > 0 ? current.stats.wins / current.stats.gamesPlayed : 0;
+      return currentWinRate > maxWinRate ? current : max;
+    }, teamsWithStats[0] || { team: teams[0], stats: { wins: 0, losses: 0, gamesPlayed: 0, pointsFor: 0, pointsAgainst: 0, winPct: 0 } });
+
     return {
-      highestScore: { score: highestScore, team: teams.find(t => t.id === highestScorePlayer), game: highestScoreGame },
-      mostWins: { player: mostWinsPlayer, team: teams.find(t => t.id === mostWinsPlayer.teamId) },
-      highestAverage: { player: highestAveragePlayer, team: teams.find(t => t.id === highestAveragePlayer.teamId) },
-      longestStreak: { player: longestStreakPlayer, team: teams.find(t => t.id === longestStreakPlayer.teamId) },
-      mostShutouts: { player: mostShutoutsPlayer, team: teams.find(t => t.id === mostShutoutsPlayer.teamId) },
-      mostBlowouts: { player: mostBlowoutsPlayer, team: teams.find(t => t.id === mostBlowoutsPlayer.teamId) },
-      mostClutch: { player: mostClutchPlayer, team: teams.find(t => t.id === mostClutchPlayer.teamId) },
-      bestTeam
+      highestScore: { score: highestScore, team: teams.find(t => t.id === highestScoreTeamId), game: highestScoreGame },
+      mostWins: mostWinsEntry,
+      highestAverage: highestAverageEntry,
+      longestStreak: longestStreakEntry,
+      mostShutouts: mostShutoutsEntry,
+      mostBlowouts: mostBlowoutsEntry,
+      mostClutch: mostClutchEntry,
+      bestTeam: bestTeamEntry
     };
   };
 
@@ -86,42 +157,42 @@ const NotableRecords: React.FC<NotableRecordsProps> = ({ players, teams, games }
     {
       title: 'Highest Single Game Score',
       value: records.highestScore.score,
-      subtitle: records.highestScore.team?.name,
+      subtitle: records.highestScore.team?.name || 'N/A',
       icon: Target,
       color: 'orange'
     },
     {
       title: 'Most Career Wins',
-      value: records.mostWins.player.stats.wins,
-      subtitle: `${records.mostWins.player.name} (${records.mostWins.team?.name})`,
+      value: records.mostWins.stats.record.wins,
+      subtitle: `${getPlayerFullName(records.mostWins.player)} (${records.mostWins.team?.name || 'No Team'})`,
       icon: Trophy,
       color: 'green'
     },
     {
       title: 'Highest Average Score',
-      value: records.highestAverage.player.stats.averagePoints.toFixed(1),
-      subtitle: `${records.highestAverage.player.name} (${records.highestAverage.team?.name})`,
+      value: records.highestAverage.stats.avgPoints.toFixed(1),
+      subtitle: `${getPlayerFullName(records.highestAverage.player)} (${records.highestAverage.team?.name || 'No Team'})`,
       icon: TrendingUp,
       color: 'blue'
     },
     {
       title: 'Longest Win Streak',
-      value: records.longestStreak.player.stats.longestWinStreak,
-      subtitle: `${records.longestStreak.player.name} (${records.longestStreak.team?.name})`,
+      value: records.longestStreak.stats.longestWinStreak,
+      subtitle: `${getPlayerFullName(records.longestStreak.player)} (${records.longestStreak.team?.name || 'No Team'})`,
       icon: Star,
       color: 'purple'
     },
     {
       title: 'Most Shutouts',
-      value: records.mostShutouts.player.stats.shutouts,
-      subtitle: `${records.mostShutouts.player.name} (${records.mostShutouts.team?.name})`,
+      value: records.mostShutouts.stats.shutouts,
+      subtitle: `${getPlayerFullName(records.mostShutouts.player)} (${records.mostShutouts.team?.name || 'No Team'})`,
       icon: Award,
       color: 'red'
     },
     {
       title: 'Most Blowout Wins',
-      value: records.mostBlowouts.player.stats.blowoutWins,
-      subtitle: `${records.mostBlowouts.player.name} (${records.mostBlowouts.team?.name})`,
+      value: records.mostBlowouts.stats.blowoutWins,
+      subtitle: `${getPlayerFullName(records.mostBlowouts.player)} (${records.mostBlowouts.team?.name || 'No Team'})`,
       icon: Zap,
       color: 'yellow'
     }
@@ -135,14 +206,22 @@ const NotableRecords: React.FC<NotableRecordsProps> = ({ players, teams, games }
       description: string;
       icon: any;
     }> = [];
+    
     const recentGames = games
       .filter(g => g.status === 'completed')
-      .sort((a, b) => new Date(b.completedDate!).getTime() - new Date(a.completedDate!).getTime())
+      .sort((a, b) => {
+        const dateA = a.gameDate ? new Date(a.gameDate).getTime() : 0;
+        const dateB = b.gameDate ? new Date(b.gameDate).getTime() : 0;
+        return dateB - dateA;
+      })
       .slice(0, 10);
 
     recentGames.forEach(game => {
-      if (game.isShutout) {
-        const winnerTeam = teams.find(t => t.id === game.winnerId);
+      const tags = getGameTags(game);
+      const winnerId = getWinnerId(game);
+      const winnerTeam = winnerId ? teams.find(t => t.id === winnerId) : undefined;
+
+      if (tags.isShutout) {
         achievements.push({
           type: 'Shutout Victory',
           team: winnerTeam?.name,
@@ -151,8 +230,7 @@ const NotableRecords: React.FC<NotableRecordsProps> = ({ players, teams, games }
         });
       }
       
-      if (game.isBlowout) {
-        const winnerTeam = teams.find(t => t.id === game.winnerId);
+      if (tags.isBlowout) {
         achievements.push({
           type: 'Blowout Win',
           team: winnerTeam?.name,
@@ -161,8 +239,7 @@ const NotableRecords: React.FC<NotableRecordsProps> = ({ players, teams, games }
         });
       }
       
-      if (game.isClutch) {
-        const winnerTeam = teams.find(t => t.id === game.winnerId);
+      if (tags.isClutch) {
         achievements.push({
           type: 'Clutch Victory',
           team: winnerTeam?.name,
@@ -233,28 +310,25 @@ const NotableRecords: React.FC<NotableRecordsProps> = ({ players, teams, games }
           <h3>Team Excellence</h3>
           <div className="team-record-card">
             <div className="team-header">
-              <div 
-                className="team-color-large"
-                style={{ backgroundColor: records.bestTeam.color }}
-              />
+              <TeamIcon iconId={records.bestTeam.team.abbreviation} color="#3b82f6" size={32} />
               <div className="team-info">
-                <h4>{records.bestTeam.name}</h4>
+                <h4>{records.bestTeam.team.name}</h4>
                 <div className="team-achievement">Best Win Rate</div>
               </div>
             </div>
             <div className="team-stats">
               <div className="team-stat">
-                <span className="stat-value">{records.bestTeam.wins}</span>
+                <span className="stat-value">{records.bestTeam.stats.wins}</span>
                 <span className="stat-label">Wins</span>
               </div>
               <div className="team-stat">
-                <span className="stat-value">{records.bestTeam.losses}</span>
+                <span className="stat-value">{records.bestTeam.stats.losses}</span>
                 <span className="stat-label">Losses</span>
               </div>
               <div className="team-stat">
                 <span className="stat-value">
-                  {records.bestTeam.wins + records.bestTeam.losses > 0 
-                    ? Math.round((records.bestTeam.wins / (records.bestTeam.wins + records.bestTeam.losses)) * 100)
+                  {records.bestTeam.stats.gamesPlayed > 0 
+                    ? Math.round((records.bestTeam.stats.wins / records.bestTeam.stats.gamesPlayed) * 100)
                     : 0}%
                 </span>
                 <span className="stat-label">Win Rate</span>

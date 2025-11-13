@@ -59,20 +59,14 @@ const DataToolsTab: React.FC<DataToolsTabProps> = ({ onDataChange }) => {
       const text = await file.text();
       const data = JSON.parse(text);
       
-      const response = await dataApi.importAll(data);
+      // Import functionality not yet implemented
+      setStatus({
+        type: 'error',
+        message: 'Import functionality is not yet implemented'
+      });
       
-      if (response.success) {
-        setStatus({
-          type: 'success',
-          message: 'Data imported successfully!'
-        });
-        onDataChange();
-      } else {
-        setStatus({
-          type: 'error',
-          message: response.message || 'Failed to import data'
-        });
-      }
+      // Placeholder for future implementation  
+      onDataChange(); // Reload data anyway
     } catch (error) {
       setStatus({
         type: 'error',
@@ -156,7 +150,7 @@ const DataToolsTab: React.FC<DataToolsTabProps> = ({ onDataChange }) => {
           </div>
           <p>
             Download all league data as a JSON file. This includes teams, players, 
-            games, tournaments, and settings.
+            games, playoffs, and settings.
           </p>
           <button 
             className="btn btn-primary"
@@ -227,7 +221,7 @@ const DataToolsTab: React.FC<DataToolsTabProps> = ({ onDataChange }) => {
           </div>
           <p>
             Reset all data to default values. This will delete all teams, players, 
-            games, and tournaments. This action cannot be undone.
+            games, and playoffs. This action cannot be undone.
           </p>
           
           {!showResetConfirm ? (
