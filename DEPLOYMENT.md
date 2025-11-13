@@ -75,8 +75,9 @@ vercel --prod
 ### Environment Variables
 Make sure these are set in your Vercel dashboard:
 - `NODE_VERSION`: `18.x` (or your preferred version)
-- `BUILD_COMMAND`: `npm run build`
-- `OUTPUT_DIRECTORY`: `build`
+- `CI`: `false` (to prevent warnings from failing the build)
+
+**Note:** The `vercel.json` file is configured with the correct build settings. The build script has been updated to work reliably across all environments.
 
 ## Release Notes Template
 
@@ -223,10 +224,17 @@ npm run deploy:patch
 npm run build
 
 # If it works locally, check:
-# 1. Node.js version in Vercel settings
-# 2. Environment variables
+# 1. Node.js version in Vercel settings (should be 18.x)
+# 2. Environment variables (especially CI=false)
 # 3. Dependencies in package.json
+# 4. Check Vercel build logs for specific error messages
+# 5. Ensure vercel.json is committed to the repository
 ```
+
+**Common Issues:**
+- **"Command exited with 1"**: Usually means the build script failed. Check that `scripts/build.js` exists and is executable.
+- **Environment variable issues**: The build script now reads version from `package.json` automatically, so `REACT_APP_VERSION` is set correctly.
+- **ESLint warnings**: Set `CI=false` in Vercel environment variables to prevent warnings from failing the build.
 
 ### Deployment Successful but Site Broken
 ```bash
