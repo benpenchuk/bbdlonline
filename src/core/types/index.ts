@@ -1,7 +1,7 @@
 // =====================================================
 // ENUMS
 // =====================================================
-export type PlayerStatus = 'active' | 'inactive' | 'retired';
+export type PlayerStatus = 'active' | 'inactive' | 'alumni';
 export type TeamStatus = 'active' | 'inactive' | 'retired';
 export type SeasonStatus = 'upcoming' | 'active' | 'completed' | 'archived';
 export type RosterRole = 'starter_1' | 'starter_2' | 'sub';

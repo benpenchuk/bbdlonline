@@ -168,46 +168,59 @@ const HomePage: React.FC = () => {
   }
 
   return (
-    <div className="home-page-compact">
-      {/* Top Section: 3-Column Grid */}
-      <div className="home-boxes-container">
-        {/* Scores - Current Week Games */}
-        <CompactScores
-          games={currentWeekGames}
-          teams={seasonTeams}
-          limit={6}
-        />
-
-        {/* Standings Table */}
-        <CompactStandings 
-          teams={seasonTeams}
-          games={seasonGames}
-          teamSeasonStats={seasonTeamSeasonStats}
-          limit={8}
-        />
-
-        {/* League Leaders */}
-        <CompactStatsLeaders
-          players={players}
-          teams={seasonTeams}
-          playerTeams={seasonPlayerTeams}
-          playerGameStats={seasonPlayerGameStats}
-          playerSeasonStats={seasonPlayerSeasonStats}
-          limit={5}
-        />
+    <div className="page-container">
+      {/* Page Header */}
+      <div className="page-header">
+        <div className="page-title-section">
+          <h1>Home</h1>
+          <p className="page-subtitle">
+            {activeSeason ? `${activeSeason.name} season overview` : 'League overview and latest updates'}
+          </p>
+        </div>
       </div>
 
-      {/* Bottom Section: 2-Column Grid */}
-      <div className="home-secondary-grid">
-        {/* Left Column: Announcements & Photos */}
-        <div className="home-secondary-left">
-          <AnnouncementCard announcement={activeAnnouncement} />
-          <PhotoCarousel photos={seasonPhotos} featuredPhoto={featuredPhoto} />
+      {/* Main Content */}
+      <div className="page-content home-page-compact">
+        {/* Top Section: 3-Column Grid */}
+        <div className="home-boxes-container">
+          {/* Scores - Current Week Games */}
+          <CompactScores
+            games={currentWeekGames}
+            teams={seasonTeams}
+            limit={6}
+          />
+
+          {/* Standings Table */}
+          <CompactStandings 
+            teams={seasonTeams}
+            games={seasonGames}
+            teamSeasonStats={seasonTeamSeasonStats}
+            limit={8}
+          />
+
+          {/* League Leaders */}
+          <CompactStatsLeaders
+            players={players}
+            teams={seasonTeams}
+            playerTeams={seasonPlayerTeams}
+            playerGameStats={seasonPlayerGameStats}
+            playerSeasonStats={seasonPlayerSeasonStats}
+            limit={5}
+          />
         </div>
 
-        {/* Right Column: Sponsors */}
-        <div className="home-secondary-right">
-          <SponsorCarousel />
+        {/* Bottom Section: 2-Column Grid */}
+        <div className="home-secondary-grid">
+          {/* Left Column: Announcements & Photos */}
+          <div className="home-secondary-left">
+            <AnnouncementCard announcement={activeAnnouncement} />
+            <PhotoCarousel photos={seasonPhotos} featuredPhoto={featuredPhoto} />
+          </div>
+
+          {/* Right Column: Sponsors */}
+          <div className="home-secondary-right">
+            <SponsorCarousel />
+          </div>
         </div>
       </div>
     </div>

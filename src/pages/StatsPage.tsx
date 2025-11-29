@@ -1,223 +1,561 @@
-import React, { useState } from 'react';
-import { BarChart3, Trophy, Target, Zap, Award, Users, Swords } from 'lucide-react';
+import React, { useState, useMemo, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { 
+  Trophy, 
+  Target, 
+  Crown, 
+  Search, 
+  ChevronDown, 
+  ChevronUp,
+  Flame,
+  TrendingUp,
+  BarChart3
+} from 'lucide-react';
 import { useData } from '../state';
-import { calculateSeasonStats, calculateHeadToHead } from '../core/utils/statsCalculations';
-import { getLeagueLeaders } from '../core/services/stats';
 import LoadingSpinner from '../components/common/LoadingSpinner';
-import StatCard from '../components/common/StatCard';
-import LeaderboardTable from '../components/stats/LeaderboardTable';
-import TeamStatsPanel from '../components/stats/TeamStatsPanel';
-import HeadToHeadComparison from '../components/stats/HeadToHeadComparison';
-import NotableRecords from '../components/stats/NotableRecords';
+import ProfilePicture from '../components/common/ProfilePicture';
+import {
+  computeAllPlayerStats,
+  computeAllTeamStats,
+  getSeasonLeaders,
+  filterPlayerStats,
+  filterTeamStats,
+  sortPlayerStats,
+  sortTeamStats,
+  ComputedPlayerStats,
+  ComputedTeamStats,
+  SortDirection,
+} from '../core/utils/statsHelpers';
+
+type StatsView = 'players' | 'teams';
+type PlayerSortKey = 'playerName' | 'gamesPlayed' | 'wins' | 'losses' | 'winPct' | 'totalCups' | 'cupsPerGame' | 'accuracy' | 'currentStreak' | 'heat';
+type TeamSortKey = 'teamName' | 'gamesPlayed' | 'wins' | 'losses' | 'winPct' | 'cupsFor' | 'cupsAgainst' | 'cupDifferential' | 'currentStreak';
 
 const StatsPage: React.FC = () => {
-  const { players, teams, games, playerTeams, loading } = useData();
-  
-  // Active tabs and selections
-  const [activeLeaderboard, setActiveLeaderboard] = useState<'wins' | 'average' | 'shutouts' | 'blowouts' | 'clutch' | 'streak'>('wins');
-  const [selectedTeam, setSelectedTeam] = useState<string>('');
-  const [h2hTeam1, setH2hTeam1] = useState<string>('');
-  const [h2hTeam2, setH2hTeam2] = useState<string>('');
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { 
+    players, 
+    teams, 
+    games, 
+    playerTeams, 
+    playerGameStats,
+    seasons,
+    activeSeason, 
+    loading 
+  } = useData();
 
+  // State
+  const [selectedSeasonId, setSelectedSeasonId] = useState<string>('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [activeView, setActiveView] = useState<StatsView>('players');
+  const [playerSortKey, setPlayerSortKey] = useState<PlayerSortKey>('winPct');
+  const [playerSortDir, setPlayerSortDir] = useState<SortDirection>('desc');
+  const [teamSortKey, setTeamSortKey] = useState<TeamSortKey>('winPct');
+  const [teamSortDir, setTeamSortDir] = useState<SortDirection>('desc');
+
+  // Restore scroll position when returning from player detail
+  useEffect(() => {
+    const state = location.state as { restoreScrollY?: number } | null;
+    if (state?.restoreScrollY) {
+      setTimeout(() => {
+        window.scrollTo(0, state.restoreScrollY!);
+      }, 0);
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
+
+  // Set default season when data loads
+  React.useEffect(() => {
+    if (!selectedSeasonId && activeSeason) {
+      setSelectedSeasonId(activeSeason.id);
+    } else if (!selectedSeasonId && seasons.length > 0) {
+      // Fall back to most recent season
+      const sorted = [...seasons].sort((a, b) => b.year - a.year);
+      setSelectedSeasonId(sorted[0].id);
+    }
+  }, [activeSeason, seasons, selectedSeasonId]);
+
+  // Compute stats
+  const playerStats = useMemo(() => {
+    if (!selectedSeasonId) return [];
+    return computeAllPlayerStats(
+      selectedSeasonId,
+      games,
+      playerGameStats,
+      playerTeams,
+      players,
+      teams
+    );
+  }, [selectedSeasonId, games, playerGameStats, playerTeams, players, teams]);
+
+  const teamStats = useMemo(() => {
+    if (!selectedSeasonId) return [];
+    return computeAllTeamStats(selectedSeasonId, games, teams);
+  }, [selectedSeasonId, games, teams]);
+
+  const seasonLeaders = useMemo(() => {
+    if (!selectedSeasonId) return { topScorer: null, mostAccurate: null, topTeam: null };
+    return getSeasonLeaders(
+      selectedSeasonId,
+      games,
+      playerGameStats,
+      playerTeams,
+      players,
+      teams
+    );
+  }, [selectedSeasonId, games, playerGameStats, playerTeams, players, teams]);
+
+  // Filter and sort
+  const filteredPlayerStats = useMemo(() => {
+    const filtered = filterPlayerStats(playerStats, searchQuery);
+    return sortPlayerStats(filtered, playerSortKey as keyof ComputedPlayerStats, playerSortDir);
+  }, [playerStats, searchQuery, playerSortKey, playerSortDir]);
+
+  const filteredTeamStats = useMemo(() => {
+    const filtered = filterTeamStats(teamStats, searchQuery);
+    return sortTeamStats(filtered, teamSortKey as keyof ComputedTeamStats, teamSortDir);
+  }, [teamStats, searchQuery, teamSortKey, teamSortDir]);
+
+  // Sort handlers
+  const handlePlayerSort = (key: PlayerSortKey) => {
+    if (playerSortKey === key) {
+      setPlayerSortDir(playerSortDir === 'asc' ? 'desc' : 'asc');
+    } else {
+      setPlayerSortKey(key);
+      setPlayerSortDir('desc');
+    }
+  };
+
+  const handleTeamSort = (key: TeamSortKey) => {
+    if (teamSortKey === key) {
+      setTeamSortDir(teamSortDir === 'asc' ? 'desc' : 'asc');
+    } else {
+      setTeamSortKey(key);
+      setTeamSortDir('desc');
+    }
+  };
+
+  // Navigation
+  const handlePlayerClick = (playerSlug: string) => {
+    navigate(`/players/${playerSlug}`, { 
+      state: { 
+        from: '/stats', 
+        fromLabel: 'Stats',
+        scrollY: window.scrollY 
+      } 
+    });
+  };
+
+  const handleTeamClick = (teamId: string) => {
+    navigate(`/team/${teamId}`, {
+      state: {
+        from: '/stats',
+        fromLabel: 'Stats',
+        scrollY: window.scrollY
+      }
+    });
+  };
+
+  // Render sort indicator
+  const SortIndicator: React.FC<{ active: boolean; direction: SortDirection }> = ({ active, direction }) => {
+    if (!active) return <ChevronDown size={14} className="stats-sort-icon inactive" />;
+    return direction === 'asc' 
+      ? <ChevronUp size={14} className="stats-sort-icon active" />
+      : <ChevronDown size={14} className="stats-sort-icon active" />;
+  };
+
+  // Format streak display
+  const formatStreak = (streak: { type: 'W' | 'L' | null; length: number }) => {
+    if (!streak.type || streak.length === 0) return '-';
+    return `${streak.type}${streak.length}`;
+  };
 
   if (loading) {
     return <LoadingSpinner message="Loading statistics..." />;
   }
 
-  const seasonStats = calculateSeasonStats(games);
-  const leagueLeaders = getLeagueLeaders(games, players);
-  
-  // Convert new stats format to match existing LeaderboardTable expectations
-  const leaderboards = {
-    wins: leagueLeaders.mostWins.map((entry, index) => ({ ...entry, rank: index + 1 })),
-    average: leagueLeaders.highestAverage.map((entry, index) => ({ ...entry, rank: index + 1 })),
-    shutouts: leagueLeaders.mostShutouts.map((entry, index) => ({ ...entry, rank: index + 1 })),
-    blowouts: leagueLeaders.mostBlowouts.map((entry, index) => ({ ...entry, rank: index + 1 })),
-    clutch: leagueLeaders.mostClutch.map((entry, index) => ({ ...entry, rank: index + 1 })),
-    streak: leagueLeaders.longestStreak.map((entry, index) => ({ ...entry, rank: index + 1 }))
-  };
-
-  const headToHeadData = h2hTeam1 && h2hTeam2 && h2hTeam1 !== h2hTeam2 
-    ? calculateHeadToHead(h2hTeam1, h2hTeam2, games)
-    : null;
-
-  const leaderboardTabs = [
-    { key: 'wins', label: 'Most Wins', icon: Trophy },
-    { key: 'average', label: 'Highest Average', icon: Target },
-    { key: 'shutouts', label: 'Most Shutouts', icon: Award },
-    { key: 'blowouts', label: 'Most Blowouts', icon: Zap },
-    { key: 'clutch', label: 'Most Clutch Wins', icon: Users },
-    { key: 'streak', label: 'Longest Win Streak', icon: BarChart3 }
-  ] as const;
-
   return (
     <div className="page-container">
-      <div className="page-header">
+      {/* Page Header */}
+      <div className="page-header stats-page-header">
         <div className="page-title-section">
-          <h1>League Statistics</h1>
-          <p>Comprehensive analytics and player rankings</p>
+          <h1>Statistics</h1>
+          <p className="page-subtitle">League stats, leaderboards, and performance metrics</p>
+        </div>
+
+        <div className="page-controls stats-controls">
+          {/* Season Selector */}
+          <div className="stats-season-selector">
+            <label htmlFor="season-select" className="stats-select-label">Season</label>
+            <div className="stats-select-wrapper">
+              <select
+                id="season-select"
+                className="stats-select"
+                value={selectedSeasonId}
+                onChange={(e) => setSelectedSeasonId(e.target.value)}
+              >
+                {seasons.length === 0 && (
+                  <option value="">No seasons available</option>
+                )}
+                {seasons
+                  .sort((a, b) => b.year - a.year)
+                  .map(season => (
+                    <option key={season.id} value={season.id}>
+                      {season.name}
+                    </option>
+                  ))}
+              </select>
+              <ChevronDown size={18} className="stats-select-chevron" />
+            </div>
+          </div>
+
+          {/* Search Bar */}
+          <div className="stats-search-container">
+            <Search size={18} className="stats-search-icon" />
+            <input
+              type="text"
+              className="stats-search-input"
+              placeholder={`Search ${activeView}...`}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
+
+          {/* View Toggle */}
+          <div className="stats-view-toggle">
+            <button
+              className={`stats-toggle-btn ${activeView === 'players' ? 'active' : ''}`}
+              onClick={() => setActiveView('players')}
+            >
+              Player Stats
+            </button>
+            <button
+              className={`stats-toggle-btn ${activeView === 'teams' ? 'active' : ''}`}
+              onClick={() => setActiveView('teams')}
+            >
+              Team Stats
+            </button>
+          </div>
         </div>
       </div>
 
-      <div className="stats-layout">
-        {/* Season Overview */}
-        <section className="stats-section">
-          <h2 className="section-title">Season Overview</h2>
-          <div className="stat-cards-grid">
-            <StatCard
-              title="Total Games"
-              value={seasonStats.totalGames}
-              icon={BarChart3}
-              color="blue"
-            />
-            <StatCard
-              title="Completed Games"
-              value={seasonStats.completedGames}
-              icon={Trophy}
-              color="green"
-            />
-            <StatCard
-              title="Average Score"
-              value={seasonStats.averageScore.toFixed(1)}
-              icon={Target}
-              color="purple"
-            />
-            <StatCard
-              title="Highest Score"
-              value={seasonStats.highestScore}
-              icon={Zap}
-              color="orange"
-            />
-            <StatCard
-              title="Shutout Games"
-              value={seasonStats.shutouts}
-              icon={Award}
-              color="red"
-            />
-            <StatCard
-              title="Blowout Games"
-              value={seasonStats.blowouts}
-              icon={Users}
-              color="gray"
-            />
-          </div>
-        </section>
-
-        {/* Leaderboards */}
-        <section className="stats-section">
-          <h2 className="section-title">Player Leaderboards</h2>
-          
-          <div className="leaderboard-tabs">
-            {leaderboardTabs.map(tab => {
-              const Icon = tab.icon;
-              return (
-                <button
-                  key={tab.key}
-                  className={`tab-btn ${activeLeaderboard === tab.key ? 'tab-btn-active' : ''}`}
-                  onClick={() => setActiveLeaderboard(tab.key)}
-                >
-                  <Icon size={16} />
-                  {tab.label}
-                </button>
-              );
-            })}
+      {/* Hero Stat Cards */}
+      <section className="stats-hero-section">
+        <div className="stats-hero-cards">
+          {/* Top Scorer */}
+          <div className="stats-hero-card stats-hero-scorer">
+            <div className="stats-hero-icon">
+              <Trophy size={24} />
+            </div>
+            <div className="stats-hero-content">
+              <span className="stats-hero-label">Top Cup Scorer</span>
+              {seasonLeaders.topScorer ? (
+                <>
+                  <div className="stats-hero-player">
+                    <ProfilePicture
+                      imageUrl={seasonLeaders.topScorer.player.avatarUrl}
+                      fallbackImage="player"
+                      alt={`${seasonLeaders.topScorer.player.firstName} ${seasonLeaders.topScorer.player.lastName}`}
+                      size={32}
+                    />
+                    <span className="stats-hero-name">
+                      {seasonLeaders.topScorer.player.firstName} {seasonLeaders.topScorer.player.lastName}
+                    </span>
+                  </div>
+                  <span className="stats-hero-value">{seasonLeaders.topScorer.cups} cups</span>
+                </>
+              ) : (
+                <span className="stats-hero-empty">No data yet</span>
+              )}
+            </div>
           </div>
 
-          <LeaderboardTable
-            entries={leaderboards[activeLeaderboard]}
-            players={players}
-            teams={teams}
-            playerTeams={playerTeams}
-            category={activeLeaderboard}
-          />
-        </section>
-
-        {/* Team Stats */}
-        <section className="stats-section">
-          <h2 className="section-title">Team Performance</h2>
-          
-          <div className="team-selector">
-            <select
-              value={selectedTeam}
-              onChange={(e) => setSelectedTeam(e.target.value)}
-              className="team-select"
-            >
-              <option value="">Select a team...</option>
-              {teams.map(team => (
-                <option key={team.id} value={team.id}>
-                  {team.name}
-                </option>
-              ))}
-            </select>
+          {/* Most Accurate */}
+          <div className="stats-hero-card stats-hero-accurate">
+            <div className="stats-hero-icon">
+              <Target size={24} />
+            </div>
+            <div className="stats-hero-content">
+              <span className="stats-hero-label">Most Accurate</span>
+              {seasonLeaders.mostAccurate ? (
+                <>
+                  <div className="stats-hero-player">
+                    <ProfilePicture
+                      imageUrl={seasonLeaders.mostAccurate.player.avatarUrl}
+                      fallbackImage="player"
+                      alt={`${seasonLeaders.mostAccurate.player.firstName} ${seasonLeaders.mostAccurate.player.lastName}`}
+                      size={32}
+                    />
+                    <span className="stats-hero-name">
+                      {seasonLeaders.mostAccurate.player.firstName} {seasonLeaders.mostAccurate.player.lastName}
+                    </span>
+                  </div>
+                  <span className="stats-hero-value">{seasonLeaders.mostAccurate.accuracy.toFixed(1)}%</span>
+                </>
+              ) : (
+                <span className="stats-hero-empty">Min. {3} games required</span>
+              )}
+            </div>
           </div>
 
-          {selectedTeam && (
-            <TeamStatsPanel
-              teamId={selectedTeam}
-              teams={teams}
-              games={games}
-              players={players}
-              playerTeams={playerTeams}
-            />
-          )}
-        </section>
-
-        {/* Head-to-Head Comparison */}
-        <section className="stats-section">
-          <div className="section-header">
-            <h2 className="section-title">Head-to-Head Comparison</h2>
-            <Swords className="section-icon" size={20} />
+          {/* Top Team */}
+          <div className="stats-hero-card stats-hero-team">
+            <div className="stats-hero-icon">
+              <Crown size={24} />
+            </div>
+            <div className="stats-hero-content">
+              <span className="stats-hero-label">Top Team</span>
+              {seasonLeaders.topTeam ? (
+                <>
+                  <div className="stats-hero-player">
+                    <ProfilePicture
+                      imageUrl={seasonLeaders.topTeam.team.logoUrl}
+                      fallbackImage="team"
+                      alt={seasonLeaders.topTeam.team.name}
+                      size={32}
+                    />
+                    <span className="stats-hero-name">{seasonLeaders.topTeam.team.name}</span>
+                  </div>
+                  <span className="stats-hero-value">
+                    {seasonLeaders.topTeam.record} ({seasonLeaders.topTeam.winPct.toFixed(0)}%)
+                  </span>
+                </>
+              ) : (
+                <span className="stats-hero-empty">No data yet</span>
+              )}
+            </div>
           </div>
-          
-          <div className="h2h-selectors">
-            <select
-              value={h2hTeam1}
-              onChange={(e) => setH2hTeam1(e.target.value)}
-              className="h2h-select"
-            >
-              <option value="">Select Team 1...</option>
-              {teams.map(team => (
-                <option key={team.id} value={team.id} disabled={team.id === h2hTeam2}>
-                  {team.name}
-                </option>
-              ))}
-            </select>
+        </div>
+      </section>
 
-            <div className="vs-indicator">VS</div>
+      {/* Data Tables */}
+      <section className="stats-tables-section">
+        {activeView === 'players' ? (
+          /* Player Stats Table */
+          <div className="stats-table-container">
+            <div className="stats-table-header">
+              <h2>
+                <TrendingUp size={20} />
+                Player Statistics
+              </h2>
+              <span className="stats-table-count">
+                {filteredPlayerStats.length} player{filteredPlayerStats.length !== 1 ? 's' : ''}
+              </span>
+            </div>
 
-            <select
-              value={h2hTeam2}
-              onChange={(e) => setH2hTeam2(e.target.value)}
-              className="h2h-select"
-            >
-              <option value="">Select Team 2...</option>
-              {teams.map(team => (
-                <option key={team.id} value={team.id} disabled={team.id === h2hTeam1}>
-                  {team.name}
-                </option>
-              ))}
-            </select>
+            {filteredPlayerStats.length === 0 ? (
+              <div className="stats-empty-state">
+                <BarChart3 size={48} />
+                <h3>No player data available</h3>
+                <p>
+                  {searchQuery 
+                    ? 'No players match your search criteria.' 
+                    : 'No player statistics found for the selected season.'}
+                </p>
+              </div>
+            ) : (
+              <div className="stats-table-scroll">
+                <table className="stats-table stats-player-table">
+                  <thead>
+                    <tr>
+                      <th className="stats-th-sticky" onClick={() => handlePlayerSort('playerName')}>
+                        <span>Player</span>
+                        <SortIndicator active={playerSortKey === 'playerName'} direction={playerSortDir} />
+                      </th>
+                      <th>Team</th>
+                      <th onClick={() => handlePlayerSort('gamesPlayed')}>
+                        <span>GP</span>
+                        <SortIndicator active={playerSortKey === 'gamesPlayed'} direction={playerSortDir} />
+                      </th>
+                      <th onClick={() => handlePlayerSort('wins')}>
+                        <span>W</span>
+                        <SortIndicator active={playerSortKey === 'wins'} direction={playerSortDir} />
+                      </th>
+                      <th onClick={() => handlePlayerSort('losses')}>
+                        <span>L</span>
+                        <SortIndicator active={playerSortKey === 'losses'} direction={playerSortDir} />
+                      </th>
+                      <th onClick={() => handlePlayerSort('winPct')}>
+                        <span>Win%</span>
+                        <SortIndicator active={playerSortKey === 'winPct'} direction={playerSortDir} />
+                      </th>
+                      <th onClick={() => handlePlayerSort('totalCups')}>
+                        <span>Cups</span>
+                        <SortIndicator active={playerSortKey === 'totalCups'} direction={playerSortDir} />
+                      </th>
+                      <th onClick={() => handlePlayerSort('cupsPerGame')}>
+                        <span>C/G</span>
+                        <SortIndicator active={playerSortKey === 'cupsPerGame'} direction={playerSortDir} />
+                      </th>
+                      <th onClick={() => handlePlayerSort('accuracy')}>
+                        <span>Acc%</span>
+                        <SortIndicator active={playerSortKey === 'accuracy'} direction={playerSortDir} />
+                      </th>
+                      <th onClick={() => handlePlayerSort('currentStreak')}>
+                        <span>Streak</span>
+                        <SortIndicator active={playerSortKey === 'currentStreak'} direction={playerSortDir} />
+                      </th>
+                      <th onClick={() => handlePlayerSort('heat')} className="stats-th-heat">
+                        <span><Flame size={14} /> Heat</span>
+                        <SortIndicator active={playerSortKey === 'heat'} direction={playerSortDir} />
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredPlayerStats.map((ps) => (
+                      <tr 
+                        key={ps.playerId} 
+                        className="stats-row-clickable"
+                        onClick={() => handlePlayerClick(ps.playerSlug)}
+                      >
+                        <td className="stats-td-player">
+                          <ProfilePicture
+                            imageUrl={ps.avatarUrl}
+                            fallbackImage="player"
+                            alt={ps.playerName}
+                            size={28}
+                          />
+                          <span className="stats-player-name">{ps.playerName}</span>
+                        </td>
+                        <td className="stats-td-team">
+                          {ps.teamNames.length > 0 ? ps.teamNames.join(', ') : '-'}
+                        </td>
+                        <td>{ps.gamesPlayed}</td>
+                        <td className="stats-td-wins">{ps.wins}</td>
+                        <td className="stats-td-losses">{ps.losses}</td>
+                        <td className="stats-td-pct">{ps.winPct.toFixed(1)}%</td>
+                        <td>{ps.totalCups}</td>
+                        <td>{ps.cupsPerGame.toFixed(1)}</td>
+                        <td>{ps.totalThrows > 0 ? `${ps.accuracy.toFixed(1)}%` : '-'}</td>
+                        <td className={`stats-td-streak ${ps.currentStreak.type === 'W' ? 'streak-win' : ps.currentStreak.type === 'L' ? 'streak-loss' : ''}`}>
+                          {formatStreak(ps.currentStreak)}
+                        </td>
+                        <td className="stats-td-heat">
+                          <div className="stats-heat-indicator">
+                            <Flame size={14} className={ps.heat >= 5 ? 'heat-hot' : ps.heat >= 3 ? 'heat-warm' : ''} />
+                            <span>{ps.heat.toFixed(1)}</span>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
+        ) : (
+          /* Team Stats Table */
+          <div className="stats-table-container">
+            <div className="stats-table-header">
+              <h2>
+                <Crown size={20} />
+                Team Statistics
+              </h2>
+              <span className="stats-table-count">
+                {filteredTeamStats.length} team{filteredTeamStats.length !== 1 ? 's' : ''}
+              </span>
+            </div>
 
-          {headToHeadData && (
-            <HeadToHeadComparison
-              comparison={headToHeadData}
-              teams={teams}
-            />
-          )}
-        </section>
+            {filteredTeamStats.length === 0 ? (
+              <div className="stats-empty-state">
+                <BarChart3 size={48} />
+                <h3>No team data available</h3>
+                <p>
+                  {searchQuery 
+                    ? 'No teams match your search criteria.' 
+                    : 'No team statistics found for the selected season.'}
+                </p>
+              </div>
+            ) : (
+              <div className="stats-table-scroll">
+                <table className="stats-table stats-team-table">
+                  <thead>
+                    <tr>
+                      <th className="stats-th-sticky" onClick={() => handleTeamSort('teamName')}>
+                        <span>Team</span>
+                        <SortIndicator active={teamSortKey === 'teamName'} direction={teamSortDir} />
+                      </th>
+                      <th onClick={() => handleTeamSort('gamesPlayed')}>
+                        <span>GP</span>
+                        <SortIndicator active={teamSortKey === 'gamesPlayed'} direction={teamSortDir} />
+                      </th>
+                      <th onClick={() => handleTeamSort('wins')}>
+                        <span>W</span>
+                        <SortIndicator active={teamSortKey === 'wins'} direction={teamSortDir} />
+                      </th>
+                      <th onClick={() => handleTeamSort('losses')}>
+                        <span>L</span>
+                        <SortIndicator active={teamSortKey === 'losses'} direction={teamSortDir} />
+                      </th>
+                      <th onClick={() => handleTeamSort('winPct')}>
+                        <span>Win%</span>
+                        <SortIndicator active={teamSortKey === 'winPct'} direction={teamSortDir} />
+                      </th>
+                      <th onClick={() => handleTeamSort('cupsFor')}>
+                        <span>CF</span>
+                        <SortIndicator active={teamSortKey === 'cupsFor'} direction={teamSortDir} />
+                      </th>
+                      <th onClick={() => handleTeamSort('cupsAgainst')}>
+                        <span>CA</span>
+                        <SortIndicator active={teamSortKey === 'cupsAgainst'} direction={teamSortDir} />
+                      </th>
+                      <th onClick={() => handleTeamSort('cupDifferential')}>
+                        <span>Diff</span>
+                        <SortIndicator active={teamSortKey === 'cupDifferential'} direction={teamSortDir} />
+                      </th>
+                      <th onClick={() => handleTeamSort('currentStreak')}>
+                        <span>Streak</span>
+                        <SortIndicator active={teamSortKey === 'currentStreak'} direction={teamSortDir} />
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredTeamStats.map((ts) => (
+                      <tr 
+                        key={ts.teamId} 
+                        className="stats-row-clickable"
+                        onClick={() => handleTeamClick(ts.teamId)}
+                      >
+                        <td className="stats-td-team-name">
+                          <ProfilePicture
+                            imageUrl={ts.logoUrl}
+                            fallbackImage="team"
+                            alt={ts.teamName}
+                            size={28}
+                          />
+                          <span className="stats-team-name">{ts.teamName}</span>
+                        </td>
+                        <td>{ts.gamesPlayed}</td>
+                        <td className="stats-td-wins">{ts.wins}</td>
+                        <td className="stats-td-losses">{ts.losses}</td>
+                        <td className="stats-td-pct">{ts.winPct.toFixed(1)}%</td>
+                        <td>{ts.cupsFor}</td>
+                        <td>{ts.cupsAgainst}</td>
+                        <td className={`stats-td-diff ${ts.cupDifferential > 0 ? 'diff-positive' : ts.cupDifferential < 0 ? 'diff-negative' : ''}`}>
+                          {ts.cupDifferential > 0 ? '+' : ''}{ts.cupDifferential}
+                        </td>
+                        <td className={`stats-td-streak ${ts.currentStreak.type === 'W' ? 'streak-win' : ts.currentStreak.type === 'L' ? 'streak-loss' : ''}`}>
+                          {formatStreak(ts.currentStreak)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
+      </section>
 
-        {/* Notable Records */}
-        <section className="stats-section">
-          <h2 className="section-title">Notable Records & Achievements</h2>
-          <NotableRecords
-            players={players}
-            teams={teams}
-            games={games}
-            playerTeams={playerTeams}
-          />
-        </section>
-      </div>
+      {/* Charts Placeholder */}
+      <section className="stats-charts-placeholder">
+        <div className="stats-charts-placeholder-content">
+          <BarChart3 size={32} />
+          <h3>Charts Coming Soon</h3>
+          <p>Team accuracy comparison, cups per game distribution, and more visualizations will appear here.</p>
+        </div>
+      </section>
     </div>
   );
 };

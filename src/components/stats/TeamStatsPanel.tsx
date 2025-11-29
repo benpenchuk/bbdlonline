@@ -2,9 +2,9 @@ import React from 'react';
 import { Trophy, Target, Users, Zap, Award, TrendingUp } from 'lucide-react';
 import { Team, Game, Player, PlayerTeam } from '../../core/types';
 import { calculateTeamStatsForGames } from '../../core/utils/statsCalculations';
-import { getPlayerFullName, getPlayerInitials, getTeamPlayers } from '../../core/utils/playerHelpers';
+import { getPlayerFullName, getTeamPlayers } from '../../core/utils/playerHelpers';
 import { getGameTags } from '../../core/utils/gameHelpers';
-import TeamIcon from '../common/TeamIcon';
+import ProfilePicture from '../common/ProfilePicture';
 
 interface TeamStatsPanelProps {
   teamId: string;
@@ -72,7 +72,12 @@ const TeamStatsPanel: React.FC<TeamStatsPanelProps> = ({
     <div className="team-stats-panel">
       <div className="team-header">
         <div className="team-identity">
-          <TeamIcon iconId={team.abbreviation} color="#3b82f6" size={32} />
+          <ProfilePicture
+            imageUrl={team.logoUrl}
+            fallbackImage="team"
+            alt={team.name}
+            size={56}
+          />
           <div className="team-info">
             <h3 className="team-name">{team.name}</h3>
             <div className="team-record">
@@ -161,7 +166,12 @@ const TeamStatsPanel: React.FC<TeamStatsPanelProps> = ({
               return (
                 <div key={opponentId} className="h2h-record">
                   <div className="opponent-info">
-                    <TeamIcon iconId={opponent.abbreviation} color="#64748b" size={16} />
+                    <ProfilePicture
+                      imageUrl={opponent.logoUrl}
+                      fallbackImage="team"
+                      alt={opponent.name}
+                      size={24}
+                    />
                     <span className="opponent-name">{opponent.name}</span>
                   </div>
                   <div className="record-stats">
@@ -194,15 +204,12 @@ const TeamStatsPanel: React.FC<TeamStatsPanelProps> = ({
 
               return (
                 <div key={player.id} className="roster-player">
-                  <div className="player-avatar-small">
-                    {player.avatarUrl ? (
-                      <img src={player.avatarUrl} alt={getPlayerFullName(player)} />
-                    ) : (
-                      <div className="player-initials-small">
-                        {getPlayerInitials(player)}
-                      </div>
-                    )}
-                  </div>
+                  <ProfilePicture
+                    imageUrl={player.avatarUrl}
+                    fallbackImage="player"
+                    alt={getPlayerFullName(player)}
+                    size={32}
+                  />
                   <div className="player-info">
                     <span className="player-name">{getPlayerFullName(player)}</span>
                     <span className="player-stats">

@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { useData } from '../state';
 import { Player } from '../core/types';
@@ -6,7 +7,6 @@ import LoadingSpinner from '../components/common/LoadingSpinner';
 import PlayerCard from '../components/common/PlayerCard';
 import TeamSection from '../components/players/TeamSection';
 import ViewToggle, { ViewMode } from '../components/players/ViewToggle';
-import PlayerModal from '../components/players/PlayerModal';
 import { getPlayerFullName, getTeamPlayers } from '../core/utils/playerHelpers';
 import { getWinnerId } from '../core/utils/gameHelpers';
 
@@ -37,13 +37,25 @@ const useLocalStorage = <T,>(key: string, initialValue: T): [T, React.Dispatch<R
 
 // --- Main Component ---
 const PlayersPage: React.FC = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
   const { players, teams, games, playerTeams, loading } = useData();
+
+  // --- Restore scroll position when returning from player detail ---
+  useEffect(() => {
+    const state = location.state as { restoreScrollY?: number } | null;
+    if (state?.restoreScrollY) {
+      // Small delay to ensure DOM is rendered
+      setTimeout(() => {
+        window.scrollTo(0, state.restoreScrollY!);
+      }, 0);
+      // Clear the state so it doesn't restore again on refresh
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
 
   // --- View State ---
   const [view, setView] = useLocalStorage<ViewMode>('bbdl-players-view', 'player');
-  
-  // --- Modal State ---
-  const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
   
   // --- Team Collapse State (store as array, use as Set) ---
   const [expandedTeamsArray, setExpandedTeamsArray] = useLocalStorage<string[]>(
@@ -186,37 +198,16 @@ const PlayersPage: React.FC = () => {
     return grouped;
   }, [teams, players, playerTeams]);
 
-  // --- Get Recent Games for Selected Player ---
-  const selectedPlayerRecentGames = useMemo(() => {
-    if (!selectedPlayer) return [];
-    
-    // Find player's team
-    const playerTeamEntry = playerTeams.find(pt => pt.playerId === selectedPlayer.id && pt.status === 'active');
-    const playerTeamId = playerTeamEntry?.teamId;
-    
-    if (!playerTeamId) return [];
-    
-    return games
-      .filter(g => 
-        (g.homeTeamId === playerTeamId || g.awayTeamId === playerTeamId) && 
-        g.status === 'completed'
-      )
-      .sort((a, b) => {
-        const dateA = a.gameDate ? new Date(a.gameDate).getTime() : 0;
-        const dateB = b.gameDate ? new Date(b.gameDate).getTime() : 0;
-        return dateB - dateA;
-      })
-      .slice(0, 5);
-  }, [selectedPlayer, games, playerTeams]);
-
-  // --- Modal Logic ---
-  const openModal = (player: Player) => {
-    setSelectedPlayer(player);
+  // --- Navigate to Player Detail ---
+  const handlePlayerClick = (player: Player) => {
+    navigate(`/players/${player.slug}`, { 
+      state: { 
+        from: '/players', 
+        fromLabel: 'Players',
+        scrollY: window.scrollY 
+      } 
+    });
   };
-
-  const closeModal = useCallback(() => {
-    setSelectedPlayer(null);
-  }, []);
 
   // --- Loading State ---
   if (loading) {
@@ -224,32 +215,33 @@ const PlayersPage: React.FC = () => {
   }
 
   return (
-    <div className="bbdl-players-page">
+    <div className="page-container">
       {/* Page Header */}
-      <div className="bbdl-page-header">
-        <div className="bbdl-page-title-section">
+      <div className="page-header">
+        <div className="page-title-section">
           <h1>Players</h1>
+          <p className="page-subtitle">League rosters and player profiles</p>
+        </div>
+        
+        {/* View Controls */}
+        <div className="page-controls">
+          <ViewToggle activeView={view} onViewChange={setView} />
+          
+          {view === 'team' && (
+            <button 
+              className="bbdl-collapse-all-btn"
+              onClick={toggleAllTeams}
+              aria-label={areAllExpanded ? 'Collapse all teams' : 'Expand all teams'}
+            >
+              {areAllExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+              {areAllExpanded ? 'Collapse All' : 'Expand All'}
+            </button>
+          )}
         </div>
       </div>
 
-      {/* View Controls */}
-      <div className="bbdl-players-controls">
-        <ViewToggle activeView={view} onViewChange={setView} />
-        
-        {view === 'team' && (
-          <button 
-            className="bbdl-collapse-all-btn"
-            onClick={toggleAllTeams}
-            aria-label={areAllExpanded ? 'Collapse all teams' : 'Expand all teams'}
-          >
-            {areAllExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-            {areAllExpanded ? 'Collapse All' : 'Expand All'}
-          </button>
-        )}
-      </div>
-
       {/* Content Area */}
-      <div id="players-content" className="bbdl-players-content">
+      <div id="players-content" className="page-content bbdl-players-content">
         {view === 'player' ? (
           // BY PLAYER VIEW
           <div className="bbdl-players-grid">
@@ -266,7 +258,7 @@ const PlayersPage: React.FC = () => {
                     team={team}
                     record={stats?.record}
                     avgPoints={stats?.avgPoints}
-                    onClick={() => openModal(player)}
+                    onClick={() => handlePlayerClick(player)}
                   />
                 );
               })}
@@ -290,7 +282,7 @@ const PlayersPage: React.FC = () => {
                     teamStats={teamAggStats!}
                     isCollapsed={!expandedTeams.has(team.id)}
                     onToggle={() => toggleTeamExpand(team.id)}
-                    onPlayerClick={(player) => openModal(player)}
+                    onPlayerClick={(player) => handlePlayerClick(player)}
                     playerStats={playerStats}
                   />
                 );
@@ -299,18 +291,6 @@ const PlayersPage: React.FC = () => {
         )}
       </div>
 
-      {/* Player Modal */}
-      {selectedPlayer && (
-        <PlayerModal
-          player={selectedPlayer}
-          team={teams.find(t => playerTeams.find(pt => pt.playerId === selectedPlayer.id && pt.teamId === t.id && pt.status === 'active'))}
-          isOpen={!!selectedPlayer}
-          onClose={closeModal}
-          stats={playerStats.get(selectedPlayer.id)}
-          recentGames={selectedPlayerRecentGames}
-          teams={teams}
-        />
-      )}
     </div>
   );
 };

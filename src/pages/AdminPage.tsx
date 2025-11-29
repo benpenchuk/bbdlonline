@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Lock, Users, UserPlus, Calendar, Settings, Database, LogOut, Shield, MessageSquare, Image } from 'lucide-react';
+import { Lock, Users, UserPlus, Calendar, Settings, Database, LogOut, MessageSquare, Image, CalendarDays } from 'lucide-react';
 import { getConfig } from '../core/config/appConfig';
 import { useData } from '../state';
 import { useAuth } from '../state';
@@ -13,14 +13,15 @@ import DataManagementTab from '../components/admin/DataManagementTab';
 import DataDebugTab from '../components/admin/DataDebugTab';
 import AnnouncementsTab from '../components/admin/AnnouncementsTab';
 import PhotosTab from '../components/admin/PhotosTab';
+import SeasonsTab from '../components/admin/SeasonsTab';
 
-type AdminTab = 'teams' | 'players' | 'games' | 'announcements' | 'photos' | 'settings' | 'data' | 'debug';
+type AdminTab = 'teams' | 'players' | 'games' | 'seasons' | 'announcements' | 'photos' | 'settings' | 'data' | 'debug';
 
 const AdminPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<AdminTab>('teams');
   
   const { teams, players, games, playerTeams, loading } = useData();
-  const { isAuthenticated, logout, demoMode, toggleDemoMode } = useAuth();
+  const { isAuthenticated, logout } = useAuth();
   const config = getConfig();
 
 
@@ -44,6 +45,7 @@ const AdminPage: React.FC = () => {
     { id: 'teams', label: 'Teams', icon: Users },
     { id: 'players', label: 'Players', icon: UserPlus },
     { id: 'games', label: 'Games', icon: Calendar },
+    { id: 'seasons', label: 'Seasons', icon: CalendarDays },
     { id: 'announcements', label: 'Announcements', icon: MessageSquare },
     { id: 'photos', label: 'Photos', icon: Image },
     { id: 'settings', label: 'Settings', icon: Settings },
@@ -55,27 +57,14 @@ const AdminPage: React.FC = () => {
     <div className="page-container">
       <div className="page-header">
         <div className="page-title-section">
-          <div className="admin-header">
-            <Lock size={24} />
-            <h1>Admin Panel</h1>
-          </div>
-          <p>Manage teams, players, games, and league settings</p>
+          <h1>
+            <Lock size={24} style={{ display: 'inline', marginRight: '8px', verticalAlign: 'middle' }} />
+            Admin
+          </h1>
+          <p className="page-subtitle">Manage teams, players, games, and league settings</p>
         </div>
         
-        <div className="page-actions">
-          <div className="demo-mode-toggle">
-            <label className="toggle-label">
-              <Shield size={16} />
-              <span>Demo Mode</span>
-              <input
-                type="checkbox"
-                checked={demoMode}
-                onChange={toggleDemoMode}
-                className="toggle-input"
-              />
-              <span className="toggle-slider"></span>
-            </label>
-          </div>
+        <div className="page-controls">
           <button className="btn btn-outline" onClick={handleLogout}>
             <LogOut size={16} />
             Logout
@@ -84,6 +73,7 @@ const AdminPage: React.FC = () => {
       </div>
 
       {/* Admin Tabs */}
+      <div className="page-content">
       <div className="admin-tabs">
         {adminTabs.map(tab => {
           const Icon = tab.icon;
@@ -127,6 +117,10 @@ const AdminPage: React.FC = () => {
           />
         )}
         
+        {activeTab === 'seasons' && (
+          <SeasonsTab />
+        )}
+        
         {activeTab === 'announcements' && (
           <AnnouncementsTab />
         )}
@@ -146,6 +140,7 @@ const AdminPage: React.FC = () => {
         {activeTab === 'debug' && (
           <DataDebugTab />
         )}
+      </div>
       </div>
     </div>
   );

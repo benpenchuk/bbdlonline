@@ -1,9 +1,9 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Trophy, Target, Award, Zap, Users, BarChart3 } from 'lucide-react';
 import { LeaderboardEntry, Player, Team, PlayerTeam } from '../../core/types';
-import TeamIcon from '../common/TeamIcon';
-import { getPlayerFullName, getPlayerInitials } from '../../core/utils/playerHelpers';
+import ProfilePicture from '../common/ProfilePicture';
+import { getPlayerFullName } from '../../core/utils/playerHelpers';
 
 interface LeaderboardTableProps {
   entries: LeaderboardEntry[];
@@ -20,6 +20,30 @@ const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
   playerTeams,
   category
 }) => {
+  const navigate = useNavigate();
+
+  const handlePlayerClick = (playerSlug: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    navigate(`/players/${playerSlug}`, {
+      state: {
+        from: '/stats',
+        fromLabel: 'Stats',
+        scrollY: window.scrollY
+      }
+    });
+  };
+
+  const handleTeamClick = (teamId: string, teamName: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    navigate(`/team/${teamId}`, {
+      state: {
+        from: '/stats',
+        fromLabel: 'Stats',
+        scrollY: window.scrollY
+      }
+    });
+  };
+
   const getCategoryIcon = () => {
     switch (category) {
       case 'wins': return Trophy;
@@ -99,28 +123,38 @@ const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
                   </td>
                   
                   <td>
-                    <div className="player-cell">
-                      <div className="player-avatar-small">
-                        {player.avatarUrl ? (
-                          <img src={player.avatarUrl} alt={getPlayerFullName(player)} />
-                        ) : (
-                          <div className="player-initials-small">
-                            {getPlayerInitials(player)}
-                          </div>
-                        )}
-                      </div>
+                    <a 
+                      href={`/players/${player.slug}`}
+                      onClick={(e) => handlePlayerClick(player.slug, e)}
+                      className="player-cell player-cell-link"
+                    >
+                      <ProfilePicture
+                        imageUrl={player.avatarUrl}
+                        fallbackImage="player"
+                        alt={getPlayerFullName(player)}
+                        size={32}
+                      />
                       <span className="player-name">{getPlayerFullName(player)}</span>
-                    </div>
+                    </a>
                   </td>
                   
                   <td>
                     {team ? (
-                      <Link to={`/team/${team.id}`} className="team-cell-link">
+                      <a 
+                        href={`/team/${team.id}`}
+                        onClick={(e) => handleTeamClick(team.id, team.name, e)}
+                        className="team-cell-link"
+                      >
                         <div className="team-cell">
-                          <TeamIcon iconId={team.abbreviation} color="#3b82f6" size={16} />
+                          <ProfilePicture
+                            imageUrl={team.logoUrl}
+                            fallbackImage="team"
+                            alt={team.name}
+                            size={20}
+                          />
                           <span>{team.name}</span>
                         </div>
-                      </Link>
+                      </a>
                     ) : (
                       <span className="text-muted">No team</span>
                     )}

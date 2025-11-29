@@ -1,11 +1,11 @@
-import React, { useState, useMemo } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useMemo, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Search, Trophy, TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import { useData } from '../state';
 import { Team, Game, Season, TeamSeasonStats } from '../core/types';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import { getWinnerId } from '../core/utils/gameHelpers';
-import TeamIcon from '../components/common/TeamIcon';
+import ProfilePicture from '../components/common/ProfilePicture';
 
 // =====================================================
 // TYPES
@@ -236,10 +236,39 @@ const calculateTeamStandings = (
 // MAIN COMPONENT
 // =====================================================
 
+// Type for navigation state
+interface LocationState {
+  restoreScrollY?: number;
+}
+
 const StandingsPage: React.FC = () => {
   const { teams, games, seasons, teamSeasonStats, loading } = useData();
+  const navigate = useNavigate();
+  const location = useLocation();
   const [selectedSeason, setSelectedSeason] = useState<string>('All Time');
   const [searchQuery, setSearchQuery] = useState<string>('');
+
+  // Restore scroll position when returning from team detail
+  useEffect(() => {
+    const state = location.state as LocationState | null;
+    if (state?.restoreScrollY) {
+      setTimeout(() => {
+        window.scrollTo(0, state.restoreScrollY!);
+      }, 0);
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
+
+  // Handle team click with navigation state
+  const handleTeamClick = (teamId: string, teamName: string) => {
+    navigate(`/team/${teamId}`, {
+      state: {
+        from: '/standings',
+        fromLabel: 'Standings',
+        scrollY: window.scrollY
+      }
+    });
+  };
   
   // Get available seasons
   const availableSeasons = useMemo(() => {
@@ -284,18 +313,16 @@ const StandingsPage: React.FC = () => {
   const hasGames = filteredGames.length > 0;
   
   return (
-    <div className="standings-page">
+    <div className="page-container">
       {/* Page Header */}
-      <div className="standings-header">
-        <div className="standings-title-section">
+      <div className="page-header">
+        <div className="page-title-section">
           <h1>Standings</h1>
-          <p className="standings-subtitle">League standings and team records</p>
+          <p className="page-subtitle">League standings and team records</p>
         </div>
-      </div>
-      
-      {/* Controls */}
-      <div className="standings-controls">
-        <div className="standings-controls-left">
+        
+        {/* Controls */}
+        <div className="page-controls standings-controls">
           {/* Season Selector */}
           <div className="season-selector">
             <label htmlFor="season-select">Season:</label>
@@ -318,9 +345,7 @@ const StandingsPage: React.FC = () => {
               })}
             </select>
           </div>
-        </div>
-        
-        <div className="standings-controls-right">
+          
           {/* Search Bar */}
           <div className="standings-search">
             <Search size={18} />
@@ -336,6 +361,7 @@ const StandingsPage: React.FC = () => {
       </div>
       
       {/* Standings Content */}
+      <div className="page-content">
       {!hasGames ? (
         <div className="standings-empty-state">
           <Trophy size={64} />
@@ -379,12 +405,24 @@ const StandingsPage: React.FC = () => {
                       {standing.rank}
                     </td>
                     <td className="standings-td standings-td-team">
-                      <Link to={`/team/${standing.team.id}`} className="team-cell-link">
+                      <a 
+                        href={`/team/${standing.team.id}`}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handleTeamClick(standing.team.id, standing.team.name);
+                        }}
+                        className="team-cell-link"
+                      >
                         <div className="team-cell">
-                          <TeamIcon iconId={standing.team.abbreviation} color="#3b82f6" size={20} />
+                          <ProfilePicture
+                            imageUrl={standing.team.logoUrl}
+                            fallbackImage="team"
+                            alt={standing.team.name}
+                            size={28}
+                          />
                           <span className="team-name">{standing.team.name}</span>
                         </div>
-                      </Link>
+                      </a>
                     </td>
                     <td className="standings-td standings-td-record">
                       {standing.wins}-{standing.losses}
@@ -439,10 +477,18 @@ const StandingsPage: React.FC = () => {
           {/* Mobile Card View */}
           <div className="standings-cards-container">
             {filteredStandings.map(standing => (
-              <Link 
+              <div 
                 key={standing.team.id} 
-                to={`/team/${standing.team.id}`}
                 className="standings-card"
+                onClick={() => handleTeamClick(standing.team.id, standing.team.name)}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    handleTeamClick(standing.team.id, standing.team.name);
+                  }
+                }}
               >
                 <div className="standings-card-header">
                   <div className="standings-card-rank">
@@ -450,7 +496,12 @@ const StandingsPage: React.FC = () => {
                     <span className="rank-number">#{standing.rank}</span>
                   </div>
                   <div className="standings-card-team">
-                    <TeamIcon iconId={standing.team.abbreviation} color="#3b82f6" size={20} />
+                    <ProfilePicture
+                      imageUrl={standing.team.logoUrl}
+                      fallbackImage="team"
+                      alt={standing.team.name}
+                      size={32}
+                    />
                     <span className="team-name">{standing.team.name}</span>
                   </div>
                 </div>
@@ -508,11 +559,12 @@ const StandingsPage: React.FC = () => {
                     ))}
                   </div>
                 </div>
-              </Link>
+              </div>
             ))}
           </div>
         </>
       )}
+      </div>
     </div>
   );
 };

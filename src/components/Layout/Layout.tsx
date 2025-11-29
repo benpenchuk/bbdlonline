@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Home, Calendar, Users, BarChart3, Menu, X, List, Sun, Moon } from 'lucide-react';
+import { Home, Calendar, Users, BarChart3, Menu, X, List, Sun, Moon, Lock } from 'lucide-react';
 import { getConfig } from '../../core/config/appConfig';
 import VersionBanner from '../common/VersionBanner';
 import { useTheme } from '../../state/ThemeContext';
@@ -21,7 +21,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     { name: 'Players', href: '/players', icon: Users },
     { name: 'Standings', href: '/standings', icon: List },
     { name: 'Stats', href: '/stats', icon: BarChart3 },
-    // Hidden for now: Tournament, Admin, Contact
+    { name: 'Admin', href: '/admin', icon: Lock },
+    // Hidden for now: Tournament, Contact
   ];
 
   const isActive = (href: string) => location.pathname === href;

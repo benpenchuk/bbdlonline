@@ -4,6 +4,7 @@ import Layout from './components/Layout/Layout';
 import HomePage from './pages/HomePage';
 import GamesPageESPN from './pages/GamesPageESPN';
 import PlayersPage from './pages/PlayersPage';
+import PlayerDetailPage from './pages/PlayerDetailPage';
 import StatsPage from './pages/StatsPage';
 import StandingsPage from './pages/StandingsPage';
 import TeamPage from './pages/TeamPage';
@@ -24,6 +25,7 @@ function App() {
                 <Route path="/" element={<HomePage />} />
                 <Route path="/games" element={<GamesPageESPN />} />
                 <Route path="/players" element={<PlayersPage />} />
+                <Route path="/players/:slug" element={<PlayerDetailPage />} />
                 <Route path="/standings" element={<StandingsPage />} />
                 <Route path="/team/:id" element={<TeamPage />} />
                 <Route path="/stats" element={<StatsPage />} />

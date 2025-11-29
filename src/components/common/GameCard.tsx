@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { Calendar } from 'lucide-react';
 import { Game, Team } from '../../core/types';
 import { format } from 'date-fns';
-import TeamIcon from './TeamIcon';
+import ProfilePicture from './ProfilePicture';
 import GameStatusBadge from './GameStatusBadge';
 
 interface GameCardProps {
@@ -59,8 +59,18 @@ const GameCard: React.FC<GameCardProps> = ({ game, teams, compact = false, onCli
       </div>
 
       <div className="game-teams">
-        <Link to={`/team/${homeTeam.id}`} className="game-team" onClick={(e) => e.stopPropagation()}>
-          <TeamIcon iconId={homeTeam.abbreviation} color="#3b82f6" size={20} />
+        <Link 
+          to={`/team/${homeTeam.id}`} 
+          state={{ from: '/games', fromLabel: 'Games', scrollY: window.scrollY }}
+          className="game-team" 
+          onClick={(e) => e.stopPropagation()}
+        >
+          <ProfilePicture
+            imageUrl={homeTeam.logoUrl}
+            fallbackImage="team"
+            alt={homeTeam.name}
+            size={32}
+          />
           <span className="team-name">{homeTeam.name}</span>
           {game.status === 'completed' && (
             <span className={`team-score ${game.winningTeamId === homeTeam.id ? 'winner-score' : ''}`}>
@@ -71,8 +81,18 @@ const GameCard: React.FC<GameCardProps> = ({ game, teams, compact = false, onCli
 
         <div className="game-vs">vs</div>
 
-        <Link to={`/team/${awayTeam.id}`} className="game-team" onClick={(e) => e.stopPropagation()}>
-          <TeamIcon iconId={awayTeam.abbreviation} color="#ef4444" size={20} />
+        <Link 
+          to={`/team/${awayTeam.id}`} 
+          state={{ from: '/games', fromLabel: 'Games', scrollY: window.scrollY }}
+          className="game-team" 
+          onClick={(e) => e.stopPropagation()}
+        >
+          <ProfilePicture
+            imageUrl={awayTeam.logoUrl}
+            fallbackImage="team"
+            alt={awayTeam.name}
+            size={32}
+          />
           <span className="team-name">{awayTeam.name}</span>
           {game.status === 'completed' && (
             <span className={`team-score ${game.winningTeamId === awayTeam.id ? 'winner-score' : ''}`}>

@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { Trophy, TrendingUp, TrendingDown, Minus, ChevronRight } from 'lucide-react';
 import { Team, Game, TeamSeasonStats } from '../../core/types';
-import TeamIcon from '../common/TeamIcon';
+import ProfilePicture from '../common/ProfilePicture';
 
 interface StandingsPreviewProps {
   teams: Team[];
@@ -87,10 +87,11 @@ const StandingsPreview: React.FC<StandingsPreviewProps> = ({ teams, games, teamS
               </div>
               
               <div className="standings-preview-team">
-                <TeamIcon 
-                  iconId={standing.team.abbreviation} 
-                  color="#3b82f6" 
-                  size={24} 
+                <ProfilePicture
+                  imageUrl={standing.team.logoUrl}
+                  fallbackImage="team"
+                  alt={standing.team.name}
+                  size={32}
                 />
                 <div className="standings-preview-team-info">
                   <span className="team-name">{standing.team.name}</span>

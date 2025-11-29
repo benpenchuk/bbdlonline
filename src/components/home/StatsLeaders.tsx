@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { Trophy, Target, Award, Zap } from 'lucide-react';
 import { Player, Team, PlayerTeam, PlayerGameStats, PlayerSeasonStats } from '../../core/types';
 import { getPlayerFullName } from '../../core/utils/playerHelpers';
-import TeamIcon from '../common/TeamIcon';
+import ProfilePicture from '../common/ProfilePicture';
 
 interface PlayerStatLeader {
   playerId: string;
@@ -209,10 +209,11 @@ const StatsLeaders: React.FC<StatsLeadersProps> = ({
                       
                       <div className="stat-leader-player">
                         {leader.team && (
-                          <TeamIcon 
-                            iconId={leader.team.abbreviation} 
-                            color="#3b82f6" 
-                            size={16} 
+                          <ProfilePicture
+                            imageUrl={leader.team.logoUrl}
+                            fallbackImage="team"
+                            alt={leader.team.name}
+                            size={24}
                           />
                         )}
                         <span className="player-name">{getPlayerFullName(leader.player)}</span>

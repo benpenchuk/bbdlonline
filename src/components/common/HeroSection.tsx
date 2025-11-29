@@ -3,8 +3,8 @@ import { Link } from 'react-router-dom';
 import { Calendar, Trophy, Users, TrendingUp, Target } from 'lucide-react';
 import { Game, Player, Team, PlayerTeam } from '../../core/types';
 import { getConfig } from '../../core/config/appConfig';
-import { getPlayerFullName, getPlayerInitials } from '../../core/utils/playerHelpers';
-import TeamIcon from './TeamIcon';
+import { getPlayerFullName } from '../../core/utils/playerHelpers';
+import ProfilePicture from './ProfilePicture';
 
 interface HeroSectionProps {
   games: Game[];
@@ -156,12 +156,22 @@ const HeroSection: React.FC<HeroSectionProps> = ({
                 <div className="next-game">
                   <div className="game-teams-preview">
                     <div className="team-preview">
-                      <TeamIcon iconId={nextGameHomeTeam.abbreviation} color="#3b82f6" size={16} />
+                      <ProfilePicture
+                        imageUrl={nextGameHomeTeam.logoUrl}
+                        fallbackImage="team"
+                        alt={nextGameHomeTeam.name}
+                        size={24}
+                      />
                       <span>{nextGameHomeTeam.name}</span>
                     </div>
                     <span className="vs-text">vs</span>
                     <div className="team-preview">
-                      <TeamIcon iconId={nextGameAwayTeam.abbreviation} color="#ef4444" size={16} />
+                      <ProfilePicture
+                        imageUrl={nextGameAwayTeam.logoUrl}
+                        fallbackImage="team"
+                        alt={nextGameAwayTeam.name}
+                        size={24}
+                      />
                       <span>{nextGameAwayTeam.name}</span>
                     </div>
                   </div>
@@ -191,20 +201,22 @@ const HeroSection: React.FC<HeroSectionProps> = ({
                   Leading Player
                 </h3>
                 <div className="top-performer">
-                  <div className="performer-avatar">
-                    {topPlayer.avatarUrl ? (
-                      <img src={topPlayer.avatarUrl} alt={getPlayerFullName(topPlayer)} />
-                    ) : (
-                      <div className="performer-initials">
-                        {getPlayerInitials(topPlayer)}
-                      </div>
-                    )}
-                  </div>
+                  <ProfilePicture
+                    imageUrl={topPlayer.avatarUrl}
+                    fallbackImage="player"
+                    alt={getPlayerFullName(topPlayer)}
+                    size={48}
+                  />
                   <div className="performer-info">
                     <div className="performer-name">{getPlayerFullName(topPlayer)}</div>
                     {topPlayerTeam && (
                       <div className="performer-team">
-                        <TeamIcon iconId={topPlayerTeam.abbreviation} color="#64748b" size={14} />
+                        <ProfilePicture
+                          imageUrl={topPlayerTeam.logoUrl}
+                          fallbackImage="team"
+                          alt={topPlayerTeam.name}
+                          size={18}
+                        />
                         <span>{topPlayerTeam.name}</span>
                       </div>
                     )}

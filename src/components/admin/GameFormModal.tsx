@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, Calendar, Trophy, AlertCircle } from 'lucide-react';
 import { Game, Team } from '../../core/types';
 import { useData } from '../../state';
@@ -24,6 +24,31 @@ const GameFormModal: React.FC<GameFormModalProps> = ({ game, teams, onClose, onS
   const [homeScore, setHomeScore] = useState(game?.homeScore?.toString() || '');
   const [awayScore, setAwayScore] = useState(game?.awayScore?.toString() || '');
   const [status, setStatus] = useState(game?.status || 'scheduled');
+  const [week, setWeek] = useState(game?.week?.toString() || '');
+  const [location, setLocation] = useState(game?.location || '');
+
+  // Reset form when game changes
+  useEffect(() => {
+    if (game) {
+      setHomeTeamId(game.homeTeamId);
+      setAwayTeamId(game.awayTeamId);
+      setGameDate(game.gameDate ? new Date(game.gameDate).toISOString().slice(0, 16) : '');
+      setHomeScore(game.homeScore?.toString() || '');
+      setAwayScore(game.awayScore?.toString() || '');
+      setStatus(game.status);
+      setWeek(game.week?.toString() || '');
+      setLocation(game.location || '');
+    } else {
+      setHomeTeamId('');
+      setAwayTeamId('');
+      setGameDate('');
+      setHomeScore('');
+      setAwayScore('');
+      setStatus('scheduled');
+      setWeek('');
+      setLocation('');
+    }
+  }, [game]);
 
   const isEditing = !!game;
   const title = isEditing ? 'Edit Game' : 'Schedule New Game';
@@ -37,6 +62,14 @@ const GameFormModal: React.FC<GameFormModalProps> = ({ game, teams, onClose, onS
     if (homeTeamId === awayTeamId) errors.push('Teams cannot play against themselves');
     if (!gameDate) errors.push('Game date is required');
     if (!activeSeason) errors.push('No active season found');
+    
+    // Week validation (1-6)
+    if (week) {
+      const weekNum = parseInt(week);
+      if (isNaN(weekNum) || weekNum < 1 || weekNum > 6) {
+        errors.push('Week must be a number between 1 and 6');
+      }
+    }
     
     // Score validation for completed games
     if (status === 'completed') {
@@ -85,6 +118,8 @@ const GameFormModal: React.FC<GameFormModalProps> = ({ game, teams, onClose, onS
         seasonId: activeSeason.id,
         homeScore: status === 'completed' ? parseInt(homeScore) : 0,
         awayScore: status === 'completed' ? parseInt(awayScore) : 0,
+        week: week ? parseInt(week) : undefined,
+        location: location.trim() || undefined,
       };
 
       // Calculate winner if completed
@@ -222,6 +257,41 @@ const GameFormModal: React.FC<GameFormModalProps> = ({ game, teams, onClose, onS
                 <option value="completed">Completed</option>
                 <option value="canceled">Canceled</option>
               </select>
+            </div>
+
+            {/* Week */}
+            <div className="form-group">
+              <label htmlFor="week" className="form-label">
+                Week
+                <span className="text-muted"> (1-6)</span>
+              </label>
+              <input
+                type="number"
+                id="week"
+                value={week}
+                onChange={(e) => setWeek(e.target.value)}
+                className="form-input"
+                min="1"
+                max="6"
+                disabled={loading}
+                placeholder="Optional"
+              />
+            </div>
+
+            {/* Location */}
+            <div className="form-group">
+              <label htmlFor="location" className="form-label">
+                Location
+              </label>
+              <input
+                type="text"
+                id="location"
+                value={location}
+                onChange={(e) => setLocation(e.target.value)}
+                className="form-input"
+                disabled={loading}
+                placeholder="Game location (optional)"
+              />
             </div>
 
             {/* Scores (only for completed games) */}

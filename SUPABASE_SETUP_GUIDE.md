@@ -85,7 +85,7 @@ npm start
 ```
 
 ### 3.2 Verify Data Loading
-1. Open browser to `http://localhost:3000`
+1. Open browser to `http://localhost:8000`
 2. Check browser console (F12) for:
    - ✅ "✅ Supabase connection successful!"
    - ❌ No error messages about missing env vars

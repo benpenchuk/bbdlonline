@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Team, Game, TeamSeasonStats } from '../../core/types';
-import TeamIcon from '../common/TeamIcon';
+import ProfilePicture from '../common/ProfilePicture';
 
 interface CompactStandingsProps {
   teams: Team[];
@@ -16,6 +16,18 @@ const CompactStandings: React.FC<CompactStandingsProps> = ({
   teamSeasonStats,
   limit
 }) => {
+  const navigate = useNavigate();
+
+  const handleTeamClick = (teamId: string, teamName: string) => {
+    navigate(`/team/${teamId}`, {
+      state: {
+        from: '/',
+        fromLabel: 'Home',
+        scrollY: window.scrollY
+      }
+    });
+  };
+
   const standings = useMemo(() => {
     const standingsData = teams.map(team => {
       const teamStat = teamSeasonStats.find(s => s.teamId === team.id);
@@ -90,10 +102,22 @@ const CompactStandings: React.FC<CompactStandingsProps> = ({
                 <td className="numeric tabular-nums">{index + 1}</td>
                 <td>
                   <div className="standings-team-cell">
-                    <TeamIcon iconId={standing.team.abbreviation} color="#64748b" size={16} />
-                    <Link to={`/team/${standing.team.id}`} className="standings-team-link">
+                    <ProfilePicture
+                      imageUrl={standing.team.logoUrl}
+                      fallbackImage="team"
+                      alt={standing.team.name}
+                      size={24}
+                    />
+                    <a 
+                      href={`/team/${standing.team.id}`}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        handleTeamClick(standing.team.id, standing.team.name);
+                      }}
+                      className="standings-team-link"
+                    >
                       {standing.team.name}
-                    </Link>
+                    </a>
                   </div>
                 </td>
                 <td className="numeric tabular-nums">{standing.wins}</td>

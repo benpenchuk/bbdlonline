@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { Trophy, Clock, X, Calendar, AlertCircle } from 'lucide-react';
 import { Game, Team } from '../../core/types';
 import { format } from 'date-fns';
-import TeamIcon from '../common/TeamIcon';
+import ProfilePicture from '../common/ProfilePicture';
 import { getGameTags, getWinnerId } from '../../core/utils/gameHelpers';
 
 interface GameTableProps {
@@ -89,12 +89,18 @@ const GameTable: React.FC<GameTableProps> = ({ games, teams, onGameClick }) => {
                 
                 <td>
                   {homeTeam ? (
-                    <Link to={`/team/${homeTeam.id}`} className="team-cell-link" onClick={(e) => e.stopPropagation()}>
+                    <Link 
+                      to={`/team/${homeTeam.id}`} 
+                      state={{ from: '/games', fromLabel: 'Games', scrollY: window.scrollY }}
+                      className="team-cell-link" 
+                      onClick={(e) => e.stopPropagation()}
+                    >
                       <div className="team-cell">
-                        <TeamIcon 
-                          iconId={homeTeam.abbreviation}
-                          color="#3b82f6"
-                          size={16} 
+                        <ProfilePicture
+                          imageUrl={homeTeam.logoUrl}
+                          fallbackImage="team"
+                          alt={homeTeam.name}
+                          size={20}
                         />
                         <span>{homeTeam.name}</span>
                       </div>
@@ -108,12 +114,18 @@ const GameTable: React.FC<GameTableProps> = ({ games, teams, onGameClick }) => {
 
                 <td>
                   {awayTeam ? (
-                    <Link to={`/team/${awayTeam.id}`} className="team-cell-link" onClick={(e) => e.stopPropagation()}>
+                    <Link 
+                      to={`/team/${awayTeam.id}`} 
+                      state={{ from: '/games', fromLabel: 'Games', scrollY: window.scrollY }}
+                      className="team-cell-link" 
+                      onClick={(e) => e.stopPropagation()}
+                    >
                       <div className="team-cell">
-                        <TeamIcon 
-                          iconId={awayTeam.abbreviation}
-                          color="#ef4444"
-                          size={16} 
+                        <ProfilePicture
+                          imageUrl={awayTeam.logoUrl}
+                          fallbackImage="team"
+                          alt={awayTeam.name}
+                          size={20}
                         />
                         <span>{awayTeam.name}</span>
                       </div>

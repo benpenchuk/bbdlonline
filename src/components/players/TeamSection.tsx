@@ -2,7 +2,7 @@ import React from 'react';
 import { ChevronRight } from 'lucide-react';
 import { Team, Player } from '../../core/types';
 import PlayerCard from '../common/PlayerCard';
-import TeamIcon from '../common/TeamIcon';
+import ProfilePicture from '../common/ProfilePicture';
 
 type PlayerStatsMap = Map<string, { record: { wins: number; losses: number; }; avgPoints: number; }>;
 
@@ -44,7 +44,12 @@ const TeamSection: React.FC<TeamSectionProps> = ({
           size={20} 
           className={`chevron-icon ${isCollapsed ? '' : 'expanded'}`}
         />
-        <TeamIcon iconId={team.abbreviation} color="#3b82f6" size={24} />
+        <ProfilePicture
+          imageUrl={team.logoUrl}
+          fallbackImage="team"
+          alt={team.name}
+          size={32}
+        />
         <h2 className="team-section-title">{team.name}</h2>
         <div 
           className="team-section-record"

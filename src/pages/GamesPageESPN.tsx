@@ -6,7 +6,7 @@ import { Game, Team } from '../core/types';
 import { format } from 'date-fns';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import GameModal from '../components/games/GameModal';
-import TeamIcon from '../components/common/TeamIcon';
+import ProfilePicture from '../components/common/ProfilePicture';
 import { getWinnerId } from '../core/utils/gameHelpers';
 
 const GamesPageESPN: React.FC = () => {
@@ -96,39 +96,42 @@ const GamesPageESPN: React.FC = () => {
   };
 
   return (
-    <div className="games-page-week">
+    <div className="page-container">
       {/* Header */}
-      <div className="games-page-header">
-        <div className="games-header-left">
+      <div className="page-header">
+        <div className="page-title-section">
           <h1>Games</h1>
+          <p className="page-subtitle">Weekly matchups and results</p>
         </div>
         
         {/* Week Selector */}
-        <div className="week-selector-container">
-          <label htmlFor="week-select" className="week-select-label">Week</label>
-          <div className="week-select-wrapper">
-            <select
-              id="week-select"
-              className="week-select"
-              value={selectedWeek || ''}
-              onChange={(e) => setSelectedWeek(e.target.value ? parseInt(e.target.value) : null)}
-            >
-              {availableWeeks.length === 0 && (
-                <option value="">No weeks available</option>
-              )}
-              {availableWeeks.map(week => (
-                <option key={week} value={week}>
-                  Week {week}
-                </option>
-              ))}
-            </select>
-            <ChevronDown size={18} className="week-select-chevron" />
+        <div className="page-controls">
+          <div className="week-selector-container">
+            <label htmlFor="week-select" className="week-select-label">Week</label>
+            <div className="week-select-wrapper">
+              <select
+                id="week-select"
+                className="week-select"
+                value={selectedWeek || ''}
+                onChange={(e) => setSelectedWeek(e.target.value ? parseInt(e.target.value) : null)}
+              >
+                {availableWeeks.length === 0 && (
+                  <option value="">No weeks available</option>
+                )}
+                {availableWeeks.map(week => (
+                  <option key={week} value={week}>
+                    Week {week}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown size={18} className="week-select-chevron" />
+            </div>
           </div>
         </div>
       </div>
 
       {/* Games List */}
-      <div className="games-week-content">
+      <div className="page-content games-week-content">
         {selectedWeek === null ? (
           <div className="games-empty-state">
             <Calendar size={48} />
@@ -165,9 +168,15 @@ const GamesPageESPN: React.FC = () => {
                   <div className="game-week-teams">
                     {/* Home Team */}
                     <div className={`game-week-team ${isCompleted && winnerId === homeTeam.id ? 'winner' : ''}`}>
-                      <TeamIcon iconId={homeTeam.abbreviation} color="#3b82f6" size={24} />
+                      <ProfilePicture
+                        imageUrl={homeTeam.logoUrl}
+                        fallbackImage="team"
+                        alt={homeTeam.name}
+                        size={32}
+                      />
                       <Link 
                         to={`/team/${homeTeam.id}`} 
+                        state={{ from: '/games', fromLabel: 'Games', scrollY: window.scrollY }}
                         className="game-week-team-name"
                         onClick={(e) => e.stopPropagation()}
                       >
@@ -185,9 +194,15 @@ const GamesPageESPN: React.FC = () => {
 
                     {/* Away Team */}
                     <div className={`game-week-team ${isCompleted && winnerId === awayTeam.id ? 'winner' : ''}`}>
-                      <TeamIcon iconId={awayTeam.abbreviation} color="#ef4444" size={24} />
+                      <ProfilePicture
+                        imageUrl={awayTeam.logoUrl}
+                        fallbackImage="team"
+                        alt={awayTeam.name}
+                        size={32}
+                      />
                       <Link 
                         to={`/team/${awayTeam.id}`} 
+                        state={{ from: '/games', fromLabel: 'Games', scrollY: window.scrollY }}
                         className="game-week-team-name"
                         onClick={(e) => e.stopPropagation()}
                       >

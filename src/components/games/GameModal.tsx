@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { X, Calendar, MapPin, Trophy, Users, Clock } from 'lucide-react';
 import { Game, Team } from '../../core/types';
 import { format } from 'date-fns';
-import TeamIcon from '../common/TeamIcon';
+import ProfilePicture from '../common/ProfilePicture';
 import { getGameTags, getWinnerId } from '../../core/utils/gameHelpers';
 
 interface GameModalProps {
@@ -83,9 +83,19 @@ const GameModal: React.FC<GameModalProps> = ({ game, teams, onClose }) => {
           {/* Teams */}
           <div className="game-matchup">
             {/* Home Team */}
-            <Link to={`/team/${homeTeam.id}`} className="team-display" onClick={(e) => e.stopPropagation()}>
+            <Link 
+              to={`/team/${homeTeam.id}`} 
+              state={{ from: '/games', fromLabel: 'Games', scrollY: window.scrollY }}
+              className="team-display" 
+              onClick={(e) => e.stopPropagation()}
+            >
               <div className="team-header-display">
-                <TeamIcon iconId={homeTeam.abbreviation} color="#3b82f6" size={48} />
+                <ProfilePicture
+                  imageUrl={homeTeam.logoUrl}
+                  fallbackImage="team"
+                  alt={homeTeam.name}
+                  size={64}
+                />
                 <div className="team-details">
                   <h3 className="team-name">{homeTeam.name}</h3>
                 </div>
@@ -103,9 +113,19 @@ const GameModal: React.FC<GameModalProps> = ({ game, teams, onClose }) => {
             </div>
 
             {/* Away Team */}
-            <Link to={`/team/${awayTeam.id}`} className="team-display" onClick={(e) => e.stopPropagation()}>
+            <Link 
+              to={`/team/${awayTeam.id}`} 
+              state={{ from: '/games', fromLabel: 'Games', scrollY: window.scrollY }}
+              className="team-display" 
+              onClick={(e) => e.stopPropagation()}
+            >
               <div className="team-header-display">
-                <TeamIcon iconId={awayTeam.abbreviation} color="#ef4444" size={48} />
+                <ProfilePicture
+                  imageUrl={awayTeam.logoUrl}
+                  fallbackImage="team"
+                  alt={awayTeam.name}
+                  size={64}
+                />
                 <div className="team-details">
                   <h3 className="team-name">{awayTeam.name}</h3>
                 </div>

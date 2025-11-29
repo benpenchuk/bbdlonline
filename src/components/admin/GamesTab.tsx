@@ -4,7 +4,7 @@ import { Game, Team } from '../../core/types';
 import { useData } from '../../state';
 import { format } from 'date-fns';
 import GameFormModal from './GameFormModal';
-import TeamIcon from '../common/TeamIcon';
+import ProfilePicture from '../common/ProfilePicture';
 import { getWinnerId } from '../../core/utils/gameHelpers';
 
 interface GamesTabProps {
@@ -72,7 +72,12 @@ const GamesTab: React.FC<GamesTabProps> = ({ games, teams }) => {
                 <div className="game-teams">
                   <div className="team-info">
                     {homeTeam && (
-                      <TeamIcon iconId={homeTeam.abbreviation} color="#3b82f6" size={16} />
+                      <ProfilePicture
+                        imageUrl={homeTeam.logoUrl}
+                        fallbackImage="team"
+                        alt={homeTeam.name}
+                        size={24}
+                      />
                     )}
                     <span>{getTeamName(game.homeTeamId)}</span>
                     {game.status === 'completed' && (
@@ -86,7 +91,12 @@ const GamesTab: React.FC<GamesTabProps> = ({ games, teams }) => {
                   
                   <div className="team-info">
                     {awayTeam && (
-                      <TeamIcon iconId={awayTeam.abbreviation} color="#ef4444" size={16} />
+                      <ProfilePicture
+                        imageUrl={awayTeam.logoUrl}
+                        fallbackImage="team"
+                        alt={awayTeam.name}
+                        size={24}
+                      />
                     )}
                     <span>{getTeamName(game.awayTeamId)}</span>
                     {game.status === 'completed' && (

@@ -2,7 +2,14 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Game, Team } from '../../core/types';
 import { format } from 'date-fns';
-import TeamIcon from '../common/TeamIcon';
+import ProfilePicture from '../common/ProfilePicture';
+
+// Get current scroll position for navigation state
+const getNavState = (teamName: string) => ({
+  from: '/',
+  fromLabel: 'Home',
+  scrollY: window.scrollY
+});
 
 interface CompactScoresProps {
   games: Game[];
@@ -88,13 +95,18 @@ const CompactScores: React.FC<CompactScoresProps> = ({
                     {/* Home Team */}
                     <div className="scores-team-item">
                       <div className="scores-team-icon-wrapper">
-                        <TeamIcon 
-                          iconId={homeTeam.abbreviation} 
-                          color="#64748b" 
-                          size={20} 
+                        <ProfilePicture
+                          imageUrl={homeTeam.logoUrl}
+                          fallbackImage="team"
+                          alt={homeTeam.name}
+                          size={24}
                         />
                       </div>
-                      <Link to={`/team/${homeTeam.id}`} className="scores-team-name">
+                      <Link 
+                        to={`/team/${homeTeam.id}`} 
+                        state={getNavState(homeTeam.name)}
+                        className="scores-team-name"
+                      >
                         {homeTeam.name}
                       </Link>
                       <span className="scores-team-score">{homeScore}</span>
@@ -103,13 +115,18 @@ const CompactScores: React.FC<CompactScoresProps> = ({
                     {/* Away Team */}
                     <div className="scores-team-item">
                       <div className="scores-team-icon-wrapper">
-                        <TeamIcon 
-                          iconId={awayTeam.abbreviation} 
-                          color="#64748b" 
-                          size={20} 
+                        <ProfilePicture
+                          imageUrl={awayTeam.logoUrl}
+                          fallbackImage="team"
+                          alt={awayTeam.name}
+                          size={24}
                         />
                       </div>
-                      <Link to={`/team/${awayTeam.id}`} className="scores-team-name">
+                      <Link 
+                        to={`/team/${awayTeam.id}`} 
+                        state={getNavState(awayTeam.name)}
+                        className="scores-team-name"
+                      >
                         {awayTeam.name}
                       </Link>
                       <span className="scores-team-score">{awayScore}</span>

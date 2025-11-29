@@ -57,6 +57,10 @@
   --color-silver: #94a3b8;             /* Silver - 2nd place */
   --color-bronze: #d97706;             /* Bronze - 3rd place */
   
+  /* Additional Accent Colors */
+  --color-purple: #8b5cf6;             /* Purple accent for variety */
+  --color-purple-light: #a78bfa;       /* Light purple */
+  
   /* =====================================================
      TYPOGRAPHY
      ===================================================== */
@@ -201,6 +205,10 @@
     --color-gold: #fcd34d;               /* Brightened gold */
     --color-silver: #94a3b8;
     --color-bronze: #f59e0b;             /* Warmed bronze */
+    
+    /* Additional Accent Colors */
+    --color-purple: #a78bfa;             /* Brightened purple for dark mode */
+    --color-purple-light: #c4b5fd;       /* Light purple */
     
     /* Focus Ring - Brightened for Dark Mode */
     --focus-ring: 0 0 0 2px var(--color-surface-elevated), 0 0 0 4px var(--color-primary);

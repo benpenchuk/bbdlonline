@@ -53,91 +53,105 @@ const AdminLogin: React.FC = () => {
   };
 
   return (
-    <div className="admin-login-container">
-      <div className="admin-login-card">
-        <div className="login-header">
-          <div className="login-icon">
-            {isLockedOut() ? <Clock size={32} /> : <Lock size={32} />}
-          </div>
-          <h2>Admin Access</h2>
-          {isLockedOut() ? (
-            <p className="lockout-message">
-              Account temporarily locked. Please wait {lockoutTime} seconds.
-            </p>
-          ) : (
-            <p>Enter your admin password to access the management panel</p>
-          )}
+    <div className="page-container">
+      {/* Page Header */}
+      <div className="page-header">
+        <div className="page-title-section">
+          <h1>
+            <Lock size={24} style={{ display: 'inline', marginRight: '8px', verticalAlign: 'middle' }} />
+            Admin
+          </h1>
+          <p className="page-subtitle">Secure access to the management panel</p>
         </div>
+      </div>
 
-        <form onSubmit={handleSubmit} className="login-form">
-          <div className="form-group">
-            <label htmlFor="admin-password">Admin Password</label>
-            <div className="password-input-container">
-              <input
-                id="admin-password"
-                type={showPassword ? 'text' : 'password'}
-                value={password}
-                onChange={(e) => {
-                  setPassword(e.target.value);
-                  setError('');
-                }}
-                placeholder="Enter admin password"
-                className={`form-input ${error ? 'input-error' : ''}`}
-                disabled={loading}
-              />
-              <button
-                type="button"
-                className="password-toggle"
-                onClick={() => setShowPassword(!showPassword)}
-                disabled={loading}
-              >
-                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-              </button>
+      {/* Login Card */}
+      <div className="page-content">
+        <div className="admin-login-card">
+          <div className="login-header">
+            <div className="login-icon">
+              {isLockedOut() ? <Clock size={32} /> : <Shield size={32} />}
             </div>
+            <h2>Admin Access</h2>
+            {isLockedOut() ? (
+              <p className="lockout-message">
+                Account temporarily locked. Please wait {lockoutTime} seconds.
+              </p>
+            ) : (
+              <p>Enter your admin password to access the management panel</p>
+            )}
           </div>
 
-          {error && (
-            <div className="error-message">
-              <AlertCircle size={16} />
-              <span>{error}</span>
+          <form onSubmit={handleSubmit} className="login-form">
+            <div className="form-group">
+              <label htmlFor="admin-password">Admin Password</label>
+              <div className="password-input-container">
+                <input
+                  id="admin-password"
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    setError('');
+                  }}
+                  placeholder="Enter admin password"
+                  className={`form-input ${error ? 'input-error' : ''}`}
+                  disabled={loading}
+                />
+                <button
+                  type="button"
+                  className="password-toggle"
+                  onClick={() => setShowPassword(!showPassword)}
+                  disabled={loading}
+                >
+                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                </button>
+              </div>
             </div>
-          )}
 
-          <button 
-            type="submit" 
-            className="btn btn-primary btn-full"
-            disabled={loading || !password.trim() || isLockedOut()}
-          >
-            {loading ? (
-              <div className="loading-spinner small" />
-            ) : isLockedOut() ? (
-              <>
-                <Clock size={16} />
-                Locked ({lockoutTime}s)
-              </>
-            ) : (
-              <>
-                <Lock size={16} />
-                Access Admin Panel
-              </>
+            {error && (
+              <div className="error-message">
+                <AlertCircle size={16} />
+                <span>{error}</span>
+              </div>
             )}
-          </button>
-        </form>
 
-        <div className="login-footer">
-          {failedAttempts > 0 && !isLockedOut() && (
-            <div className="attempts-warning">
-              <Shield size={14} />
-              <span>{failedAttempts}/5 failed attempts</span>
-            </div>
-          )}
-          <p className="login-hint">
-            Default password: <code>bbdladmin2025</code>
-          </p>
-          <small className="security-note">
-            Note: This is a front-end only authentication for demonstration purposes.
-            In production, this would be replaced with secure server-side authentication.
-          </small>
+            <button 
+              type="submit" 
+              className="btn btn-primary btn-full"
+              disabled={loading || !password.trim() || isLockedOut()}
+            >
+              {loading ? (
+                <div className="loading-spinner small" />
+              ) : isLockedOut() ? (
+                <>
+                  <Clock size={16} />
+                  Locked ({lockoutTime}s)
+                </>
+              ) : (
+                <>
+                  <Lock size={16} />
+                  Access Admin Panel
+                </>
+              )}
+            </button>
+          </form>
+
+          <div className="login-footer">
+            {failedAttempts > 0 && !isLockedOut() && (
+              <div className="attempts-warning">
+                <Shield size={14} />
+                <span>{failedAttempts}/5 failed attempts</span>
+              </div>
+            )}
+            <p className="login-hint">
+              Default password: <code>bbdladmin2025</code>
+            </p>
+            <small className="security-note">
+              Note: This is a front-end only authentication for demonstration purposes.
+              In production, this would be replaced with secure server-side authentication.
+            </small>
+          </div>
         </div>
       </div>
     </div>

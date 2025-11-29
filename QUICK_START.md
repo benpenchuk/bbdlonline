@@ -29,6 +29,6 @@ Here are the steps to run the application on your local machine for development 
     npm start
     ```
 
-This will automatically open the application in your default web browser, usually at **[http://localhost:3000](http://localhost:3000)**.
+This will automatically open the application in your default web browser, usually at **[http://localhost:8000](http://localhost:8000)**.
 
 The server will watch for any file changes you make, and it will automatically reload the page to reflect your updates.

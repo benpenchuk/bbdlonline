@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { MapPin, Trophy, Calendar } from 'lucide-react';
 import { Game, Team } from '../../core/types';
 import { format } from 'date-fns';
-import TeamIcon from '../common/TeamIcon';
+import ProfilePicture from '../common/ProfilePicture';
 import { getGameTags, getWinnerId } from '../../core/utils/gameHelpers';
 
 interface ESPNGameCardProps {
@@ -65,11 +65,17 @@ const ESPNGameCard: React.FC<ESPNGameCardProps> = ({ game, teams, onClick }) => 
         {/* Home Team */}
         <Link 
           to={`/team/${homeTeam.id}`}
+          state={{ from: '/games', fromLabel: 'Games', scrollY: window.scrollY }}
           className={`espn-team ${isCompleted && winnerId === homeTeam.id ? 'espn-team-winner' : ''}`}
           onClick={handleTeamClick}
         >
           <div className="espn-team-info">
-            <TeamIcon iconId={homeTeam.abbreviation} color="#3b82f6" size={28} />
+            <ProfilePicture
+              imageUrl={homeTeam.logoUrl}
+              fallbackImage="team"
+              alt={homeTeam.name}
+              size={40}
+            />
             <div className="espn-team-details">
               <span className="espn-team-name">{homeTeam.name}</span>
             </div>
@@ -88,11 +94,17 @@ const ESPNGameCard: React.FC<ESPNGameCardProps> = ({ game, teams, onClick }) => 
         {/* Away Team */}
         <Link 
           to={`/team/${awayTeam.id}`}
+          state={{ from: '/games', fromLabel: 'Games', scrollY: window.scrollY }}
           className={`espn-team ${isCompleted && winnerId === awayTeam.id ? 'espn-team-winner' : ''}`}
           onClick={handleTeamClick}
         >
           <div className="espn-team-info">
-            <TeamIcon iconId={awayTeam.abbreviation} color="#ef4444" size={28} />
+            <ProfilePicture
+              imageUrl={awayTeam.logoUrl}
+              fallbackImage="team"
+              alt={awayTeam.name}
+              size={40}
+            />
             <div className="espn-team-details">
               <span className="espn-team-name">{awayTeam.name}</span>
             </div>

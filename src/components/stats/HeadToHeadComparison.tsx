@@ -2,7 +2,7 @@ import React from 'react';
 import { Trophy, Target, Calendar } from 'lucide-react';
 import { HeadToHeadComparison as H2HType, Team } from '../../core/types';
 import { format } from 'date-fns';
-import TeamIcon from '../common/TeamIcon';
+import ProfilePicture from '../common/ProfilePicture';
 import { getWinnerId } from '../../core/utils/gameHelpers';
 
 interface HeadToHeadComparisonProps {
@@ -49,7 +49,12 @@ const HeadToHeadComparison: React.FC<HeadToHeadComparisonProps> = ({
             <div className="team-comparison">
               <div className="team-side">
                 <div className="team-header">
-                  <TeamIcon iconId={team1.abbreviation} color="#3b82f6" size={32} />
+                  <ProfilePicture
+                    imageUrl={team1.logoUrl}
+                    fallbackImage="team"
+                    alt={team1.name}
+                    size={48}
+                  />
                   <h3 className="team-name">{team1.name}</h3>
                 </div>
                 <div className="team-record">
@@ -81,7 +86,12 @@ const HeadToHeadComparison: React.FC<HeadToHeadComparisonProps> = ({
 
               <div className="team-side">
                 <div className="team-header">
-                  <TeamIcon iconId={team2.abbreviation} color="#ef4444" size={32} />
+                  <ProfilePicture
+                    imageUrl={team2.logoUrl}
+                    fallbackImage="team"
+                    alt={team2.name}
+                    size={48}
+                  />
                   <h3 className="team-name">{team2.name}</h3>
                 </div>
                 <div className="team-record">

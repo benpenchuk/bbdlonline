@@ -2,7 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Game, Team } from '../../core/types';
 import { format } from 'date-fns';
-import TeamIcon from '../common/TeamIcon';
+import ProfilePicture from '../common/ProfilePicture';
 import { getWinnerId } from '../../core/utils/gameHelpers';
 
 interface CompactGamesListProps {
@@ -52,14 +52,24 @@ const CompactGamesList: React.FC<CompactGamesListProps> = ({
             <div key={game.id} className="compact-game-item">
               <div className="compact-game-teams">
                 <div className={`compact-game-team ${winnerId === homeTeam.id ? 'winner' : ''}`}>
-                  <TeamIcon iconId={homeTeam.abbreviation} color="#64748b" size={12} />
+                  <ProfilePicture
+                    imageUrl={homeTeam.logoUrl}
+                    fallbackImage="team"
+                    alt={homeTeam.name}
+                    size={20}
+                  />
                   <span className="compact-team-name">{homeTeam.name}</span>
                   {game.status === 'completed' && (
                     <span className="compact-game-score tabular-nums">{game.homeScore}</span>
                   )}
                 </div>
                 <div className={`compact-game-team ${winnerId === awayTeam.id ? 'winner' : ''}`}>
-                  <TeamIcon iconId={awayTeam.abbreviation} color="#64748b" size={12} />
+                  <ProfilePicture
+                    imageUrl={awayTeam.logoUrl}
+                    fallbackImage="team"
+                    alt={awayTeam.name}
+                    size={20}
+                  />
                   <span className="compact-team-name">{awayTeam.name}</span>
                   {game.status === 'completed' && (
                     <span className="compact-game-score tabular-nums">{game.awayScore}</span>

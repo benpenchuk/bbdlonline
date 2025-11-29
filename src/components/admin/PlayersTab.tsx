@@ -2,8 +2,9 @@ import React, { useState } from 'react';
 import { Plus, Edit, Trash2, UserPlus } from 'lucide-react';
 import { Player, Team, PlayerTeam, Game } from '../../core/types';
 import { useData } from '../../state';
-import { getPlayerFullName, getPlayerInitials, getPlayerTeam } from '../../core/utils/playerHelpers';
-import TeamIcon from '../common/TeamIcon';
+import { getPlayerFullName, getPlayerTeam } from '../../core/utils/playerHelpers';
+import ProfilePicture from '../common/ProfilePicture';
+import PlayerFormModal from './PlayerFormModal';
 
 interface PlayersTabProps {
   players: Player[];
@@ -69,20 +70,22 @@ const PlayersTab: React.FC<PlayersTabProps> = ({ players, teams, playerTeams, ga
           return (
             <div key={player.id} className="player-admin-card">
               <div className="player-header">
-                <div className="player-avatar-small">
-                  {player.avatarUrl ? (
-                    <img src={player.avatarUrl} alt={getPlayerFullName(player)} />
-                  ) : (
-                    <div className="player-initials-small">
-                      {getPlayerInitials(player)}
-                    </div>
-                  )}
-                </div>
+                <ProfilePicture
+                  imageUrl={player.avatarUrl}
+                  fallbackImage="player"
+                  alt={getPlayerFullName(player)}
+                  size={48}
+                />
                 <div className="player-info">
                   <h3>{getPlayerFullName(player)}</h3>
                   {playerTeam && (
                     <div className="player-team">
-                      <TeamIcon iconId={playerTeam.abbreviation} color="#64748b" size={14} />
+                      <ProfilePicture
+                        imageUrl={playerTeam.logoUrl}
+                        fallbackImage="team"
+                        alt={playerTeam.name}
+                        size={18}
+                      />
                       <span>{playerTeam.name}</span>
                     </div>
                   )}
@@ -138,33 +141,20 @@ const PlayersTab: React.FC<PlayersTabProps> = ({ players, teams, playerTeams, ga
         )}
       </div>
 
-      {/* TODO: Add Player Form Modal */}
-      {showCreateForm && (
-        <div className="modal-overlay" onClick={() => setShowCreateForm(false)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h2>Add Player</h2>
-              <button onClick={() => setShowCreateForm(false)}>×</button>
-            </div>
-            <div className="modal-body">
-              <p>Player creation form coming soon...</p>
-            </div>
-          </div>
-        </div>
-      )}
-      
-      {editingPlayer && (
-        <div className="modal-overlay" onClick={() => setEditingPlayer(null)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h2>Edit Player</h2>
-              <button onClick={() => setEditingPlayer(null)}>×</button>
-            </div>
-            <div className="modal-body">
-              <p>Player editing form coming soon...</p>
-            </div>
-          </div>
-        </div>
+      {/* Player Form Modal */}
+      {(showCreateForm || editingPlayer) && (
+        <PlayerFormModal
+          player={editingPlayer}
+          onClose={() => {
+            setShowCreateForm(false);
+            setEditingPlayer(null);
+          }}
+          onSave={async () => {
+            await refreshData();
+            setShowCreateForm(false);
+            setEditingPlayer(null);
+          }}
+        />
       )}
     </div>
   );

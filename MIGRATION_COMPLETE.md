@@ -103,7 +103,7 @@ Some components still reference old structure. You may see errors in:
 
 1. Make sure your `.env.local` has Supabase credentials
 2. Run: `npm start`
-3. Navigate to `http://localhost:3000`
+3. Navigate to `http://localhost:8000`
 
 ### Expected Behavior
 

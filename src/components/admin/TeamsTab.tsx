@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
-import { Plus, Edit, Trash2, Users } from 'lucide-react';
+import { Plus, Edit, Trash2, Users, UserCog } from 'lucide-react';
 import { Team, Player, PlayerTeam, Game } from '../../core/types';
-import { useData, useAuth } from '../../state';
+import { useData } from '../../state';
 import { getTeamPlayers as getTeamPlayersHelper } from '../../core/utils/playerHelpers';
 import { calculateTeamStatsForGames } from '../../core/utils/statsCalculations';
-import TeamIcon from '../common/TeamIcon';
+import ProfilePicture from '../common/ProfilePicture';
+import TeamFormModal from './TeamFormModal';
+import RosterManagementModal from './RosterManagementModal';
 
 interface TeamsTabProps {
   teams: Team[];
@@ -15,27 +17,16 @@ interface TeamsTabProps {
 
 const TeamsTab: React.FC<TeamsTabProps> = ({ teams, players, playerTeams, games }) => {
   const { deleteTeam, refreshData, activeSeason } = useData();
-  const { demoMode } = useAuth();
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [editingTeam, setEditingTeam] = useState<Team | null>(null);
+  const [managingRoster, setManagingRoster] = useState<Team | null>(null);
 
   const handleDeleteTeam = async (teamId: string) => {
     const team = teams.find(t => t.id === teamId);
     const teamName = team?.name || 'this team';
     
-    const confirmMessage = demoMode 
-      ? `Are you sure you want to delete "${teamName}"?\n\n⚠️ DEMO MODE: This action cannot be undone!`
-      : `Are you sure you want to delete "${teamName}"?`;
-    
-    if (!window.confirm(confirmMessage)) {
+    if (!window.confirm(`Are you sure you want to delete "${teamName}"? This action cannot be undone.`)) {
       return;
-    }
-
-    // Extra confirmation in demo mode
-    if (demoMode) {
-      if (!window.confirm(`🛡️ DEMO MODE PROTECTION: This will permanently delete "${teamName}" and all associated data. Are you absolutely certain?`)) {
-        return;
-      }
     }
 
     try {
@@ -73,7 +64,31 @@ const TeamsTab: React.FC<TeamsTabProps> = ({ teams, players, playerTeams, games 
             return (
               <div key={team.id} className="team-item">
                 <div className="team-info">
-                  <TeamIcon iconId={team.abbreviation} color="#3b82f6" size={32} />
+                  {team.logoUrl ? (
+                    <img 
+                      src={team.logoUrl} 
+                      alt={team.name}
+                      className="team-logo-small"
+                      onError={(e) => {
+                        // Fallback to TeamIcon if logo fails to load
+                        const target = e.target as HTMLImageElement;
+                        target.style.display = 'none';
+                        const parent = target.parentElement;
+                        if (parent && !parent.querySelector('.team-icon-fallback')) {
+                          const iconDiv = document.createElement('div');
+                          iconDiv.className = 'team-icon-fallback';
+                          parent.appendChild(iconDiv);
+                        }
+                      }}
+                    />
+                  ) : (
+                    <ProfilePicture
+                      imageUrl={null}
+                      fallbackImage="team"
+                      alt={team.name}
+                      size={48}
+                    />
+                  )}
                   <div className="team-details">
                     <h3>{team.name}</h3>
                     <div className="team-stats">
@@ -85,6 +100,14 @@ const TeamsTab: React.FC<TeamsTabProps> = ({ teams, players, playerTeams, games 
                 </div>
                 
                 <div className="team-actions">
+                  <button 
+                    className="btn btn-outline btn-small"
+                    onClick={() => setManagingRoster(team)}
+                    title="Manage roster"
+                  >
+                    <UserCog size={14} />
+                    Roster
+                  </button>
                   <button 
                     className="btn btn-outline btn-small"
                     onClick={() => setEditingTeam(team)}
@@ -114,33 +137,31 @@ const TeamsTab: React.FC<TeamsTabProps> = ({ teams, players, playerTeams, games 
         </div>
       )}
 
-      {/* TODO: Add Team Form Modal */}
-      {showCreateForm && (
-        <div className="modal-overlay" onClick={() => setShowCreateForm(false)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h2>Add Team</h2>
-              <button onClick={() => setShowCreateForm(false)}>×</button>
-            </div>
-            <div className="modal-body">
-              <p>Team creation form coming soon...</p>
-            </div>
-          </div>
-        </div>
+      {/* Team Form Modal */}
+      {(showCreateForm || editingTeam) && (
+        <TeamFormModal
+          team={editingTeam}
+          onClose={() => {
+            setShowCreateForm(false);
+            setEditingTeam(null);
+          }}
+          onSave={async () => {
+            await refreshData();
+            setShowCreateForm(false);
+            setEditingTeam(null);
+          }}
+        />
       )}
-      
-      {editingTeam && (
-        <div className="modal-overlay" onClick={() => setEditingTeam(null)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h2>Edit Team</h2>
-              <button onClick={() => setEditingTeam(null)}>×</button>
-            </div>
-            <div className="modal-body">
-              <p>Team editing form coming soon...</p>
-            </div>
-          </div>
-        </div>
+
+      {/* Roster Management Modal */}
+      {managingRoster && (
+        <RosterManagementModal
+          team={managingRoster}
+          onClose={() => setManagingRoster(null)}
+          onSave={async () => {
+            await refreshData();
+          }}
+        />
       )}
     </div>
   );

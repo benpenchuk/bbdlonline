@@ -1,6 +1,6 @@
 import React from 'react';
 import { Player, Team } from '../../core/types';
-import TeamIcon from './TeamIcon';
+import ProfilePicture from './ProfilePicture';
 
 interface PlayerCardProps {
   player: Player;
@@ -37,13 +37,12 @@ const PlayerCard: React.FC<PlayerCardProps> = React.memo(({
     >
       {/* Avatar */}
       <div className="bbdl-player-card-avatar">
-        {player.avatarUrl ? (
-          <img src={player.avatarUrl} alt={fullName} />
-        ) : (
-          <div className="bbdl-player-card-initials">
-            {initials}
-          </div>
-        )}
+        <ProfilePicture
+          imageUrl={player.avatarUrl}
+          fallbackImage="player"
+          alt={fullName}
+          size={80}
+        />
       </div>
 
       {/* Name */}
@@ -56,7 +55,12 @@ const PlayerCard: React.FC<PlayerCardProps> = React.memo(({
           className="bbdl-player-card-team-badge"
           title={team.name}
         >
-          <TeamIcon iconId={team.abbreviation} color="#64748b" size={16} />
+          <ProfilePicture
+            imageUrl={team.logoUrl}
+            fallbackImage="team"
+            alt={team.name}
+            size={20}
+          />
           <span className="team-badge-text">{team.name}</span>
         </div>
       )}
