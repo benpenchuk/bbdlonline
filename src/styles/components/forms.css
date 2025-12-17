@@ -1,0 +1,500 @@
+/* =====================================================
+   FORM SYSTEM (Complete Input Architecture)
+   ===================================================== */
+
+/* =====================================================
+   BASE FORM ELEMENTS
+   ===================================================== */
+
+/* Base Input Styles */
+.form-input,
+.form-textarea,
+.filter-select,
+.sort-select,
+.h2h-select,
+.team-select,
+select,
+input[type="text"],
+input[type="email"],
+input[type="number"],
+input[type="date"],
+input[type="time"],
+textarea {
+  width: 100%;
+  padding: var(--space-md) var(--space-lg);
+  border-radius: var(--border-radius-md);
+  border: 1px solid var(--color-border);
+  background-color: var(--color-surface-elevated);
+  color: var(--color-text-primary);
+  font-family: var(--font-body);
+  font-size: var(--font-size-base);
+  transition: all var(--transition-fast);
+}
+
+.form-input:focus,
+.form-textarea:focus,
+.filter-select:focus,
+.sort-select:focus,
+.h2h-select:focus,
+.team-select:focus,
+select:focus,
+input:focus,
+textarea:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: var(--focus-ring);
+}
+
+.form-input::placeholder,
+.form-textarea::placeholder {
+  color: var(--color-text-muted);
+}
+
+/* Base Label Styles */
+label {
+  display: block;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  margin-bottom: var(--space-sm);
+}
+
+.form-label {
+  display: block;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  margin-bottom: var(--space-sm);
+}
+
+/* =====================================================
+   FORM GROUPS AND LAYOUTS
+   ===================================================== */
+
+.form-group {
+  margin-bottom: var(--space-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.form-group label {
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  font-size: var(--font-size-sm);
+}
+
+.form-group-full {
+  grid-column: 1 / -1;
+}
+
+.form-row {
+  display: flex;
+  gap: var(--space-md);
+  align-items: end;
+}
+
+.form-row .form-group {
+  flex: 1;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-lg);
+}
+
+/* =====================================================
+   MODERN FORM INPUTS
+   ===================================================== */
+
+.modern-input {
+  padding: var(--space-md);
+  border: 2px solid var(--color-border);
+  border-radius: var(--border-radius-md);
+  font-size: var(--font-size-base);
+  transition: all var(--transition-fast);
+  background-color: var(--color-surface);
+}
+
+.modern-input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(0, 51, 102, 0.1);
+}
+
+.modern-input.input-error {
+  border-color: var(--color-error);
+  box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.1);
+}
+
+.modern-textarea {
+  resize: vertical;
+  min-height: 120px;
+}
+
+.form-input-small {
+  padding: var(--space-sm) var(--space-md);
+  font-size: var(--font-size-sm);
+}
+
+.form-select {
+  width: 100%;
+  padding: var(--space-sm) var(--space-md);
+  border: 2px solid var(--color-border);
+  border-radius: var(--border-radius-md);
+  background-color: var(--color-surface);
+  font-size: var(--font-size-base);
+  transition: all var(--transition-fast);
+}
+
+.form-select:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(0, 51, 102, 0.1);
+}
+
+.form-textarea {
+  resize: vertical;
+}
+
+/* =====================================================
+   SPECIALIZED INPUTS
+   ===================================================== */
+
+/* Search Input */
+.search-box {
+  position: relative;
+}
+
+.search-box svg {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--color-text-secondary);
+  pointer-events: none;
+}
+
+.search-input,
+.filter-select select,
+.sort-select select {
+  height: 44px;
+  border-radius: var(--border-radius-md);
+  border: 1px solid var(--color-border);
+  background-color: var(--color-background);
+  font-family: var(--font-body);
+  font-size: var(--font-size-base);
+  transition: all var(--transition-fast);
+  padding: 0 var(--space-md);
+}
+
+.search-input {
+  padding-left: 40px;
+}
+
+.search-input:focus,
+.filter-select select:focus,
+.sort-select select:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-accent);
+}
+
+.filter-select,
+.sort-select {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+/* Input with Action */
+.input-with-action {
+  display: flex;
+  gap: var(--space-sm);
+  align-items: flex-start;
+}
+
+.input-with-action .form-input {
+  flex: 1;
+}
+
+/* =====================================================
+   FORM CONTROLS (Checkboxes, Toggles)
+   ===================================================== */
+
+.form-group-checkbox {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.form-group-checkbox label {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  margin: 0;
+  cursor: pointer;
+}
+
+.form-group-checkbox input[type="checkbox"] {
+  width: auto;
+  margin: 0;
+}
+
+/* Toggle Slider */
+.toggle-input {
+  display: none;
+}
+
+.toggle-slider {
+  position: relative;
+  width: 40px;
+  height: 20px;
+  background: var(--color-border);
+  border-radius: 20px;
+  transition: background var(--transition-fast);
+}
+
+.toggle-input:checked + .toggle-slider {
+  background: var(--color-primary);
+}
+
+.toggle-slider::after {
+  content: '';
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  background: var(--color-surface-elevated);
+  border-radius: 50%;
+  top: 2px;
+  left: 2px;
+  transition: transform var(--transition-fast);
+}
+
+.toggle-input:checked + .toggle-slider::after {
+  transform: translateX(20px);
+}
+
+/* =====================================================
+   FORM VALIDATION & HINTS
+   ===================================================== */
+
+.form-hint {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  margin-top: var(--space-xs);
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.field-error {
+  color: var(--color-error);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+}
+
+.textarea-footer {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: var(--space-xs);
+}
+
+.character-count {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+}
+
+/* =====================================================
+   IMAGE UPLOAD SYSTEM
+   ===================================================== */
+
+/* Standard Image Upload */
+.image-upload-container {
+  position: relative;
+  border: 2px dashed var(--color-border);
+  border-radius: var(--border-radius-md);
+  padding: var(--space-lg);
+  text-align: center;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  min-height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.image-upload-container:hover {
+  border-color: var(--color-primary);
+  background: var(--color-surface);
+}
+
+.image-upload-input {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.image-preview-wrapper {
+  position: relative;
+  width: 100%;
+  max-width: 300px;
+  margin: 0 auto;
+}
+
+.image-preview {
+  width: 100%;
+  height: auto;
+  border-radius: var(--border-radius-md);
+  max-height: 300px;
+  object-fit: contain;
+}
+
+.image-remove-btn {
+  position: absolute;
+  top: var(--space-xs);
+  right: var(--space-xs);
+  background: var(--color-error);
+  color: var(--color-text-light);
+  border: none;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  box-shadow: var(--shadow-md);
+}
+
+.image-remove-btn:hover {
+  background: var(--color-error-light);
+  transform: scale(1.1);
+}
+
+.image-upload-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-sm);
+  color: var(--color-text-secondary);
+}
+
+.image-upload-placeholder p {
+  margin: 0;
+  font-size: var(--font-size-sm);
+}
+
+.upload-progress {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-top: var(--space-sm);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+}
+
+.spinner-small {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(0, 0, 0, 0.1);
+  border-top: 2px solid currentColor;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+/* Circular Image Upload */
+.image-upload-container-circular {
+  min-height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.image-preview-wrapper-circular {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  overflow: hidden;
+  position: relative;
+  border: 2px solid var(--color-border);
+  background: var(--color-background);
+}
+
+.image-preview-circular {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+/* =====================================================
+   FORM SECTIONS & HEADERS
+   ===================================================== */
+
+.form-header {
+  margin-bottom: var(--space-xl);
+}
+
+.form-header h2 {
+  font-size: var(--font-size-3xl);
+  margin-bottom: var(--space-md);
+  color: var(--color-text-primary);
+}
+
+.form-header p {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-lg);
+}
+
+.contact-form-section {
+  background: var(--color-surface);
+  border-radius: var(--border-radius-lg);
+  padding: var(--space-2xl);
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--color-border);
+}
+
+/* =====================================================
+   RESPONSIVE FORM STYLES
+   ===================================================== */
+
+@media (max-width: 768px) {
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .form-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .form-row .form-group {
+    flex: 1;
+  }
+
+  .search-box,
+  .search-input,
+  .filter-select,
+  .sort-select {
+    width: 100%;
+  }
+
+  .search-input,
+  .filter-select select,
+  .sort-select select {
+    min-height: 44px;
+    font-size: var(--font-size-base);
+  }
+
+  .contact-form-section {
+    padding: var(--space-lg);
+  }
+}
+

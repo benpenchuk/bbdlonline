@@ -1,0 +1,153 @@
+/* =====================================================
+   CHIP/PILL SYSTEM - BBDL Design System
+   ===================================================== */
+
+.chip,
+.chip-status {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-xs) var(--space-md);
+  border-radius: var(--border-radius-full);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+  transition: all var(--transition-fast);
+}
+
+/* =====================================================
+   CHIP VARIANTS
+   ===================================================== */
+
+/* Win Chip - Green */
+.chip-win {
+  background-color: var(--color-success);
+  color: var(--color-text-light);
+}
+
+/* Loss Chip - Red */
+.chip-loss {
+  background-color: var(--color-error);
+  color: var(--color-text-light);
+}
+
+/* Streak Chip - Amber */
+.chip-streak {
+  background-color: var(--color-accent);
+  color: var(--color-text-primary);
+}
+
+/* Seed Chip - Deep Navy */
+.chip-seed {
+  background-color: var(--color-primary);
+  color: var(--color-text-light);
+}
+
+/* Default Chip */
+.chip-default {
+  background-color: var(--color-surface);
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border);
+}
+
+/* =====================================================
+   STATUS CHIPS
+   ===================================================== */
+
+.chip-status-completed {
+  background-color: var(--color-status-completed);
+  color: var(--color-text-light);
+}
+
+.chip-status-scheduled {
+  background-color: var(--color-surface-elevated);
+  color: var(--color-text-secondary);
+  border: 1px solid var(--color-border);
+}
+
+.chip-status-in-progress {
+  background-color: var(--color-status-in-progress);
+  color: var(--color-text-light);
+}
+
+.chip-status-cancelled {
+  background-color: var(--color-status-cancelled);
+  color: var(--color-text-light);
+}
+
+/* =====================================================
+   BADGE SYSTEM
+   ===================================================== */
+
+.badge {
+  padding: var(--space-xs) var(--space-sm);
+  border-radius: var(--border-radius-full);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+/* =====================================================
+   BADGE VARIANTS
+   ===================================================== */
+
+.badge-shutout {
+  background-color: color-mix(in srgb, var(--color-primary) 10%, transparent);
+  color: var(--color-primary);
+}
+
+.badge-clutch {
+  background-color: color-mix(in srgb, var(--color-warning) 10%, transparent);
+  color: var(--color-warning);
+}
+
+.badge-blowout {
+  background-color: color-mix(in srgb, var(--color-error) 10%, transparent);
+  color: var(--color-error);
+}
+
+/* =====================================================
+   STATUS BADGES
+   ===================================================== */
+
+.badge-live {
+  background-color: var(--color-status-live);
+  color: var(--color-text-light);
+  animation: pulse 2s infinite;
+  box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+}
+
+.badge-scheduled {
+  background-color: var(--color-surface-elevated);
+  color: var(--color-text-secondary);
+  border: 1px solid var(--color-border);
+}
+
+.badge-completed {
+  background-color: var(--color-status-completed);
+  color: var(--color-text-light);
+}
+
+.badge-canceled {
+  background-color: var(--color-status-cancelled);
+  color: var(--color-text-light);
+}
+
+/* =====================================================
+   ANIMATIONS
+   ===================================================== */
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+  }
+  50% {
+    opacity: 0.9;
+    box-shadow: 0 0 0 8px rgba(239, 68, 68, 0);
+  }
+}

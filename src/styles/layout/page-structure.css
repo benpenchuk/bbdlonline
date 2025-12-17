@@ -1,0 +1,162 @@
+/* =====================================================
+   UNIFIED PAGE LAYOUT SYSTEM
+   ===================================================== */
+
+/* =====================================================
+   PAGE CONTAINERS
+   ===================================================== */
+
+.page-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: var(--space-xl);
+  overflow-x: hidden;
+}
+
+.main-content-top-nav {
+  flex: 1;
+  background-color: var(--color-surface);
+}
+
+/* =====================================================
+   PAGE HEADERS
+   ===================================================== */
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-xl);
+  padding-bottom: var(--space-xl);
+  gap: var(--space-lg);
+  border-bottom: 2px solid var(--color-border);
+}
+
+/* Page Title Section - Left side with title and subtitle */
+.page-title-section {
+  flex: 1;
+  min-width: 0;
+}
+
+.page-title-section h1 {
+  font-size: var(--font-size-4xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
+  margin: 0 0 var(--space-xs) 0;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.page-title-section .page-subtitle {
+  font-size: var(--font-size-base);
+  color: var(--color-text-secondary);
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* Page Controls - Right side with filters, selectors, buttons */
+.page-controls {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  flex-shrink: 0;
+}
+
+/* Page Content - Main content area below header */
+.page-content {
+  width: 100%;
+}
+
+/* Legacy support - page-header with direct h1/p (will be migrated) */
+.page-header > h1 {
+  font-size: var(--font-size-4xl);
+  margin-bottom: var(--space-sm);
+  color: var(--color-text-primary);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: -0.02em;
+}
+
+.page-header > p {
+  font-size: var(--font-size-base);
+  color: var(--color-text-secondary);
+  margin: 0;
+}
+
+/* =====================================================
+   SECTION LAYOUTS
+   ===================================================== */
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-2xl);
+  padding-bottom: var(--space-md);
+  border-bottom: 2px solid var(--color-border);
+}
+
+.section-title {
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-bold);
+  margin-bottom: 0;
+  color: var(--color-primary-dark);
+}
+
+.section-header-left {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+.section-header-link {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  text-decoration: none;
+  color: inherit;
+  transition: all var(--transition-fast);
+}
+
+.section-header-link:hover .section-link-icon {
+  transform: translateX(4px);
+}
+
+.section-header-link:hover .section-title {
+  color: var(--color-primary);
+}
+
+.section-link-icon {
+  transition: transform var(--transition-fast);
+}
+
+/* =====================================================
+   RESPONSIVE PAGE STRUCTURE STYLES
+   ===================================================== */
+
+@media (max-width: 768px) {
+  .page-container {
+    padding: var(--space-md);
+  }
+
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-md);
+  }
+
+  .page-controls {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .page-title-section h1 {
+    font-size: var(--font-size-2xl);
+  }
+
+  .section-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-md);
+  }
+}
+
