@@ -122,7 +122,7 @@ const CompactStatsLeaders: React.FC<CompactStatsLeadersProps> = ({
 
   return (
     <div className="league-leaders-card-container">
-      <h3 className="league-leaders-card-title">League Leaders</h3>
+      <h3 className="league-leaders-card-title section-title">League Leaders</h3>
       <div className="league-leaders-card-separator"></div>
       <div className="league-leaders-content">
         {categories.map(category => {

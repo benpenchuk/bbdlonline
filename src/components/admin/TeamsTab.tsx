@@ -41,12 +41,12 @@ const TeamsTab: React.FC<TeamsTabProps> = ({ teams, players, playerTeams, games 
     <div className="admin-tab-content">
       <div className="tab-header">
         <h2>Teams Management</h2>
-        <button 
+        <button
           className="btn btn-primary"
           onClick={() => setShowCreateForm(true)}
         >
           <Plus size={16} />
-          Add Team
+          <span>Add Team</span>
         </button>
       </div>
 

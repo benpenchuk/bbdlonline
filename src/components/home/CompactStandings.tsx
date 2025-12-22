@@ -81,7 +81,7 @@ const CompactStandings: React.FC<CompactStandingsProps> = ({
 
   return (
     <div className="standings-card-container">
-      <h3 className="standings-card-title">Standings</h3>
+      <h3 className="standings-card-title section-title">Standings</h3>
       <div className="standings-card-separator"></div>
       <div className="standings-card-table">
         <table className="standings-card-table-inner">

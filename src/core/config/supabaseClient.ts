@@ -42,6 +42,7 @@ export const TABLES = {
   PLAYER_SEASON_STATS: 'player_season_stats',
   TEAM_SEASON_STATS: 'team_season_stats',
   PLAYOFFS: 'playoffs',
+  PLAYOFF_MATCHES: 'playoff_matches',
   ANNOUNCEMENTS: 'announcements',
   PHOTOS: 'photos',
 } as const;

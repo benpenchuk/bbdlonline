@@ -26,8 +26,8 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: var(--space-xl);
-  padding-bottom: var(--space-xl);
+  margin-bottom: var(--space-lg);
+  padding-bottom: var(--space-md);
   gap: var(--space-lg);
   border-bottom: 2px solid var(--color-border);
 }
@@ -39,19 +39,19 @@
 }
 
 .page-title-section h1 {
-  font-size: var(--font-size-4xl);
+  font-size: var(--font-size-3xl);
   font-weight: var(--font-weight-bold);
   color: var(--color-text-primary);
-  margin: 0 0 var(--space-xs) 0;
+  margin: 0 0 0.25rem 0;
   letter-spacing: -0.02em;
   line-height: 1.2;
 }
 
 .page-title-section .page-subtitle {
-  font-size: var(--font-size-base);
+  font-size: var(--font-size-sm);
   color: var(--color-text-secondary);
   margin: 0;
-  line-height: 1.5;
+  line-height: 1.4;
 }
 
 /* Page Controls - Right side with filters, selectors, buttons */
@@ -69,15 +69,15 @@
 
 /* Legacy support - page-header with direct h1/p (will be migrated) */
 .page-header > h1 {
-  font-size: var(--font-size-4xl);
-  margin-bottom: var(--space-sm);
+  font-size: var(--font-size-3xl);
+  margin-bottom: 0.25rem;
   color: var(--color-text-primary);
   font-weight: var(--font-weight-bold);
   letter-spacing: -0.02em;
 }
 
 .page-header > p {
-  font-size: var(--font-size-base);
+  font-size: var(--font-size-sm);
   color: var(--color-text-secondary);
   margin: 0;
 }

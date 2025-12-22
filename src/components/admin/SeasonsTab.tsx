@@ -9,7 +9,6 @@ const SeasonsTab: React.FC = () => {
   const {
     seasons,
     activeSeason,
-    createSeason,
     updateSeason,
     deleteSeason,
     refreshData,
@@ -135,8 +134,8 @@ const SeasonsTab: React.FC = () => {
           <p>Manage league seasons and set the active season</p>
         </div>
         <button className="btn btn-primary" onClick={() => handleOpenModal()}>
-          <Plus size={20} />
-          New Season
+          <Plus size={16} />
+          <span>New Season</span>
         </button>
       </div>
 
@@ -147,8 +146,8 @@ const SeasonsTab: React.FC = () => {
             <h3>No seasons yet</h3>
             <p>Create your first season to get started</p>
             <button className="btn btn-primary" onClick={() => handleOpenModal()}>
-              <Plus size={20} />
-              Create Season
+              <Plus size={16} />
+              <span>Create Season</span>
             </button>
           </div>
         ) : (

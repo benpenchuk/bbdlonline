@@ -1,7 +1,424 @@
+/* LAST UPDATED: Tuesday Dec 16, 2025 - Typography system rebuild */
+
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+}
+
+/* ========================================
+   COLOR SYSTEM - REGAL NAVY + DELICATE PINK
+   Research-based palette for optimal harmony
+   LAST UPDATED: Tuesday Dec 16, 2025
+   ======================================== */
+
+:root {
+  /* ========================================
+     STEP 1: PRIMITIVE COLORS (Raw Hex Values)
+     ======================================== */
+
+  /* Navy Scale - Regal Navy Palette */
+  --navy-50: #e8eaf6;
+  --navy-100: #c5cce5;
+  --navy-200: #9faad4;
+  --navy-300: #7989c3;
+  --navy-400: #5a6eb5;
+  --navy-500: #4a5fa8;
+  --navy-600: #384da1;
+  --navy-700: #2f4298;
+  --navy-800: #27388e;
+  --navy-900: #1a2a52;  /* Main Regal Navy */
+
+  /* Pink Scale - Delicate Pink Palette */
+  --pink-50: #fce4ec;
+  --pink-100: #f8bbd0;
+  --pink-200: #f48fb1;
+  --pink-300: #f06292;
+  --pink-400: #ec407a;
+  --pink-500: #e91e63;  /* Main Pink */
+  --pink-600: #d81b60;
+  --pink-700: #c2185b;  /* Hover state */
+  --pink-800: #ad1457;
+  --pink-900: #880e4f;
+
+  /* Gray Scale - Neutral Palette */
+  --gray-50: #f8fafc;
+  --gray-100: #f1f5f9;
+  --gray-200: #e2e8f0;
+  --gray-300: #cbd5e1;
+  --gray-400: #94a3b8;
+  --gray-500: #64748b;
+  --gray-600: #475569;
+  --gray-700: #334155;
+  --gray-800: #1e293b;
+  --gray-900: #0f172a;
+
+  /* Semantic Colors - Status Indicators */
+  --success: #4caf50;
+  --success-light: #e8f5e9;
+  --success-dark: #2e7d32;
+
+  --warning: #ff9800;
+  --warning-light: #fff3e0;
+  --warning-dark: #e65100;
+
+  --error: #f44336;
+  --error-light: #ffebee;
+  --error-dark: #c62828;
+
+  --info: #2196f3;
+  --info-light: #e3f2fd;
+  --info-dark: #1565c0;
+
+  /* ========================================
+     STEP 2: SEMANTIC COLOR TOKENS
+     (Reference primitives defined above)
+     ======================================== */
+
+  /* Primary - Regal Navy (60% usage) */
+  --color-primary: var(--navy-900);           /* #1a2a52 */
+  --color-primary-hover: var(--navy-800);     /* #27388e */
+  --color-primary-light: var(--navy-50);      /* #e8eaf6 */
+  --color-primary-medium: var(--navy-600);    /* #384da1 */
+
+  /* Accent - Delicate Pink (10% usage) */
+  --color-accent: var(--pink-500);            /* #e91e63 */
+  --color-accent-hover: var(--pink-700);       /* #c2185b */
+  --color-accent-light: var(--pink-50);        /* #fce4ec */
+
+  /* Backgrounds */
+  --color-bg: #ffffff;
+  --color-bg-secondary: var(--gray-50);       /* #f8fafc */
+  --color-bg-tertiary: var(--gray-100);       /* #f1f5f9 */
+
+  /* Surfaces (cards, modals, dropdowns) */
+  --color-surface: #ffffff;
+  --color-surface-elevated: #ffffff;
+  --color-surface-hover: var(--gray-50);      /* #f8fafc */
+
+  /* Borders */
+  --color-border: var(--gray-200);            /* #e2e8f0 */
+  --color-border-hover: var(--gray-300);      /* #cbd5e1 */
+  --color-border-focus: var(--color-primary); /* #1a2a52 */
+
+  /* Text Hierarchy */
+  --color-text-primary: var(--gray-800);      /* #1e293b */
+  --color-text-secondary: var(--gray-600);    /* #475569 */
+  --color-text-tertiary: var(--gray-500);     /* #64748b */
+  --color-text-on-primary: #ffffff;
+  --color-text-on-accent: #ffffff;
+
+  /* Links */
+  --color-link: var(--color-primary);
+  --color-link-hover: var(--color-accent);
+
+  /* Success Color (for winner indicators) */
+  --color-success: var(--success);  /* #4caf50 */
+
+  /* ========================================
+     STEP 3: DESIGN TOKENS
+     (Spacing, Typography, Shadows, etc.)
+     ======================================== */
+
+  /* Spacing Scale */
+  --space-xs: 0.25rem;    /* 4px */
+  --space-sm: 0.5rem;     /* 8px */
+  --space-md: 1rem;      /* 16px */
+  --space-lg: 1.5rem;    /* 24px */
+  --space-xl: 2rem;      /* 32px */
+  --space-2xl: 3rem;     /* 48px */
+  --space-3xl: 4rem;     /* 64px */
+  --space-4xl: 6rem;     /* 96px */
+
+  /* Border Radius */
+  --border-radius-sm: 0.25rem;   /* 4px */
+  --border-radius-md: 0.5rem;    /* 8px */
+  --border-radius-lg: 0.75rem;   /* 12px */
+  --border-radius-xl: 1rem;      /* 16px */
+  --border-radius-full: 9999px;
+
+  /* Typography - Font Sizes */
+  --font-size-xs: 0.75rem;      /* 12px */
+  --font-size-sm: 0.875rem;     /* 14px */
+  --font-size-base: 1rem;       /* 16px */
+  --font-size-lg: 1.125rem;     /* 18px */
+  --font-size-xl: 1.25rem;      /* 20px */
+  --font-size-2xl: 1.5rem;      /* 24px */
+  --font-size-3xl: 1.875rem;    /* 30px */
+  --font-size-4xl: 2.25rem;     /* 36px */
+  --font-size-5xl: 3rem;        /* 48px */
+
+  /* Typography - Font Weights */
+  --font-weight-light: 300;
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  --font-weight-extrabold: 800;
+
+  /* Typography - Line Heights */
+  --line-height-tight: 1.25;
+  --line-height-normal: 1.5;
+  --line-height-relaxed: 1.75;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px 0 rgba(26, 42, 82, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(26, 42, 82, 0.1), 0 2px 4px -2px rgba(26, 42, 82, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(26, 42, 82, 0.1), 0 4px 6px -4px rgba(26, 42, 82, 0.05);
+  --shadow-xl: 0 20px 25px -5px rgba(26, 42, 82, 0.1), 0 8px 10px -6px rgba(26, 42, 82, 0.04);
+  --shadow-2xl: 0 25px 50px -12px rgba(26, 42, 82, 0.25);
+
+  /* Transitions */
+  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-normal: 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: 300ms cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Z-Index Scale */
+  --z-index-dropdown: 1000;
+  --z-index-sticky: 1020;
+  --z-index-fixed: 1030;
+  --z-index-modal-backdrop: 1035;
+  --z-index-modal: 1040;
+  --z-index-popover: 1050;
+  --z-index-tooltip: 1060;
+}
+
+/* ===== DARK MODE - Beta Theta Pi Colors ===== */
+
+[data-theme="dark"] {
+  /* Primary - Light Blue (Beta Theta Pi) */
+  --color-primary: #87CEEB;                  /* Sky blue - casual, cool */
+  --color-primary-hover: #A0D8EF;            /* Slightly brighter light blue */
+  --color-primary-light: #0d1625;            /* Dark blue base with subtle tint */
+  --color-primary-medium: #6FB3D8;           /* Medium light blue */
+
+  /* Accent - Light Pink (Beta Theta Pi) */
+  --color-accent: #FFB6C1;                   /* Light pink - casual and cool */
+  --color-accent-hover: #FFC0CB;             /* Slightly brighter light pink */
+  --color-accent-light: #D4A5B8;             /* Muted light pink for backgrounds */
+
+  /* Backgrounds - Dark blue with subtle blue tint */
+  --color-bg: #0d1625;                       /* Dark blue base (subtle blue tint) */
+  --color-bg-secondary: #141b2e;             /* Lighter dark blue (better contrast) */
+  --color-bg-tertiary: #1a2438;              /* Even lighter for hierarchy */
+
+  /* Surfaces - Cards with blue tint, better separation */
+  --color-surface: #1a2235;                  /* Card backgrounds - distinct from bg-secondary */
+  --color-surface-elevated: #232d42;         /* Elevated cards - clear elevation */
+  --color-surface-hover: #273147;            /* Hover state - more noticeable */
+
+  /* Borders - Subtle blue-gray */
+  --color-border: #2a3548;                   /* Subtle blue-gray border */
+  --color-border-hover: #384758;             /* Hover border */
+  --color-border-focus: #87CEEB;             /* Light blue focus ring */
+
+  /* Text - Improved readability */
+  --color-text-primary: #F0F4F8;             /* Clean white (slightly brighter) */
+  --color-text-secondary: #D1D9E6;           /* Light gray-blue (more readable) */
+  --color-text-tertiary: #B8C5D4;            /* Brighter tertiary (was hard to read) */
+  --color-text-on-primary: #0d1625;          /* Dark text on light blue */
+  --color-text-on-accent: #8B4A5C;           /* Darker pink for contrast on light pink */
+
+  /* Links - Light blue primary, light pink hover */
+  --color-link: #87CEEB;                     /* Light blue links */
+  --color-link-hover: #FFB6C1;               /* Light pink hover */
+
+  /* Success/Winner - Green (kept for winner indicators) */
+  --color-success: #4ade80;                  /* Bright emerald green for winners */
+
+  /* Shadows (more subtle in dark mode) */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 2px 4px -2px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.6), 0 4px 6px -4px rgba(0, 0, 0, 0.4);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.7), 0 8px 10px -6px rgba(0, 0, 0, 0.5);
+}
+
+/* ========================================
+   TYPOGRAPHY - SINGLE SOURCE OF TRUTH
+   ======================================== */
+
+/* Font Imports (if using Google Fonts or custom fonts) */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+/* Base Typography */
+* {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 1rem;
+  line-height: 1.5;
+  font-weight: 400;
+  color: var(--color-text-primary) !important;
+  background-color: var(--color-bg) !important;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Smooth transitions for all color changes */
+* {
+  transition: background-color 0.2s ease,
+              border-color 0.2s ease,
+              color 0.2s ease;
+}
+
+/* FORCE COLOR SYSTEM WITH !IMPORTANT FLAGS */
+.card, .stat-card, .game-card, .player-card {
+  background-color: var(--color-surface) !important;
+  border-color: var(--color-border) !important;
+  color: var(--color-text-primary) !important;
+}
+
+/* Force all surfaces */
+[class*="card"], .modal, .dropdown, [class*="surface"] {
+  background-color: var(--color-surface) !important;
+  border-color: var(--color-border) !important;
+  color: var(--color-text-primary) !important;
+}
+
+/* Headings */
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-weight: 700;
+  line-height: 1.2;
+  margin: 0;
+  color: var(--color-text-primary);
+}
+
+h1 {
+  font-size: 2.5rem;
+  font-weight: 800;
+}
+
+h2 {
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+h3 {
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+h4 {
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+h5 {
+  font-size: 1.125rem;
+  font-weight: 600;
+}
+
+h6 {
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+/* Paragraphs */
+p {
+  font-size: 1rem;
+  line-height: 1.6;
+  margin: 0;
+  color: var(--color-text-secondary);
+}
+
+/* Small Text */
+small {
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+}
+
+/* Strong/Bold */
+strong, b {
+  font-weight: 600;
+}
+
+/* Links */
+a {
+  color: var(--color-primary);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+/* Labels */
+label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+
+/* Input/Select/Textarea */
+input, select, textarea {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--color-text-primary);
+}
+
+/* Tables */
+table {
+  font-size: 0.875rem;
+}
+
+th {
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+td {
+  color: var(--color-text-secondary);
+}
+
+/* Utility Classes */
+.text-xs {
+  font-size: 0.75rem;
+}
+
+.text-sm {
+  font-size: 0.875rem;
+}
+
+.text-base {
+  font-size: 1rem;
+}
+
+.text-lg {
+  font-size: 1.125rem;
+}
+
+.text-xl {
+  font-size: 1.25rem;
+}
+
+.text-2xl {
+  font-size: 1.5rem;
+}
+
+.font-normal {
+  font-weight: 400;
+}
+
+.font-medium {
+  font-weight: 500;
+}
+
+.font-semibold {
+  font-weight: 600;
+}
+
+.font-bold {
+  font-weight: 700;
+}
+
+.font-extrabold {
+  font-weight: 800;
 }
 
 /* Import modular stylesheets */
@@ -15,7 +432,167 @@
 @import './styles/layout/navigation.css';
 @import './styles/layout/page-structure.css';
 
+/* ========================================
+   BUTTONS - SINGLE SOURCE OF TRUTH
+   ======================================== */
 
+/* Base Button */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+
+  /* Sizing */
+  padding: 0.75rem 1.5rem;
+  min-height: 44px;
+
+  /* Typography */
+  font-family: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1;
+  text-decoration: none;
+  white-space: nowrap;
+
+  /* Visual */
+  border: 2px solid transparent;
+  border-radius: 0.5rem;
+  background-color: var(--color-primary);
+  color: white;
+
+  /* Behavior */
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.2s ease;
+}
+
+.btn:hover {
+  background-color: var(--color-primary-hover);
+  transform: translateY(-1px);
+}
+
+.btn:active {
+  transform: translateY(0);
+}
+
+/* Icon Sizing */
+.btn svg {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+}
+
+/* Primary Button (Navy) */
+.btn-primary {
+  background-color: var(--color-primary);
+  color: white;
+  border-color: var(--color-primary);
+}
+
+.btn-primary:hover {
+  background-color: var(--color-primary-hover);
+  border-color: var(--color-primary-hover);
+}
+
+/* Outline Button */
+.btn-outline {
+  background-color: transparent;
+  color: var(--color-primary);
+  border: 2px solid var(--color-primary);
+}
+
+.btn-outline:hover {
+  background-color: var(--color-primary);
+  color: white;
+}
+
+/* Danger Button (Red) */
+.btn-danger {
+  background-color: var(--error);
+  color: white;
+  border-color: var(--error);
+}
+
+.btn-danger:hover {
+  background-color: var(--error-dark);
+}
+
+/* Accent Button (Pink - use sparingly!) */
+.btn-accent {
+  background-color: var(--color-accent);
+  color: var(--color-text-on-accent);
+  border-color: var(--color-accent);
+}
+
+.btn-accent:hover {
+  background-color: var(--color-accent-hover);
+  border-color: var(--color-accent-hover);
+}
+
+/* Small Button */
+.btn-sm,
+.btn-small {
+  padding: 0.5rem 1rem;
+  font-size: 0.75rem;
+  min-height: 36px;
+}
+
+/* Disabled State */
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn:disabled:hover {
+  background-color: var(--color-primary);
+  transform: none;
+}
+
+/* ========================================
+   STRATEGIC PINK ACCENT USAGE
+   Use pink sparingly for emphasis (10% usage)
+   ======================================== */
+
+/* Active navigation item - pink underline */
+.nav-link.active {
+  border-bottom: 3px solid var(--color-accent);
+  color: var(--color-accent);
+}
+
+/* Important badge with pink background */
+.badge-highlight {
+  background-color: var(--color-accent);
+  color: var(--color-text-on-accent);
+}
+
+/* Selected table rows - subtle pink background */
+.table-row-selected {
+  background-color: var(--color-accent-light);
+}
+
+/* Link hovers - navy links turn pink on hover */
+a {
+  color: var(--color-link);
+  transition: color 0.2s ease;
+}
+
+a:hover {
+  color: var(--color-link-hover);
+}
+
+/* Call-to-action buttons can use pink accent */
+.btn-cta {
+  background-color: var(--color-accent);
+  color: var(--color-text-on-accent);
+  border-color: var(--color-accent);
+}
+
+.btn-cta:hover {
+  background-color: var(--color-accent-hover);
+  border-color: var(--color-accent-hover);
+}
 
 
 .game-tag {
@@ -1112,11 +1689,11 @@
 /* Contact Page */
 .contact-page {
   min-height: 100vh;
-  background: linear-gradient(135deg, var(--color-background) 0%, #f8fafc 100%);
+  background: linear-gradient(135deg, var(--color-bg-secondary) 0%, var(--color-bg) 100%);
 }
 
 .contact-hero {
-  background: linear-gradient(135deg, var(--color-primary-dark) 0%, var(--color-primary) 100%);
+  background: linear-gradient(135deg, var(--color-primary-hover) 0%, var(--color-primary) 100%);
   color: var(--color-text-light);
   padding: var(--space-2xl) var(--space-lg);
   display: flex;
@@ -1665,19 +2242,47 @@ html {
     flex-wrap: wrap;
   }
 
+  /* TEMPORARILY DISABLED - DEBUGGING */
+  /*
   /* Buttons - Touch-friendly */
+  /*
   .btn {
     min-height: 44px;
-    min-width: 44px;
+    min-width: fit-content;
     padding: var(--space-sm) var(--space-lg);
     font-size: var(--font-size-sm);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  */
+
+  /* TEMPORARILY DISABLED - DEBUGGING */
+  /*
+  /* Small buttons */
+  /*
+  .btn-sm, .btn-small {
+    padding: var(--space-xs) var(--space-md);
+    font-size: var(--font-size-xs);
+    min-height: 32px;
+    min-width: 32px;
+  }
+  */
+
+  /* TEMPORARILY DISABLED - DEBUGGING */
+  /*
+  /* Icon + Text Layout */
+  /*
+  .btn svg {
+    flex-shrink: 0;
   }
 
-  .btn-primary,
-  .btn-outline {
-    width: 100%;
-    justify-content: center;
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-xs);
   }
+  */
 
   /* Controls */
   .games-controls,
@@ -1962,11 +2567,6 @@ html {
 
   .brand-subtitle {
     font-size: 0.65rem;
-  }
-
-  .btn {
-    font-size: var(--font-size-xs);
-    padding: var(--space-xs) var(--space-md);
   }
 
   .hero-title {
@@ -3187,9 +3787,7 @@ html {
    COMPACT HOMEPAGE - ESPN STYLE
    ===================================================== */
 
-.home-page-compact {
-  /* Background and padding now handled by page-container */
-}
+/* .home-page-compact - Background and padding now handled by page-container */
 
 .home-boxes-container {
   width: 100%;
@@ -3227,9 +3825,6 @@ html {
 }
 
 .standings-card-title {
-  font-size: var(--font-size-xl);
-  font-weight: var(--font-weight-bold);
-  color: var(--color-text-primary);
   margin: 0 0 var(--space-md) 0;
   font-family: var(--font-heading);
 }
@@ -3333,10 +3928,21 @@ html {
   max-height: 600px;
 }
 
-.scores-card-title {
-  font-size: var(--font-size-xl);
-  font-weight: var(--font-weight-bold);
+.section-title,
+h2.card-title,
+.scores-card-title,
+.standings-card-title,
+.league-leaders-card-title {
+  font-size: 1.25rem;
+  font-weight: 700;
   color: var(--color-text-primary);
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 3px solid var(--color-primary);
+  display: inline-block;
+}
+
+.scores-card-title {
   margin: 0 0 var(--space-md) 0;
   font-family: var(--font-heading);
 }
@@ -3354,25 +3960,39 @@ html {
 }
 
 
-.scores-game-group {
+.scores-game-card {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-md);
+  padding: var(--space-md);
+  margin-bottom: var(--space-sm);
   display: flex;
   flex-direction: column;
-  gap: 0;
-  padding: var(--space-xs) 0;
+  gap: var(--space-xs);
+  transition: all var(--transition-fast);
 }
 
-.scores-game-group-separated {
-  border-bottom: 1px dotted var(--color-border);
-  margin-bottom: var(--space-xs);
-  padding-bottom: var(--space-xs);
+.scores-game-card:last-child {
+  margin-bottom: 0;
 }
 
 .scores-team-item {
   display: flex;
   align-items: center;
   gap: var(--space-sm);
-  padding: 2px 0;
-  min-height: 24px;
+  padding: var(--space-xs) var(--space-sm);
+  border-radius: var(--border-radius-sm);
+  min-height: 40px;
+  transition: background-color var(--transition-fast);
+}
+
+.scores-team-item:hover {
+  background-color: var(--color-surface-hover);
+}
+
+.scores-team-winner {
+  background-color: rgba(76, 175, 80, 0.1);
+  border-left: 3px solid var(--success);
 }
 
 .scores-team-icon-wrapper {
@@ -3380,8 +4000,8 @@ html {
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  width: 32px;
-  height: 32px;
+  width: 40px;
+  height: 40px;
 }
 
 .scores-team-name {
@@ -3397,32 +4017,60 @@ html {
 }
 
 .scores-team-name:hover {
-  color: var(--color-info);
+  color: var(--color-primary);
   text-decoration: underline;
 }
 
 .scores-team-score {
-  font-size: var(--font-size-sm);
+  font-size: var(--font-size-base);
   font-weight: var(--font-weight-semibold);
   color: var(--color-text-primary);
   font-variant-numeric: tabular-nums;
   flex-shrink: 0;
   margin-left: auto;
   padding-left: var(--space-sm);
+  min-width: 32px;
+  text-align: right;
+}
+
+.scores-team-score-winner {
+  font-weight: var(--font-weight-bold);
+  color: var(--success);
+  font-size: var(--font-size-lg);
+}
+
+.scores-winner-indicator {
+  color: var(--success);
+  font-weight: var(--font-weight-bold);
+  font-size: var(--font-size-lg);
+  margin-left: var(--space-xs);
+  flex-shrink: 0;
 }
 
 .scores-game-meta {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
-  padding: 2px 0 2px 40px;
-  margin-top: 2px;
+  justify-content: center;
+  padding-top: var(--space-xs);
+  margin-top: var(--space-xs);
+  border-top: 1px solid var(--color-border);
 }
 
 .scores-game-datetime {
   font-size: var(--font-size-xs);
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
   white-space: nowrap;
+}
+
+@media (max-width: 768px) {
+  .scores-team-icon-wrapper {
+    width: 32px;
+    height: 32px;
+  }
+
+  .scores-team-item {
+    min-height: 36px;
+  }
 }
 
 .scores-card-footer {
@@ -3456,9 +4104,6 @@ html {
 }
 
 .league-leaders-card-title {
-  font-size: var(--font-size-xl);
-  font-weight: var(--font-weight-bold);
-  color: var(--color-text-primary);
   margin: 0 0 var(--space-xs) 0;
   font-family: var(--font-heading);
 }
@@ -3487,20 +4132,19 @@ html {
   min-width: 0;
   overflow: hidden;
   border: 1px solid var(--color-border);
-  border-radius: var(--border-radius-sm);
-  padding: var(--space-sm);
+  border-left: 4px solid var(--color-primary);
+  border-radius: 8px;
+  padding: 1rem;
   background-color: var(--color-surface);
 }
 
 .league-leaders-category-title {
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-semibold);
-  color: var(--color-text-secondary);
+  font-size: 0.75rem;
+  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
-  margin-bottom: var(--space-xs);
-  padding-bottom: var(--space-xs);
-  border-bottom: 1px solid var(--color-border);
+  letter-spacing: 0.05em;
+  color: var(--color-text-secondary);
+  margin-bottom: 0.75rem;
 }
 
 .league-leaders-list {
@@ -3548,7 +4192,7 @@ html {
 
 .league-leaders-player-name {
   font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-medium);
+  font-weight: 600;
   color: var(--color-text-primary);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -3556,9 +4200,9 @@ html {
 }
 
 .league-leaders-value {
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-semibold);
-  color: var(--color-text-primary);
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--color-primary);
   font-variant-numeric: tabular-nums;
   flex-shrink: 0;
   margin-left: auto;
@@ -4120,15 +4764,8 @@ html {
   z-index: 10;
 }
 
-/* Upcoming Games Section */
-.upcoming-games-section {
-  /* Inherits from .home-section */
-}
-
-/* Recent Results Section */
-.recent-results-section {
-  /* Inherits from .home-section */
-}
+/* Upcoming Games Section - Inherits from .home-section */
+/* Recent Results Section - Inherits from .home-section */
 
 /* Standings Preview */
 .standings-preview-section {
@@ -4528,11 +5165,17 @@ html {
 .game-week-card {
   background: var(--color-surface-elevated);
   border: 1px solid var(--color-border);
-  border-radius: var(--border-radius-lg);
-  padding: var(--space-xl);
+  border-radius: 8px;
+  padding: 10px 12px;
   position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: stretch;
+  min-height: 70px;
   transition: all var(--transition-fast);
   cursor: pointer;
+  overflow: hidden;
 }
 
 .game-week-card:hover {
@@ -4540,106 +5183,86 @@ html {
   box-shadow: var(--shadow-md);
 }
 
-.game-week-status {
-  margin-bottom: var(--space-md);
+/* Header: Status • Date */
+.game-week-header {
+  position: absolute;
+  top: 10px;
+  left: 12px;
 }
 
-.status-badge {
-  display: inline-block;
-  padding: var(--space-xs) var(--space-md);
-  border-radius: var(--border-radius-full);
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-medium);
+.game-week-header-text {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
 }
 
-.status-badge.status-completed {
-  background: var(--color-success);
-  color: var(--color-text-light);
-}
-
-.status-badge.status-scheduled {
-  background: var(--color-info);
-  color: var(--color-text-light);
-}
-
-.status-badge.status-in_progress {
-  background: var(--color-error);
-  color: var(--color-text-light);
-}
-
-.status-badge.status-canceled {
-  background: var(--color-text-muted);
-  color: var(--color-text-light);
-}
-
-.game-week-teams {
+/* Matchup Row: Everything on one line */
+.game-week-matchup {
   display: flex;
   align-items: center;
-  gap: var(--space-lg);
-  margin-bottom: var(--space-md);
-}
-
-.game-week-team {
-  display: flex;
-  align-items: center;
-  gap: var(--space-md);
-  flex: 1;
-}
-
-.game-week-team.winner {
-  font-weight: var(--font-weight-bold);
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: nowrap;
 }
 
 .game-week-team-name {
-  font-size: var(--font-size-lg);
+  font-size: 14px;
   font-weight: var(--font-weight-medium);
   color: var(--color-text-primary);
   text-decoration: none;
   transition: color var(--transition-fast);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  max-width: 300px;
+  vertical-align: middle;
+}
+
+.game-week-team-name-text {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+  flex: 1 1 auto;
 }
 
 .game-week-team-name:hover {
   color: var(--color-primary);
 }
 
+
+.game-week-winner-check {
+  color: var(--color-success);
+  flex-shrink: 0;
+}
+
 .game-week-score {
-  font-size: var(--font-size-2xl);
+  font-size: 1.25rem;
   font-weight: var(--font-weight-bold);
   color: var(--color-text-primary);
-  margin-left: auto;
+  line-height: 1;
+  min-width: 36px;
+  text-align: center;
 }
 
 .game-week-score.winner-score {
   color: var(--color-success);
 }
 
-.game-week-vs {
-  font-size: var(--font-size-base);
-  color: var(--color-text-secondary);
-  font-weight: var(--font-weight-medium);
+.game-week-score-separator {
+  font-size: 1rem;
+  color: var(--color-text-tertiary, var(--color-text-secondary));
+  font-weight: 300;
+  margin: 0 6px;
 }
 
-.game-week-datetime {
-  display: flex;
-  align-items: center;
-  gap: var(--space-xs);
-  color: var(--color-text-secondary);
+.game-week-vs-text {
   font-size: var(--font-size-sm);
+  color: var(--color-text-tertiary, var(--color-text-secondary));
+  letter-spacing: 1px;
+  text-transform: uppercase;
 }
 
-.game-week-card-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 1;
-}
 
-.game-week-team {
-  position: relative;
-  z-index: 2;
-}
 
 /* =====================================================
    TEAM PAGE
@@ -4933,15 +5556,27 @@ html {
   .week-select {
     width: 100%;
   }
+}
 
-  .game-week-teams {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: var(--space-md);
+/* Game Week Card Responsive (480px) */
+@media (max-width: 480px) {
+  .game-week-card {
+    padding: 10px;
   }
 
-  .game-week-vs {
-    align-self: center;
+  .game-week-team-name {
+    max-width: 80px;
+  }
+
+  .game-week-score {
+    font-size: 1.125rem;
+  }
+
+  /* Note: ProfilePicture uses inline styles for size, so this won't fully override */
+  /* Consider updating ProfilePicture component to use CSS classes for responsive sizing */
+  .game-week-matchup .profile-picture {
+    width: 20px !important;
+    height: 20px !important;
   }
 
   .team-page {
@@ -5012,7 +5647,22 @@ html {
   justify-content: space-between;
   align-items: center;
   margin-bottom: var(--space-xl);
+  gap: var(--space-md);
+  flex-wrap: wrap;
 }
+
+.tab-header h2 {
+  margin: 0;
+  flex: 1;
+  min-width: 200px;
+}
+
+/* TEMPORARILY DISABLED - DEBUGGING */
+/*
+.tab-header .btn {
+  flex-shrink: 0;
+}
+*/
 
 .tab-header h2 {
   margin: 0;
@@ -5423,20 +6073,35 @@ html {
   height: 40px;
   object-fit: cover;
   border-radius: 50%;
-  border: 1px solid var(--color-border);
+  border: 2px solid var(--color-border);
+  box-shadow: var(--shadow-sm);
+  flex-shrink: 0;
+}
+
+@media (max-width: 768px) {
+  .team-logo-small {
+    width: 32px;
+    height: 32px;
+  }
 }
 
 /* Profile Picture Styles */
 .profile-picture {
   display: inline-flex;
+  border-radius: 50%;
+  border: 2px solid var(--color-border);
+  box-shadow: var(--shadow-sm);
+  flex-shrink: 0;
   align-items: center;
   justify-content: center;
+  background-color: var(--color-surface);
 }
 
 .profile-picture img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  border-radius: 50%;
 }
 
 /* Team Cell and Player Cell - Ensure proper spacing with profile pictures */
@@ -5448,6 +6113,18 @@ html {
 
 .team-cell .profile-picture {
   flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 2px solid var(--color-border);
+  box-shadow: var(--shadow-sm);
+}
+
+@media (max-width: 768px) {
+  .team-cell .profile-picture {
+    width: 32px;
+    height: 32px;
+  }
 }
 
 .player-cell {
@@ -5808,7 +6485,7 @@ html {
 
 .stats-hero-scorer .stats-hero-icon {
   background: rgba(234, 179, 8, 0.15);
-  color: #ca8a04;
+  color: var(--warning);
 }
 
 .stats-hero-accurate .stats-hero-icon {
@@ -5818,7 +6495,7 @@ html {
 
 .stats-hero-team .stats-hero-icon {
   background: rgba(168, 85, 247, 0.15);
-  color: #9333ea;
+  color: var(--color-accent);
 }
 
 .stats-hero-content {
@@ -6142,7 +6819,7 @@ html {
 
 .player-summary-icon.cups {
   background: rgba(234, 179, 8, 0.15);
-  color: #ca8a04;
+  color: var(--warning);
 }
 
 .player-summary-icon.accuracy {
@@ -6162,12 +6839,12 @@ html {
 
 .player-summary-icon.heat-warm {
   background: rgba(249, 115, 22, 0.15);
-  color: #f97316;
+  color: var(--warning);
 }
 
 .player-summary-icon.heat-hot {
   background: rgba(239, 68, 68, 0.15);
-  color: #ef4444;
+  color: var(--error);
 }
 
 .player-summary-value {
@@ -6345,7 +7022,7 @@ html {
 }
 
 .partner-cups strong {
-  color: #ca8a04;
+  color: var(--warning);
 }
 
 /* =====================================================
@@ -6695,7 +7372,7 @@ html {
 
 .team-summary-icon.cups {
   background: rgba(234, 179, 8, 0.15);
-  color: #ca8a04;
+  color: var(--warning);
 }
 
 .team-summary-icon.positive {
@@ -6720,12 +7397,12 @@ html {
 
 .team-summary-icon.heat-warm {
   background: rgba(249, 115, 22, 0.15);
-  color: #f97316;
+  color: var(--warning);
 }
 
 .team-summary-icon.heat-hot {
   background: rgba(239, 68, 68, 0.15);
-  color: #ef4444;
+  color: var(--error);
 }
 
 .team-summary-value {
@@ -7042,4 +7719,389 @@ html {
   .team-summary-value {
     font-size: var(--font-size-xl);
   }
+}
+
+/* =====================================================
+   PHASE 2B: CONTENT STYLING - ESPN/SPORTS APP FEEL
+   ===================================================== */
+
+/* =====================================================
+   TASK 1: GAME CARDS (GAMES PAGE)
+   ===================================================== */
+
+/* Game card container - distinct matchup cards */
+.game-card,
+.matchup-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+  margin-bottom: 1rem;
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow 200ms ease, transform 200ms ease;
+}
+
+.game-card:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+/* Team row within card - vertical layout */
+.game-card .game-teams {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin-bottom: 0;
+}
+
+/* Individual team row */
+.game-card .game-team-row,
+.game-card .matchup-team,
+.game-card .game-team {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem 0;
+  gap: 0.75rem;
+  text-decoration: none;
+  color: inherit;
+  transition: all 200ms ease;
+  flex: 1;
+  justify-content: space-between;
+}
+
+.game-card .game-team-row + .game-team-row,
+.game-card .game-team + .game-team {
+  border-top: 1px solid var(--color-border);
+}
+
+/* Winner styling - green border and background */
+.game-card .game-team-row.winner,
+.game-card .matchup-team.winner,
+.game-card .game-team.winner {
+  background: linear-gradient(90deg, rgba(76, 175, 80, 0.1) 0%, transparent 70%);
+  margin: 0 -1.25rem;
+  padding: 0.75rem 1.25rem;
+  border-left: 4px solid var(--color-success);
+}
+
+/* Team avatar/logo */
+.game-card .team-avatar,
+.game-card .game-team .profile-picture {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--color-border);
+  flex-shrink: 0;
+}
+
+/* Team name */
+.game-card .team-name {
+  flex: 1;
+  font-weight: 500;
+  color: var(--color-text-primary);
+}
+
+.game-card .winner .team-name,
+.game-card .game-team.winner .team-name {
+  font-weight: 700;
+}
+
+/* Score */
+.game-card .team-score {
+  font-size: 1.5rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-secondary);
+  min-width: 40px;
+  text-align: right;
+  margin-left: auto;
+}
+
+.game-card .winner .team-score,
+.game-card .game-team.winner .team-score,
+.game-card .team-score.winner-score {
+  color: var(--color-success);
+}
+
+/* VS divider - hide in new layout */
+.game-card .game-vs {
+  display: none;
+}
+
+/* =====================================================
+   TASK 2: STANDINGS TABLE
+   ===================================================== */
+
+/* Table container */
+.standings-table-container {
+  background: var(--color-surface);
+  border-radius: 12px;
+  border: 1px solid var(--color-border);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+
+/* Table */
+.standings-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+/* Header - Navy background */
+.standings-table thead th {
+  background: var(--color-primary);
+  color: #ffffff;
+  font-weight: 600;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 0.875rem 1rem;
+  text-align: left;
+}
+
+.standings-table thead th:first-child {
+  padding-left: 1.25rem;
+}
+
+/* Right-align numeric columns */
+.standings-table th.numeric,
+.standings-table td.numeric {
+  text-align: right;
+}
+
+/* Rows - zebra striping */
+.standings-table tbody tr {
+  border-bottom: 1px solid var(--color-border);
+  transition: background-color 150ms ease;
+}
+
+.standings-table tbody tr:last-child {
+  border-bottom: none;
+}
+
+.standings-table tbody tr:nth-child(even) {
+  background: var(--color-bg-secondary);
+}
+
+.standings-table tbody tr:hover {
+  background: var(--color-surface-hover);
+}
+
+/* Cells */
+.standings-table td {
+  padding: 0.875rem 1rem;
+  font-size: 0.875rem;
+  color: var(--color-text-primary);
+}
+
+.standings-table td:first-child {
+  padding-left: 1.25rem;
+}
+
+/* Rank badges for top 3 */
+.rank-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  font-weight: 700;
+  font-size: 0.875rem;
+}
+
+.rank-badge.gold {
+  background: linear-gradient(135deg, #fbbf24, #f59e0b);
+  color: #000;
+}
+
+.rank-badge.silver {
+  background: linear-gradient(135deg, #d1d5db, #9ca3af);
+  color: #000;
+}
+
+.rank-badge.bronze {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: #fff;
+}
+
+.rank-badge.default {
+  background: var(--color-bg-secondary);
+  color: var(--color-text-secondary);
+}
+
+/* Update standings rank cell to use badges */
+.standings-td-rank {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+/* =====================================================
+   TASK 3: SCORES SECTION (HOME PAGE) - COMPACT GAME CARDS
+   ===================================================== */
+
+/* Compact game card for home page */
+.score-card,
+.compact-game-card,
+.scores-game-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.compact-team-row,
+.scores-team-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.375rem 0;
+}
+
+.compact-team-row.winner,
+.scores-team-item.scores-team-winner {
+  font-weight: 600;
+}
+
+.compact-team-row.winner .team-score,
+.scores-team-item.scores-team-winner .scores-team-score {
+  color: var(--color-success);
+}
+
+.compact-team-avatar,
+.scores-team-icon-wrapper .profile-picture {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+}
+
+.compact-team-name,
+.scores-team-name {
+  flex: 1;
+  font-size: 0.875rem;
+}
+
+.compact-team-score,
+.scores-team-score {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+/* =====================================================
+   TASK 4: LEAGUE LEADERS SECTION
+   ===================================================== */
+
+/* League leaders container */
+.league-leaders-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+}
+
+/* Individual stat card */
+.leader-card,
+.stat-leader-card,
+.league-leaders-category {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-left: 4px solid var(--color-primary);
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+.leader-card-title,
+.league-leaders-category-title {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-secondary);
+  margin-bottom: 0.75rem;
+}
+
+.leader-card-empty,
+.league-leaders-empty {
+  color: var(--color-text-tertiary);
+  font-size: 0.875rem;
+  font-style: italic;
+}
+
+/* When there's actual data */
+.leader-player,
+.league-leaders-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.leader-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+}
+
+.leader-name,
+.league-leaders-player-name {
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.leader-value,
+.league-leaders-value {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--color-primary);
+  margin-left: auto;
+}
+
+/* =====================================================
+   TASK 5: SECTION HEADERS
+   ===================================================== */
+
+.section-header,
+.card-header-title,
+h2.section-title,
+h3.section-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 3px solid var(--color-primary);
+  display: inline-block;
+}
+
+/* Override for card titles that should have section styling */
+.scores-card-title.section-title,
+.standings-card-title.section-title,
+.league-leaders-card-title.section-title {
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 3px solid var(--color-primary);
+  display: inline-block;
+}
+
+/* Dark mode adjustments */
+[data-theme="dark"] .game-team-row.winner,
+[data-theme="dark"] .matchup-team.winner,
+[data-theme="dark"] .game-team.winner {
+  background: linear-gradient(90deg, rgba(74, 222, 128, 0.20) 0%, transparent 70%);
+  border-left-color: var(--color-success); /* Green border for winners */
+}
+
+[data-theme="dark"] .standings-table thead th {
+  background: var(--color-primary);
+  color: #ffffff;
+}
+
+[data-theme="dark"] .standings-table tbody tr:nth-child(even) {
+  background: var(--color-bg-secondary);
+}
+
+[data-theme="dark"] .standings-table tbody tr:hover {
+  background: var(--color-surface-hover);
 }

@@ -104,7 +104,7 @@ export async function uploadPlayerAvatar(
     const fileName = generateFileName(file.name, prefix);
     const filePath = `${fileName}`;
 
-    const { data, error } = await supabase.storage
+    const { error } = await supabase.storage
       .from(STORAGE_BUCKETS.PLAYER_AVATARS)
       .upload(filePath, file, {
         cacheControl: '3600',
@@ -165,7 +165,7 @@ export async function uploadTeamLogo(
     const fileName = generateFileName(fileToUpload.name, prefix);
     const filePath = `${fileName}`;
 
-    const { data, error } = await supabase.storage
+    const { error } = await supabase.storage
       .from(STORAGE_BUCKETS.TEAM_LOGOS)
       .upload(filePath, fileToUpload, {
         cacheControl: '3600',

@@ -2,13 +2,30 @@
    CARD SYSTEM
    ===================================================== */
 
+.card,
+[class*="card-container"],
+.stat-card,
+.game-card {
+  box-shadow: var(--shadow-md);
+  transition: box-shadow var(--transition-normal), transform var(--transition-normal);
+}
+
 .card {
   background-color: var(--color-surface-elevated);
   border: 1px solid var(--color-border);
   border-radius: var(--border-radius-md);
-  box-shadow: var(--shadow-sm);
   overflow: hidden;
-  transition: all var(--transition-fast);
+}
+
+/* Optional: subtle lift on hover (desktop only) */
+@media (hover: hover) {
+  .card:hover,
+  [class*="card-container"]:hover,
+  .stat-card:hover,
+  .game-card:hover {
+    box-shadow: var(--shadow-lg);
+    transform: translateY(-2px);
+  }
 }
 
 .card-hover:hover {
@@ -844,6 +861,12 @@
   font-weight: var(--font-weight-medium);
 }
 
+.espn-game-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
 .espn-game-matchup {
   display: flex;
   flex-direction: column;
@@ -961,6 +984,23 @@
 
 .winner-trophy {
   color: var(--color-warning);
+}
+
+.espn-game-location {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: var(--space-sm);
+  margin-top: var(--space-sm);
+  border-top: 1px solid var(--color-border);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+}
+
+.espn-location {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
 }
 
 /* Player Cards - BBDL */

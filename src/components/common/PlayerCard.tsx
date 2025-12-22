@@ -17,9 +17,7 @@ const PlayerCard: React.FC<PlayerCardProps> = React.memo(({
   avgPoints,
   onClick 
 }) => {
-  const gamesPlayed = record ? record.wins + record.losses : 0;
   const fullName = `${player.firstName} ${player.lastName}`;
-  const initials = `${player.firstName[0]}${player.lastName[0]}`.toUpperCase();
 
   return (
     <div 

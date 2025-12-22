@@ -62,40 +62,38 @@ const GameCard: React.FC<GameCardProps> = ({ game, teams, compact = false, onCli
         <Link 
           to={`/team/${homeTeam.id}`} 
           state={{ from: '/games', fromLabel: 'Games', scrollY: window.scrollY }}
-          className="game-team" 
+          className={`game-team-row game-team ${game.status === 'completed' && game.winningTeamId === homeTeam.id ? 'winner' : ''}`}
           onClick={(e) => e.stopPropagation()}
         >
           <ProfilePicture
             imageUrl={homeTeam.logoUrl}
             fallbackImage="team"
             alt={homeTeam.name}
-            size={32}
+            size={36}
           />
           <span className="team-name">{homeTeam.name}</span>
           {game.status === 'completed' && (
-            <span className={`team-score ${game.winningTeamId === homeTeam.id ? 'winner-score' : ''}`}>
+            <span className="team-score">
               {game.homeScore}
             </span>
           )}
         </Link>
 
-        <div className="game-vs">vs</div>
-
         <Link 
-          to={`/team/${awayTeam.id}`} 
+          to={`/team/${awayTeam.id}`}
           state={{ from: '/games', fromLabel: 'Games', scrollY: window.scrollY }}
-          className="game-team" 
+          className={`game-team-row game-team ${game.status === 'completed' && game.winningTeamId === awayTeam.id ? 'winner' : ''}`}
           onClick={(e) => e.stopPropagation()}
         >
           <ProfilePicture
             imageUrl={awayTeam.logoUrl}
             fallbackImage="team"
             alt={awayTeam.name}
-            size={32}
+            size={36}
           />
           <span className="team-name">{awayTeam.name}</span>
           {game.status === 'completed' && (
-            <span className={`team-score ${game.winningTeamId === awayTeam.id ? 'winner-score' : ''}`}>
+            <span className="team-score">
               {game.awayScore}
             </span>
           )}

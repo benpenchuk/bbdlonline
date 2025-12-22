@@ -68,9 +68,16 @@ const CompactScores: React.FC<CompactScoresProps> = ({
     return `${dateStr} ${timeStr}`;
   };
 
+  const getWinnerId = (game: Game): string | null => {
+    if (game.status !== 'completed') return null;
+    if (game.homeScore > game.awayScore) return game.homeTeamId;
+    if (game.awayScore > game.homeScore) return game.awayTeamId;
+    return null; // Tie
+  };
+
   return (
     <div className="scores-card-container">
-      <h3 className="scores-card-title">Scores</h3>
+      <h3 className="scores-card-title section-title">Scores</h3>
       <div className="scores-card-separator"></div>
       <div className="scores-list">
         {games.length === 0 ? (
@@ -84,60 +91,68 @@ const CompactScores: React.FC<CompactScoresProps> = ({
 
               if (!homeTeam || !awayTeam) return null;
 
-              const status = getGameStatus(game);
               const homeScore = getHomeScore(game);
               const awayScore = getAwayScore(game);
               const dateTime = getDateTimeDisplay(game);
+              const winnerId = getWinnerId(game);
+              const isHomeWinner = winnerId === game.homeTeamId;
+              const isAwayWinner = winnerId === game.awayTeamId;
 
               return (
-                <React.Fragment key={game.id}>
-                  <div className={`scores-game-group ${index < displayedGames.length - 1 ? 'scores-game-group-separated' : ''}`}>
-                    {/* Home Team */}
-                    <div className="scores-team-item">
-                      <div className="scores-team-icon-wrapper">
-                        <ProfilePicture
-                          imageUrl={homeTeam.logoUrl}
-                          fallbackImage="team"
-                          alt={homeTeam.name}
-                          size={24}
-                        />
-                      </div>
-                      <Link 
-                        to={`/team/${homeTeam.id}`} 
-                        state={getNavState(homeTeam.name)}
-                        className="scores-team-name"
-                      >
-                        {homeTeam.name}
-                      </Link>
-                      <span className="scores-team-score">{homeScore}</span>
+                <div key={game.id} className="scores-game-card">
+                  {/* Home Team */}
+                  <div className={`scores-team-item ${isHomeWinner ? 'scores-team-winner' : ''}`}>
+                    <div className="scores-team-icon-wrapper">
+                      <ProfilePicture
+                        imageUrl={homeTeam.logoUrl}
+                        fallbackImage="team"
+                        alt={homeTeam.name}
+                        size={32}
+                      />
                     </div>
-                    
-                    {/* Away Team */}
-                    <div className="scores-team-item">
-                      <div className="scores-team-icon-wrapper">
-                        <ProfilePicture
-                          imageUrl={awayTeam.logoUrl}
-                          fallbackImage="team"
-                          alt={awayTeam.name}
-                          size={24}
-                        />
-                      </div>
-                      <Link 
-                        to={`/team/${awayTeam.id}`} 
-                        state={getNavState(awayTeam.name)}
-                        className="scores-team-name"
-                      >
-                        {awayTeam.name}
-                      </Link>
-                      <span className="scores-team-score">{awayScore}</span>
-                    </div>
-                    
-                    {/* Game Metadata */}
-                    <div className="scores-game-meta">
-                      {dateTime && <span className="scores-game-datetime">{dateTime}</span>}
-                    </div>
+                    <Link 
+                      to={`/team/${homeTeam.id}`} 
+                      state={getNavState(homeTeam.name)}
+                      className="scores-team-name"
+                    >
+                      {homeTeam.name}
+                    </Link>
+                    <span className={`scores-team-score ${isHomeWinner ? 'scores-team-score-winner' : ''}`}>
+                      {homeScore}
+                    </span>
+                    {isHomeWinner && <span className="scores-winner-indicator">✓</span>}
                   </div>
-                </React.Fragment>
+                  
+                  {/* Away Team */}
+                  <div className={`scores-team-item ${isAwayWinner ? 'scores-team-winner' : ''}`}>
+                    <div className="scores-team-icon-wrapper">
+                      <ProfilePicture
+                        imageUrl={awayTeam.logoUrl}
+                        fallbackImage="team"
+                        alt={awayTeam.name}
+                        size={32}
+                      />
+                    </div>
+                    <Link 
+                      to={`/team/${awayTeam.id}`} 
+                      state={getNavState(awayTeam.name)}
+                      className="scores-team-name"
+                    >
+                      {awayTeam.name}
+                    </Link>
+                    <span className={`scores-team-score ${isAwayWinner ? 'scores-team-score-winner' : ''}`}>
+                      {awayScore}
+                    </span>
+                    {isAwayWinner && <span className="scores-winner-indicator">✓</span>}
+                  </div>
+                  
+                  {/* Game Metadata */}
+                  {dateTime && (
+                    <div className="scores-game-meta">
+                      <span className="scores-game-datetime">{dateTime}</span>
+                    </div>
+                  )}
+                </div>
               );
             });
           })()

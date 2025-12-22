@@ -2,7 +2,9 @@
    BUTTON SYSTEM - BBDL Design System
    ===================================================== */
 
+/* TEMPORARILY DISABLED - DEBUGGING */
 /* Base Button */
+/*
 .btn {
   display: inline-flex;
   align-items: center;
@@ -30,11 +32,14 @@
   cursor: not-allowed;
   pointer-events: none;
 }
+*/
 
 /* =====================================================
    BUTTON SIZES
    ===================================================== */
 
+/* TEMPORARILY DISABLED - DEBUGGING */
+/*
 .btn-sm {
   padding: var(--space-sm) var(--space-md);
   font-size: var(--font-size-xs);
@@ -53,12 +58,16 @@
 .btn-full-width {
   width: 100%;
 }
+*/
 
 /* =====================================================
    BUTTON VARIANTS
    ===================================================== */
 
+/* TEMPORARILY DISABLED - DEBUGGING */
+/*
 /* Primary Button - Solid Deep Navy */
+/*
 .btn-primary {
   background-color: var(--color-primary);
   color: var(--color-text-on-primary);
@@ -76,6 +85,7 @@
 }
 
 /* Secondary Button - Ghost/Outline */
+/*
 .btn-secondary {
   background-color: transparent;
   color: var(--color-primary);
@@ -93,6 +103,7 @@
 }
 
 /* Ghost Button */
+/*
 .btn-ghost {
   background-color: transparent;
   color: var(--color-text-primary);
@@ -109,6 +120,7 @@
 }
 
 /* Danger Button - Solid Crimson */
+/*
 .btn-danger {
   background-color: var(--color-error);
   color: var(--color-text-light);
@@ -120,11 +132,14 @@
   box-shadow: var(--shadow-md);
   transform: translateY(-1px) scale(1.02);
 }
+*/
 
 /* =====================================================
    ADDITIONAL BUTTON VARIANTS
    ===================================================== */
 
+/* TEMPORARILY DISABLED - DEBUGGING */
+/*
 .btn-small {
   padding: var(--space-xs) var(--space-sm);
   font-size: var(--font-size-xs);
@@ -141,11 +156,14 @@
   border-color: var(--color-primary);
   color: var(--color-primary);
 }
+*/
 
 /* =====================================================
    ICON BUTTONS
    ===================================================== */
 
+/* TEMPORARILY DISABLED - DEBUGGING */
+/*
 .btn-icon {
   background: none;
   border: none;
@@ -185,12 +203,16 @@
   background: rgba(239, 68, 68, 0.1);
   color: var(--color-error);
 }
+*/
 
 /* =====================================================
    SPECIALTY BUTTONS
    ===================================================== */
 
+/* TEMPORARILY DISABLED - DEBUGGING */
+/*
 /* Theme Toggle Button */
+/*
 .theme-toggle-button {
   display: flex;
   align-items: center;
@@ -209,3 +231,4 @@
   background-color: var(--color-surface);
   color: var(--color-text-primary);
 }
+*/

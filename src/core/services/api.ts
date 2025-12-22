@@ -8,6 +8,7 @@ import {
   PlayerSeasonStats,
   TeamSeasonStats,
   Playoff,
+  PlayoffMatch,
   Announcement,
   Photo,
   ApiResponse,
@@ -86,6 +87,7 @@ const transformGameFromDB = (dbGame: any): Game => ({
   awayScore: dbGame.away_score || 0,
   winningTeamId: dbGame.winning_team_id,
   week: dbGame.week || undefined,
+  playoffMatchId: dbGame.playoff_match_id || undefined,
   createdAt: new Date(dbGame.created_at),
   updatedAt: new Date(dbGame.updated_at),
 });
@@ -150,6 +152,41 @@ const transformPlayoffFromDB = (dbPlayoff: any): Playoff => ({
   createdAt: new Date(dbPlayoff.created_at),
   updatedAt: new Date(dbPlayoff.updated_at),
 });
+
+function transformPlayoffMatchFromDB(dbMatch: any): PlayoffMatch {
+  return {
+    id: dbMatch.id,
+    playoffId: dbMatch.playoff_id,
+    roundNumber: dbMatch.round_number,
+    matchNumber: dbMatch.match_number,
+    team1Id: dbMatch.team1_id || undefined,
+    team2Id: dbMatch.team2_id || undefined,
+    winnerId: dbMatch.winner_id || undefined,
+    status: dbMatch.status,
+    seriesFormat: dbMatch.series_format,
+    pointTarget: dbMatch.point_target,
+    nextMatchId: dbMatch.next_match_id || undefined,
+    createdAt: new Date(dbMatch.created_at),
+    updatedAt: new Date(dbMatch.updated_at)
+  };
+}
+
+function transformPlayoffMatchToDB(match: Partial<PlayoffMatch>): any {
+  const dbMatch: any = {};
+  
+  if (match.playoffId !== undefined) dbMatch.playoff_id = match.playoffId;
+  if (match.roundNumber !== undefined) dbMatch.round_number = match.roundNumber;
+  if (match.matchNumber !== undefined) dbMatch.match_number = match.matchNumber;
+  if (match.team1Id !== undefined) dbMatch.team1_id = match.team1Id || null;
+  if (match.team2Id !== undefined) dbMatch.team2_id = match.team2Id || null;
+  if (match.winnerId !== undefined) dbMatch.winner_id = match.winnerId || null;
+  if (match.status !== undefined) dbMatch.status = match.status;
+  if (match.seriesFormat !== undefined) dbMatch.series_format = match.seriesFormat;
+  if (match.pointTarget !== undefined) dbMatch.point_target = match.pointTarget;
+  if (match.nextMatchId !== undefined) dbMatch.next_match_id = match.nextMatchId || null;
+  
+  return dbMatch;
+}
 
 const transformAnnouncementFromDB = (dbAnnouncement: any): Announcement => ({
   id: dbAnnouncement.id,
@@ -232,6 +269,7 @@ const transformGameToDB = (game: Partial<Game>) => ({
   away_score: game.awayScore,
   winning_team_id: game.winningTeamId,
   week: game.week,
+  playoff_match_id: game.playoffMatchId || null,
 });
 
 const transformPlayerGameStatsToDB = (stats: Partial<PlayerGameStats>) => ({
@@ -250,13 +288,18 @@ const transformPlayerGameStatsToDB = (stats: Partial<PlayerGameStats>) => ({
   mvp: stats.mvp,
 });
 
-const transformPlayoffToDB = (playoff: Partial<Playoff>) => ({
-  id: playoff.id,
-  season_id: playoff.seasonId,
-  name: playoff.name,
-  bracket_type: playoff.bracketType,
-  status: playoff.status,
-});
+const transformPlayoffToDB = (playoff: Partial<Playoff>) => {
+  const dbPlayoff: any = {};
+  
+  // Only include id if it's defined (for updates, not creates)
+  if (playoff.id !== undefined) dbPlayoff.id = playoff.id;
+  if (playoff.seasonId !== undefined) dbPlayoff.season_id = playoff.seasonId;
+  if (playoff.name !== undefined) dbPlayoff.name = playoff.name;
+  if (playoff.bracketType !== undefined) dbPlayoff.bracket_type = playoff.bracketType;
+  if (playoff.status !== undefined) dbPlayoff.status = playoff.status;
+  
+  return dbPlayoff;
+};
 
 const transformAnnouncementToDB = (announcement: Partial<Announcement>) => ({
   id: announcement.id,
@@ -1550,6 +1593,124 @@ export const playoffsApi = {
       };
     }
   },
+};
+
+// =====================================================
+// PLAYOFF MATCHES API
+// =====================================================
+
+export const playoffMatchesApi = {
+  async getAll(): Promise<ApiResponse<PlayoffMatch[]>> {
+    try {
+      const { data, error } = await supabase
+        .from(TABLES.PLAYOFF_MATCHES)
+        .select('*')
+        .order('round_number', { ascending: true })
+        .order('match_number', { ascending: true });
+
+      if (error) throw error;
+
+      const matches = (data || []).map(transformPlayoffMatchFromDB);
+      return { data: matches, success: true };
+    } catch (error: any) {
+      console.error('Error fetching playoff matches:', error);
+      return { data: [], success: false, message: error.message };
+    }
+  },
+
+  async getById(id: string): Promise<ApiResponse<PlayoffMatch | null>> {
+    try {
+      const { data, error } = await supabase
+        .from(TABLES.PLAYOFF_MATCHES)
+        .select('*')
+        .eq('id', id)
+        .single();
+
+      if (error) throw error;
+
+      const match = data ? transformPlayoffMatchFromDB(data) : null;
+      return { data: match, success: true };
+    } catch (error: any) {
+      console.error('Error fetching playoff match:', error);
+      return { data: null, success: false, message: error.message };
+    }
+  },
+
+  async getByPlayoff(playoffId: string): Promise<ApiResponse<PlayoffMatch[]>> {
+    try {
+      const { data, error } = await supabase
+        .from(TABLES.PLAYOFF_MATCHES)
+        .select('*')
+        .eq('playoff_id', playoffId)
+        .order('round_number', { ascending: true })
+        .order('match_number', { ascending: true });
+
+      if (error) throw error;
+
+      const matches = (data || []).map(transformPlayoffMatchFromDB);
+      return { data: matches, success: true };
+    } catch (error: any) {
+      console.error('Error fetching playoff matches:', error);
+      return { data: [], success: false, message: error.message };
+    }
+  },
+
+  async create(match: Omit<PlayoffMatch, 'id' | 'createdAt' | 'updatedAt'>): Promise<ApiResponse<PlayoffMatch>> {
+    try {
+      const dbMatch = transformPlayoffMatchToDB(match);
+      
+      const { data, error } = await supabase
+        .from(TABLES.PLAYOFF_MATCHES)
+        .insert([dbMatch])
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      const newMatch = transformPlayoffMatchFromDB(data);
+      return { data: newMatch, success: true, message: 'Playoff match created successfully' };
+    } catch (error: any) {
+      console.error('Error creating playoff match:', error);
+      return { data: null as any, success: false, message: error.message };
+    }
+  },
+
+  async update(id: string, updates: Partial<PlayoffMatch>): Promise<ApiResponse<PlayoffMatch>> {
+    try {
+      const dbUpdates = transformPlayoffMatchToDB(updates as PlayoffMatch);
+      
+      const { data, error } = await supabase
+        .from(TABLES.PLAYOFF_MATCHES)
+        .update(dbUpdates)
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      const updatedMatch = transformPlayoffMatchFromDB(data);
+      return { data: updatedMatch, success: true, message: 'Playoff match updated successfully' };
+    } catch (error: any) {
+      console.error('Error updating playoff match:', error);
+      return { data: null as any, success: false, message: error.message };
+    }
+  },
+
+  async delete(id: string): Promise<ApiResponse<boolean>> {
+    try {
+      const { error } = await supabase
+        .from(TABLES.PLAYOFF_MATCHES)
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+
+      return { data: true, success: true, message: 'Playoff match deleted successfully' };
+    } catch (error: any) {
+      console.error('Error deleting playoff match:', error);
+      return { data: false, success: false, message: error.message };
+    }
+  }
 };
 
 // =====================================================

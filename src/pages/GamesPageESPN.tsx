@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Calendar, ChevronDown } from 'lucide-react';
+import { ChevronDown, CheckCircle, Calendar } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useData } from '../state';
 import { Game, Team } from '../core/types';
@@ -76,7 +76,7 @@ const GamesPageESPN: React.FC = () => {
   const getStatusText = (game: Game): string => {
     switch (game.status) {
       case 'completed':
-        return 'Completed';
+        return 'Final';
       case 'scheduled':
         return 'Scheduled';
       case 'in_progress':
@@ -88,11 +88,15 @@ const GamesPageESPN: React.FC = () => {
     }
   };
 
-  const formatDateTime = (game: Game): string => {
+  const formatHeaderDate = (game: Game): string => {
     if (!game.gameDate) return 'TBD';
-    const date = format(game.gameDate, 'MMM d, yyyy');
-    const time = format(game.gameDate, 'h:mm a');
-    return `${date} at ${time}`;
+    if (game.status === 'completed') {
+      return format(game.gameDate, 'MMM d');
+    } else {
+      const date = format(game.gameDate, 'MMM d');
+      const time = format(game.gameDate, 'h:mm a');
+      return `${date}, ${time}`;
+    }
   };
 
   return (
@@ -156,77 +160,73 @@ const GamesPageESPN: React.FC = () => {
               const isCompleted = game.status === 'completed';
 
               return (
-                <div key={game.id} className="game-week-card">
-                  {/* Status Badge */}
-                  <div className="game-week-status">
-                    <span className={`status-badge status-${game.status}`}>
-                      {getStatusText(game)}
+                <div 
+                  key={game.id} 
+                  className="game-week-card"
+                  onClick={() => setSelectedGame(game)}
+                >
+                  {/* Header: Status • Date */}
+                  <div className="game-week-header">
+                    <span className="game-week-header-text">
+                      {getStatusText(game)} • {formatHeaderDate(game)}
                     </span>
                   </div>
 
-                  {/* Teams and Scores */}
-                  <div className="game-week-teams">
+                  {/* Matchup Row: Everything on one line */}
+                  <div className="game-week-matchup">
                     {/* Home Team */}
-                    <div className={`game-week-team ${isCompleted && winnerId === homeTeam.id ? 'winner' : ''}`}>
-                      <ProfilePicture
-                        imageUrl={homeTeam.logoUrl}
-                        fallbackImage="team"
-                        alt={homeTeam.name}
-                        size={32}
-                      />
-                      <Link 
-                        to={`/team/${homeTeam.id}`} 
-                        state={{ from: '/games', fromLabel: 'Games', scrollY: window.scrollY }}
-                        className="game-week-team-name"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        {homeTeam.name}
-                      </Link>
-                      {isCompleted && (
+                    <Link 
+                      to={`/team/${homeTeam.id}`} 
+                      state={{ from: '/games', fromLabel: 'Games', scrollY: window.scrollY }}
+                      className="game-week-team-name game-week-team-home-name"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <span className="game-week-team-name-text">{homeTeam.name}</span>
+                      {isCompleted && winnerId === homeTeam.id && (
+                        <CheckCircle size={14} className="game-week-winner-check" />
+                      )}
+                    </Link>
+                    <ProfilePicture
+                      imageUrl={homeTeam.logoUrl}
+                      fallbackImage="team"
+                      alt={homeTeam.name}
+                      size={24}
+                    />
+
+                    {/* Score Area */}
+                    {isCompleted ? (
+                      <>
                         <span className={`game-week-score ${winnerId === homeTeam.id ? 'winner-score' : ''}`}>
                           {game.homeScore}
                         </span>
-                      )}
-                    </div>
-
-                    {/* VS Divider */}
-                    <div className="game-week-vs">vs</div>
-
-                    {/* Away Team */}
-                    <div className={`game-week-team ${isCompleted && winnerId === awayTeam.id ? 'winner' : ''}`}>
-                      <ProfilePicture
-                        imageUrl={awayTeam.logoUrl}
-                        fallbackImage="team"
-                        alt={awayTeam.name}
-                        size={32}
-                      />
-                      <Link 
-                        to={`/team/${awayTeam.id}`} 
-                        state={{ from: '/games', fromLabel: 'Games', scrollY: window.scrollY }}
-                        className="game-week-team-name"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        {awayTeam.name}
-                      </Link>
-                      {isCompleted && (
+                        <span className="game-week-score-separator">—</span>
                         <span className={`game-week-score ${winnerId === awayTeam.id ? 'winner-score' : ''}`}>
                           {game.awayScore}
                         </span>
+                      </>
+                    ) : (
+                      <span className="game-week-vs-text">VS</span>
+                    )}
+
+                    {/* Away Team */}
+                    <ProfilePicture
+                      imageUrl={awayTeam.logoUrl}
+                      fallbackImage="team"
+                      alt={awayTeam.name}
+                      size={24}
+                    />
+                    <Link 
+                      to={`/team/${awayTeam.id}`} 
+                      state={{ from: '/games', fromLabel: 'Games', scrollY: window.scrollY }}
+                      className="game-week-team-name game-week-team-away-name"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <span className="game-week-team-name-text">{awayTeam.name}</span>
+                      {isCompleted && winnerId === awayTeam.id && (
+                        <CheckCircle size={14} className="game-week-winner-check" />
                       )}
-                    </div>
+                    </Link>
                   </div>
-
-                  {/* Date and Time */}
-                  <div className="game-week-datetime">
-                    <Calendar size={14} />
-                    <span>{formatDateTime(game)}</span>
-                  </div>
-
-                  {/* Click handler for modal */}
-                  <div 
-                    className="game-week-card-overlay"
-                    onClick={() => setSelectedGame(game)}
-                  />
                 </div>
               );
             })}
@@ -247,3 +247,4 @@ const GamesPageESPN: React.FC = () => {
 };
 
 export default GamesPageESPN;
+

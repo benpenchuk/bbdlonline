@@ -1,4 +1,4 @@
-import { Game, ComputedSeasonStats, LeaderboardEntry, HeadToHeadComparison } from '../types';
+import { Game, ComputedSeasonStats, HeadToHeadComparison } from '../types';
 
 // Note: These calculations now work with the new schema structure
 // Players are linked to teams via player_teams, not directly

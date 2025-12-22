@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import { Lock, Users, UserPlus, Calendar, Settings, Database, LogOut, MessageSquare, Image, CalendarDays } from 'lucide-react';
-import { getConfig } from '../core/config/appConfig';
+import { Lock, Users, UserPlus, Calendar, Settings, Database, LogOut, MessageSquare, Image, CalendarDays, Trophy } from 'lucide-react';
 import { useData } from '../state';
 import { useAuth } from '../state';
 import LoadingSpinner from '../components/common/LoadingSpinner';
@@ -14,15 +13,15 @@ import DataDebugTab from '../components/admin/DataDebugTab';
 import AnnouncementsTab from '../components/admin/AnnouncementsTab';
 import PhotosTab from '../components/admin/PhotosTab';
 import SeasonsTab from '../components/admin/SeasonsTab';
+import PlayoffsTab from '../components/admin/PlayoffsTab';
 
-type AdminTab = 'teams' | 'players' | 'games' | 'seasons' | 'announcements' | 'photos' | 'settings' | 'data' | 'debug';
+type AdminTab = 'teams' | 'players' | 'games' | 'seasons' | 'announcements' | 'photos' | 'settings' | 'data' | 'debug' | 'playoffs';
 
 const AdminPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<AdminTab>('teams');
   
   const { teams, players, games, playerTeams, loading } = useData();
   const { isAuthenticated, logout } = useAuth();
-  const config = getConfig();
 
 
   const handleLogout = () => {
@@ -46,6 +45,7 @@ const AdminPage: React.FC = () => {
     { id: 'players', label: 'Players', icon: UserPlus },
     { id: 'games', label: 'Games', icon: Calendar },
     { id: 'seasons', label: 'Seasons', icon: CalendarDays },
+    { id: 'playoffs', label: 'Playoffs', icon: Trophy },
     { id: 'announcements', label: 'Announcements', icon: MessageSquare },
     { id: 'photos', label: 'Photos', icon: Image },
     { id: 'settings', label: 'Settings', icon: Settings },
@@ -65,9 +65,9 @@ const AdminPage: React.FC = () => {
         </div>
         
         <div className="page-controls">
-          <button className="btn btn-outline" onClick={handleLogout}>
+          <button className="btn btn-outline btn-sm" onClick={handleLogout}>
             <LogOut size={16} />
-            Logout
+            <span>Logout</span>
           </button>
         </div>
       </div>
@@ -119,6 +119,10 @@ const AdminPage: React.FC = () => {
         
         {activeTab === 'seasons' && (
           <SeasonsTab />
+        )}
+        
+        {activeTab === 'playoffs' && (
+          <PlayoffsTab />
         )}
         
         {activeTab === 'announcements' && (

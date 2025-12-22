@@ -1,10 +1,11 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { Team, Player, Game, Playoff, Season, PlayerTeam, PlayerGameStats, PlayerSeasonStats, TeamSeasonStats, Announcement, Photo } from '../core/types';
+import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
+import { Team, Player, Game, Playoff, PlayoffMatch, Season, PlayerTeam, PlayerGameStats, PlayerSeasonStats, TeamSeasonStats, Announcement, Photo, ApiResponse } from '../core/types';
 import {
   teamsApi,
   playersApi,
   gamesApi,
   playoffsApi,
+  playoffMatchesApi,
   seasonsApi,
   playerTeamsApi,
   playerGameStatsApi,
@@ -21,6 +22,7 @@ interface DataState {
   players: Player[];
   games: Game[];
   playoffs: Playoff[];
+  playoffMatches: PlayoffMatch[];
   seasons: Season[];
   playerTeams: PlayerTeam[];
   playerGameStats: PlayerGameStats[];
@@ -38,6 +40,7 @@ interface DataContextType {
   players: Player[];
   games: Game[];
   playoffs: Playoff[];
+  playoffMatches: PlayoffMatch[];
   seasons: Season[];
   playerTeams: PlayerTeam[];
   playerGameStats: PlayerGameStats[];
@@ -89,6 +92,12 @@ interface DataContextType {
   createPlayoff: (playoff: Omit<Playoff, 'id' | 'createdAt' | 'updatedAt'>) => Promise<Playoff>;
   updatePlayoff: (id: string, updates: Partial<Playoff>) => Promise<Playoff>;
   deletePlayoff: (id: string) => Promise<boolean>;
+
+  // Playoff Match operations
+  getPlayoffMatches: (playoffId: string) => PlayoffMatch[];
+  createPlayoffMatch: (match: Omit<PlayoffMatch, 'id' | 'createdAt' | 'updatedAt'>) => Promise<ApiResponse<PlayoffMatch>>;
+  updatePlayoffMatch: (id: string, updates: Partial<PlayoffMatch>) => Promise<ApiResponse<PlayoffMatch>>;
+  deletePlayoffMatch: (id: string) => Promise<ApiResponse<boolean>>;
 
   // Announcement operations
   getAnnouncements: () => Promise<Announcement[]>;
@@ -152,6 +161,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     players: [],
     games: [],
     playoffs: [],
+    playoffMatches: [],
     seasons: [],
     playerTeams: [],
     playerGameStats: [],
@@ -184,6 +194,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         playersResponse,
         gamesResponse,
         playoffsResponse,
+        playoffMatchesResponse,
         seasonsResponse,
         playerTeamsResponse,
         playerGameStatsResponse,
@@ -197,6 +208,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         playersApi.getAll(),
         gamesApi.getAll(),
         playoffsApi.getAll(),
+        playoffMatchesApi.getAll(),
         seasonsApi.getAll(),
         playerTeamsApi.getAll(),
         playerGameStatsApi.getAll(),
@@ -211,6 +223,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       const players = playersResponse.data || [];
       const games = gamesResponse.data || [];
       const playoffs = playoffsResponse.data || [];
+      const playoffMatches = playoffMatchesResponse.data || [];
       const seasons = seasonsResponse.data || [];
       const playerTeams = playerTeamsResponse.data || [];
       const playerGameStats = playerGameStatsResponse.data || [];
@@ -229,6 +242,8 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         games.length,
         'Playoffs:',
         playoffs.length,
+        'PlayoffMatches:',
+        playoffMatches.length,
         'Seasons:',
         seasons.length,
         'PlayerTeams:',
@@ -252,6 +267,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         players,
         games,
         playoffs,
+        playoffMatches,
         seasons,
         playerTeams,
         playerGameStats,
@@ -270,9 +286,9 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
-  const refreshData = async () => {
+  const refreshData = useCallback(async () => {
     await loadAllData();
-  };
+  }, []);
 
   // Team operations
   const getTeams = async (): Promise<Team[]> => {
@@ -525,6 +541,35 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     throw new Error(response.message || 'Failed to delete playoff');
   };
 
+  // Playoff Match operations
+  const getPlayoffMatches = useCallback((playoffId: string) => {
+    return state.playoffMatches.filter(m => m.playoffId === playoffId);
+  }, [state.playoffMatches]);
+
+  const createPlayoffMatch = useCallback(async (match: Omit<PlayoffMatch, 'id' | 'createdAt' | 'updatedAt'>) => {
+    const result = await playoffMatchesApi.create(match);
+    if (result.success) {
+      await refreshData();
+    }
+    return result;
+  }, [refreshData]);
+
+  const updatePlayoffMatch = useCallback(async (id: string, updates: Partial<PlayoffMatch>) => {
+    const result = await playoffMatchesApi.update(id, updates);
+    if (result.success) {
+      await refreshData();
+    }
+    return result;
+  }, [refreshData]);
+
+  const deletePlayoffMatch = useCallback(async (id: string) => {
+    const result = await playoffMatchesApi.delete(id);
+    if (result.success) {
+      await refreshData();
+    }
+    return result;
+  }, [refreshData]);
+
   // Data management
   const exportData = async (): Promise<any> => {
     const response = await dataApi.exportAll();
@@ -667,6 +712,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     players: state.players,
     games: state.games,
     playoffs: state.playoffs,
+    playoffMatches: state.playoffMatches,
     seasons: state.seasons,
     playerTeams: state.playerTeams,
     playerGameStats: state.playerGameStats,
@@ -718,6 +764,12 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     createPlayoff,
     updatePlayoff,
     deletePlayoff,
+
+    // Playoff Match operations
+    getPlayoffMatches,
+    createPlayoffMatch,
+    updatePlayoffMatch,
+    deletePlayoffMatch,
 
     // Announcement operations
     getAnnouncements,

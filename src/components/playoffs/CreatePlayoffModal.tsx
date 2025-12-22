@@ -1,24 +1,38 @@
 import React, { useState } from 'react';
 import { X, Trophy, Users, AlertCircle } from 'lucide-react';
 import { Team } from '../../core/types';
-import { validatePlayoffSetup } from '../../core/utils/playoffUtils';
+import { useData } from '../../state';
+import { validatePlayoffSetup, generateBracketMatches, seedTeams } from '../../core/utils/playoffUtils';
 
 interface CreatePlayoffModalProps {
   teams: Team[];
   onClose: () => void;
-  onCreatePlayoff: (name: string, selectedTeams: Team[]) => void;
+  onSave: () => void;
 }
 
 const CreatePlayoffModal: React.FC<CreatePlayoffModalProps> = ({
   teams,
   onClose,
-  onCreatePlayoff
+  onSave
 }) => {
+  const { 
+    createPlayoff, 
+    createPlayoffMatch,
+    teamSeasonStats,
+    seasons,
+    refreshData
+  } = useData();
+  
+  const activeSeason = seasons.find(s => s.status === 'active');
+  
   const [playoffName, setPlayoffName] = useState('');
   const [selectedTeamIds, setSelectedTeamIds] = useState<string[]>([]);
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const selectedTeams = teams.filter(team => selectedTeamIds.includes(team.id));
+  // Filter to show only active teams for playoff creation
+  const seasonTeams = teams.filter(team => team.status === 'active');
+  const selectedTeams = seasonTeams.filter(team => selectedTeamIds.includes(team.id));
 
   const handleTeamToggle = (teamId: string) => {
     if (selectedTeamIds.includes(teamId)) {
@@ -29,9 +43,14 @@ const CreatePlayoffModal: React.FC<CreatePlayoffModalProps> = ({
     setError('');
   };
 
-  const handleCreate = () => {
+  const handleCreate = async () => {
     if (!playoffName.trim()) {
       setError('Playoff name is required');
+      return;
+    }
+
+    if (!activeSeason) {
+      setError('No active season found. Please set an active season first.');
       return;
     }
 
@@ -41,7 +60,48 @@ const CreatePlayoffModal: React.FC<CreatePlayoffModalProps> = ({
       return;
     }
 
-    onCreatePlayoff(playoffName.trim(), selectedTeams);
+    setLoading(true);
+    setError('');
+
+    try {
+      // Seed teams by their season stats
+      const standings = teamSeasonStats
+        .filter(stat => stat.seasonId === activeSeason?.id)
+        .map(stat => ({
+          teamId: stat.teamId,
+          wins: stat.wins,
+          losses: stat.losses,
+          pointsFor: stat.pointsFor,
+          pointsAgainst: stat.pointsAgainst
+        }));
+      
+      const seededTeams = seedTeams(selectedTeams, standings);
+
+      // Create the playoff
+      const playoff = await createPlayoff({
+        seasonId: activeSeason?.id,
+        name: playoffName.trim(),
+        bracketType: 'single_elimination',
+        status: 'planned'
+      });
+
+      // Generate and create playoff matches
+      const matches = generateBracketMatches(playoff.id, seededTeams);
+      
+      // Create all matches
+      for (const match of matches) {
+        await createPlayoffMatch(match);
+      }
+
+      await refreshData();
+      onSave();
+      onClose();
+    } catch (error: any) {
+      console.error('Failed to create playoff:', error);
+      setError(error.message || 'Failed to create playoff. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const getRecommendedBracketSize = () => {
@@ -57,14 +117,19 @@ const CreatePlayoffModal: React.FC<CreatePlayoffModalProps> = ({
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content large" onClick={(e) => e.stopPropagation()}>
+      <div className="modal-content modal-content-large" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
-          <div className="modal-title">
-            <Trophy size={24} />
-            <h2>Create Playoff</h2>
-          </div>
-          <button className="modal-close-btn" onClick={onClose}>
-            <X size={24} />
+          <h2 className="modal-title">
+            <Trophy size={20} />
+            Create Playoff
+          </h2>
+          <button
+            onClick={onClose}
+            className="modal-close"
+            aria-label="Close modal"
+            disabled={loading}
+          >
+            <X size={20} />
           </button>
         </div>
 
@@ -107,40 +172,57 @@ const CreatePlayoffModal: React.FC<CreatePlayoffModalProps> = ({
 
           {/* Team Selection */}
           <div className="form-group">
-            <div className="team-selection-header">
-              <label>Select Teams ({selectedTeamIds.length}/16)</label>
-              <div className="bracket-info">
-                <span>Bracket Size: {bracketSize} teams</span>
-                {byeCount > 0 && (
-                  <span className="bye-info">({byeCount} BYEs)</span>
-                )}
-              </div>
-            </div>
-            
-            <div className="team-selection-grid">
-              {teams.map(team => (
-                <div
-                  key={team.id}
-                  className={`team-option ${
-                    selectedTeamIds.includes(team.id) ? 'selected' : ''
-                  } ${
-                    !selectedTeamIds.includes(team.id) && selectedTeamIds.length >= 16 ? 'disabled' : ''
-                  }`}
-                  onClick={() => handleTeamToggle(team.id)}
-                >
-                  <div className="team-info">
-                    <div className="team-name">{team.name}</div>
-                    <div className="team-record">
-                      {/* Team record calculated from games */}
+            <label>
+              Select Teams ({selectedTeamIds.length} selected)
+              {selectedTeamIds.length > 0 && (
+                <span className="team-selection-label-info">
+                  • Bracket Size: {bracketSize} teams
+                  {byeCount > 0 && ` • ${byeCount} byes`}
+                </span>
+              )}
+            </label>
+
+            <div className="team-selection-container">
+              {seasonTeams.map(team => {
+                const isSelected = selectedTeamIds.includes(team.id);
+                const stats = teamSeasonStats.find(
+                  s => s.teamId === team.id && s.seasonId === activeSeason?.id
+                );
+
+                return (
+                  <div
+                    key={team.id}
+                    className={`team-selection-item ${isSelected ? 'selected' : ''}`}
+                    onClick={() => handleTeamToggle(team.id)}
+                  >
+                    <div className="team-selection-header">
+                      <strong className="team-selection-name">{team.name}</strong>
+                      {isSelected && (
+                        <span className="team-selection-checkmark">✓</span>
+                      )}
                     </div>
+
+                    {stats && stats.gamesPlayed > 0 ? (
+                      <div className="team-selection-record">
+                        <span>{stats.wins}-{stats.losses}</span>
+                        <span>•</span>
+                        <span>{(stats.winPct * 100).toFixed(0)}%</span>
+                      </div>
+                    ) : (
+                      <div className="team-selection-no-games">
+                        No games played
+                      </div>
+                    )}
                   </div>
-                  <div className="team-players">
-                    <Users size={14} />
-                    <span>Team</span>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
+
+            {seasonTeams.length === 0 && (
+              <div className="team-selection-empty">
+                No active teams found for this season
+              </div>
+            )}
           </div>
 
           {/* Playoff Preview */}
@@ -170,24 +252,39 @@ const CreatePlayoffModal: React.FC<CreatePlayoffModalProps> = ({
 
           {/* Error Message */}
           {error && (
-            <div className="error-message">
+            <div className="alert alert-error">
               <AlertCircle size={16} />
               <span>{error}</span>
             </div>
           )}
         </div>
 
-        <div className="modal-actions">
-          <button className="btn btn-outline" onClick={onClose}>
+        <div className="modal-footer">
+          <button
+            type="button"
+            onClick={onClose}
+            className="btn btn-outline"
+            disabled={loading}
+          >
             Cancel
           </button>
-          <button 
+          <button
+            type="button"
             className="btn btn-primary"
             onClick={handleCreate}
-            disabled={!playoffName.trim() || selectedTeamIds.length < 2}
+            disabled={!playoffName.trim() || selectedTeamIds.length < 2 || loading}
           >
-            <Trophy size={16} />
-            Create Playoff
+            {loading ? (
+              <>
+                <div className="spinner-small" />
+                Creating...
+              </>
+            ) : (
+              <>
+                <Trophy size={16} />
+                Create Playoff
+              </>
+            )}
           </button>
         </div>
       </div>

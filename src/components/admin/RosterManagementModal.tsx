@@ -1,9 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { X, Users, Plus, Trash2, Crown, AlertCircle, UserMinus } from 'lucide-react';
-import { Team, Player, PlayerTeam, RosterRole, RosterStatus } from '../../core/types';
+import { X, Users, Plus, Trash2, Crown, AlertCircle } from 'lucide-react';
+import { Team, PlayerTeam, RosterRole, RosterStatus } from '../../core/types';
 import { useData } from '../../state';
 import { getPlayerFullName } from '../../core/utils/playerHelpers';
-import ProfilePicture from '../common/ProfilePicture';
 
 interface RosterManagementModalProps {
   team: Team;

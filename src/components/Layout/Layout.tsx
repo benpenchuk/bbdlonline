@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Home, Calendar, Users, BarChart3, Menu, X, List, Sun, Moon, Lock } from 'lucide-react';
-import { getConfig } from '../../core/config/appConfig';
 import VersionBanner from '../common/VersionBanner';
 import { useTheme } from '../../state/ThemeContext';
 
@@ -11,7 +10,6 @@ interface LayoutProps {
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   const location = useLocation();
-  const config = getConfig();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { theme, toggleTheme } = useTheme();
 
@@ -58,38 +56,63 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             />
           </Link>
           
-          {/* Mobile Menu Toggle */}
-          <button 
-            className="mobile-menu-toggle"
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
-            aria-expanded={mobileMenuOpen}
-          >
-            {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-          </button>
+          {/* Mobile Menu Toggle - only show when menu is closed */}
+          {!mobileMenuOpen && (
+            <button
+              className="mobile-menu-toggle"
+              onClick={() => setMobileMenuOpen(true)}
+              aria-label="Open menu"
+              aria-expanded={mobileMenuOpen}
+            >
+              <Menu size={24} />
+            </button>
+          )}
           
           {/* Navigation Links - Desktop */}
           <nav className={`nav-links ${mobileMenuOpen ? 'nav-links-mobile-open' : ''}`}>
-            {navigation.map((item) => {
-              return (
-                <Link
-                  key={item.name}
-                  to={item.href}
-                  className={`nav-link ${isActive(item.href) ? 'nav-link-active' : ''}`}
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  {item.name}
-                </Link>
-              );
-            })}
-            {/* Theme Toggle Button */}
-            <button
-              className="theme-toggle-button"
-              onClick={toggleTheme}
-              aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
-            >
-              {theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}
-            </button>
+            {/* Mobile Menu Header */}
+            <div className="mobile-menu-header">
+              <img
+                src="/images/BBDL Logo.png"
+                alt="BBDL Logo"
+                className="mobile-menu-logo"
+              />
+              <button
+                className="mobile-menu-close"
+                onClick={() => setMobileMenuOpen(false)}
+                aria-label="Close menu"
+              >
+                <X size={28} />
+              </button>
+            </div>
+
+            {/* Mobile Menu Navigation */}
+            <div className="mobile-menu-nav">
+              {navigation.map((item) => {
+                return (
+                  <Link
+                    key={item.name}
+                    to={item.href}
+                    className={`nav-link ${isActive(item.href) ? 'nav-link-active' : ''}`}
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    {item.name}
+                  </Link>
+                );
+              })}
+            </div>
+
+            {/* Mobile Menu Footer */}
+            <div className="mobile-menu-footer">
+              <button
+                className="theme-toggle-button"
+                onClick={toggleTheme}
+                aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
+              >
+                {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
+                <span>{theme === 'light' ? 'Dark' : 'Light'} Mode</span>
+              </button>
+            </div>
           </nav>
         </div>
       </header>

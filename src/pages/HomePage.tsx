@@ -1,6 +1,5 @@
 import React, { useMemo } from 'react';
 import { useData } from '../state';
-import { Game } from '../core/types';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import CompactStandings from '../components/home/CompactStandings';
 import CompactScores from '../components/home/CompactScores';
@@ -21,9 +20,7 @@ const HomePage: React.FC = () => {
     announcements,
     photos,
     activeSeason,
-    loading,
-    getActiveAnnouncement,
-    getFeaturedPhoto
+    loading
   } = useData();
 
   // Filter data by active season

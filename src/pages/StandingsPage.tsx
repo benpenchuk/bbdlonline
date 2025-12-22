@@ -401,8 +401,17 @@ const StandingsPage: React.FC = () => {
                     className="standings-row"
                   >
                     <td className="standings-td standings-td-rank">
-                      {standing.rank === 1 && <Trophy size={16} className="rank-icon" />}
-                      {standing.rank}
+                      {standing.rank <= 3 ? (
+                        <span className={`rank-badge ${
+                          standing.rank === 1 ? 'gold' :
+                          standing.rank === 2 ? 'silver' :
+                          'bronze'
+                        }`}>
+                          {standing.rank}
+                        </span>
+                      ) : (
+                        <span className="rank-badge default">{standing.rank}</span>
+                      )}
                     </td>
                     <td className="standings-td standings-td-team">
                       <a 

@@ -6,6 +6,8 @@
    BASE TABLE STRUCTURE
    ===================================================== */
 
+/* TEMPORARILY DISABLED - COLOR SYSTEM CLEANUP */
+/*
 .table-container {
   background-color: var(--color-surface-elevated);
   border-radius: var(--border-radius-md);
@@ -17,6 +19,7 @@
   -webkit-overflow-scrolling: touch;
   margin-bottom: var(--space-lg);
 }
+*/
 
 /* Base Table Styles */
 table {
@@ -32,6 +35,8 @@ thead {
   z-index: 10;
 }
 
+/* TEMPORARILY DISABLED - COLOR SYSTEM CLEANUP */
+/*
 th {
   background-color: var(--color-primary);
   color: var(--color-text-light);
@@ -45,6 +50,7 @@ th {
   white-space: nowrap;
   border-bottom: 2px solid var(--color-primary-dark);
 }
+*/
 
 /* =====================================================
    SORTABLE HEADERS

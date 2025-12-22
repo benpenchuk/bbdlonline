@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Save, Settings, AlertCircle, CheckCircle } from 'lucide-react';
+import { Save, AlertCircle, CheckCircle } from 'lucide-react';
 import { getConfig, saveConfig, AppConfig } from '../../core/config/appConfig';
 
 const SettingsTab: React.FC = () => {

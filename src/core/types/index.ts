@@ -85,7 +85,8 @@ export interface Game {
   homeScore: number;
   awayScore: number;
   winningTeamId?: string;
-  week?: number; // Week number (1-6) for regular season games
+  week?: number; // 1-6 for regular season, null for playoffs
+  playoffMatchId?: string; // NEW: UUID of playoff match if this is a playoff game
   createdAt: Date;
   updatedAt: Date;
 }
@@ -157,8 +158,24 @@ export interface Playoff {
   id: string; // UUID
   seasonId: string;
   name: string;
-  bracketType: string;
-  status: string;
+  bracketType: 'single_elimination' | 'double_elimination';
+  status: 'planned' | 'in_progress' | 'completed' | 'canceled';
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface PlayoffMatch {
+  id: string;
+  playoffId: string;
+  roundNumber: number; // 1 = first round, 2 = quarterfinals, etc.
+  matchNumber: number; // Position within round (0-indexed)
+  team1Id?: string; // null = BYE
+  team2Id?: string; // null = BYE
+  winnerId?: string;
+  status: 'pending' | 'in_progress' | 'completed' | 'bye';
+  seriesFormat: 'single' | 'best_of_3' | 'best_of_5';
+  pointTarget: number;
+  nextMatchId?: string; // Where winner advances
   createdAt: Date;
   updatedAt: Date;
 }
