@@ -3,6 +3,8 @@ import { notFound } from "next/navigation";
 import { format } from "date-fns";
 import { createClient } from "@/lib/supabase/server";
 import { getGameThrows, shortName, fullName } from "@/lib/queries";
+import { getCurrentPerson, isCommissioner } from "@/lib/auth";
+import { ConfirmPanel } from "@/components/confirm-panel";
 import type { ThrowOutcome } from "@/lib/supabase/types";
 
 export const metadata = { title: "Game · BBDL" };
@@ -45,6 +47,17 @@ export default async function GamePage({
     supabase.from("game_mvp").select("*").eq("game_id", id).maybeSingle(),
     getGameThrows(id),
   ]);
+
+  const { data: confirmations } = await supabase
+    .from("game_confirmations")
+    .select("*")
+    .eq("game_id", id);
+
+  const me = await getCurrentPerson();
+  const commissioner = isCommissioner(me);
+  const myTeamIds = (participants ?? [])
+    .filter((p) => p.person_id === me?.id)
+    .map((p) => p.team_id);
 
   const teamById = new Map((teams ?? []).map((t) => [t.id, t]));
   const peopleById = new Map((people ?? []).map((p) => [p.id, p]));
@@ -99,6 +112,17 @@ export default async function GamePage({
           </div>
         </div>
       </div>
+
+      {game.status === "awaiting_confirmation" && home && away && (
+        <ConfirmPanel
+          gameId={game.id}
+          home={{ id: home.id, name: home.name }}
+          away={{ id: away.id, name: away.name }}
+          confirmedTeamIds={(confirmations ?? []).map((c) => c.team_id)}
+          myTeamIds={myTeamIds}
+          isCommissioner={commissioner}
+        />
+      )}
 
       {mvp?.person_id && (
         <div className="rounded-lg border border-pink-500/30 bg-pink-500/5 px-4 py-3">
