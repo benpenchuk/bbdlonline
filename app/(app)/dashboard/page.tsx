@@ -1,170 +1,204 @@
 import Link from "next/link";
-import { ShieldAlert } from "lucide-react";
-import { createClient } from "@/lib/supabase/server";
-import { requirePerson } from "@/lib/auth";
+import { format } from "date-fns";
+import { requirePerson, displayName, isCommissioner } from "@/lib/auth";
+import {
+  getActiveSeason,
+  getSeasonGames,
+  getTeams,
+  getStandings,
+  getRosters,
+  getPlayerSeasonStats,
+  shortName,
+} from "@/lib/queries";
+import { EmptyState } from "@/components/empty-state";
+import { ScoreLine } from "@/components/score-line";
 
-export const metadata = { title: "Home" };
+export const metadata = { title: "BBDL" };
 
-export default async function DashboardPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ denied?: string }>;
-}) {
+export default async function DashboardPage() {
   const person = await requirePerson();
-  const { denied } = await searchParams;
-  const supabase = await createClient();
+  const season = await getActiveSeason();
 
-  // Every query below runs as this member, so RLS decides what comes back.
-  const { data: season } = await supabase
-    .from("seasons")
-    .select("*")
-    .eq("status", "active")
-    .maybeSingle();
+  if (!season) {
+    return (
+      <EmptyState
+        title={`Welcome, ${person.first_name}`}
+        body={
+          isCommissioner(person)
+            ? "No season is active. Start one from the admin panel."
+            : "No season is running right now. Check back when the commissioner starts one."
+        }
+      />
+    );
+  }
 
-  const [{ data: standings }, { data: games }] = await Promise.all([
-    supabase
-      .from("standings")
-      .select("*")
-      .eq("season_id", season?.id ?? "")
-      .order("rank", { ascending: true }),
-    supabase
-      .from("games")
-      .select("id, week, status, home_score, away_score, is_tracked, home_team_id, away_team_id")
-      .eq("season_id", season?.id ?? "")
-      .order("week", { ascending: false })
-      .limit(8),
+  const [games, teams, standings, rosters, stats] = await Promise.all([
+    getSeasonGames(season.id),
+    getTeams(season.id),
+    getStandings(season.id),
+    getRosters(season.id),
+    getPlayerSeasonStats(season.id),
   ]);
 
-  const teamName = new Map(
-    (standings ?? []).map((s) => [s.team_id, s.name ?? "—"]),
-  );
+  const teamById = new Map(teams.map((t) => [t.id, t]));
+
+  const recent = games
+    .filter((g) => g.status === "final")
+    .sort((a, b) => (b.scheduled_at ?? "").localeCompare(a.scheduled_at ?? ""))
+    .slice(0, 5);
+
+  const upcoming = games
+    .filter((g) => g.status === "scheduled")
+    .sort((a, b) => (a.scheduled_at ?? "").localeCompare(b.scheduled_at ?? ""))
+    .slice(0, 5);
+
+  // the signed-in member's own team this season
+  let myTeamId: string | null = null;
+  for (const [teamId, roster] of rosters) {
+    if (roster.some((p) => p.id === person.id)) myTeamId = teamId;
+  }
+  const myStanding = myTeamId ? standings.find((s) => s.team_id === myTeamId) : null;
+  const myStats = stats.find((s) => s.person_id === person.id);
+
+  const sideFor = (teamId: string, score: number) => ({
+    id: teamId,
+    name: teamById.get(teamId)?.name ?? "Unknown",
+    score,
+  });
 
   return (
     <div className="space-y-6">
-      {denied === "admin" && (
-        <div className="flex items-center gap-2 rounded-lg bg-pink-50 px-4 py-3 text-sm text-pink-700">
-          <ShieldAlert size={16} />
-          That area is commissioner only.
-        </div>
+      <header>
+        <h1 className="font-display text-2xl font-bold tracking-tight text-navy-800">
+          {season.name}
+        </h1>
+        <p className="text-sm text-ash-500">
+          Welcome back, {displayName(person)}.
+        </p>
+      </header>
+
+      {myStanding && (
+        <section className="rounded-lg bg-navy-800 px-5 py-4 text-white">
+          <div className="eyebrow mb-1 text-navy-200">Your team</div>
+          <Link
+            href={`/teams/${myTeamId}`}
+            className="font-display text-xl font-bold hover:text-pink-300"
+          >
+            {myStanding.name}
+          </Link>
+          <div className="mt-2 flex flex-wrap gap-5 font-mono text-sm tabular-nums">
+            <span>
+              <span className="text-navy-300">Record </span>
+              {myStanding.wins}–{myStanding.losses}
+            </span>
+            <span>
+              <span className="text-navy-300">Rank </span>#{myStanding.rank} of{" "}
+              {standings.length}
+            </span>
+            {myStats && (
+              <span>
+                <span className="text-navy-300">Your points </span>
+                {myStats.total_points}
+              </span>
+            )}
+            {myStats?.accuracy_pct !== null && myStats?.accuracy_pct !== undefined && (
+              <span>
+                <span className="text-navy-300">Accuracy </span>
+                {myStats.accuracy_pct}%
+              </span>
+            )}
+          </div>
+        </section>
       )}
 
-      <div>
-        <p className="eyebrow text-ash-500">{season?.name ?? "No active season"}</p>
-        <h1 className="text-2xl font-bold text-navy-800">
-          Welcome back, {person.nickname || person.first_name}
-        </h1>
-      </div>
-
-      <div className="grid gap-6 lg:grid-cols-[1fr_1.1fr]">
-        {/* ---------- standings ---------- */}
-        <section className="overflow-hidden rounded-xl border border-ash-200 bg-white">
-          <header className="flex items-center justify-between border-b border-ash-200 px-4 py-3">
-            <h2 className="font-display text-sm font-bold uppercase tracking-wide text-navy-800">
-              Standings
+      <div className="grid gap-5 lg:grid-cols-3">
+        <section className="lg:col-span-2">
+          <div className="mb-2 flex items-baseline justify-between">
+            <h2 className="font-display text-base font-bold text-navy-800">
+              Recent results
             </h2>
-            <Link href="/standings" className="text-xs font-semibold text-pink-500 hover:underline">
-              Full table
+            <Link href="/games" className="text-xs text-pink-500 hover:underline">
+              All games
             </Link>
-          </header>
+          </div>
+          <div className="overflow-hidden rounded-lg border border-ash-200 bg-white">
+            {recent.length === 0 ? (
+              <p className="px-4 py-6 text-center text-sm text-ash-500">
+                No games played yet.
+              </p>
+            ) : (
+              recent.map((g) => (
+                <ScoreLine
+                  key={g.id}
+                  gameId={g.id}
+                  home={sideFor(g.home_team_id, g.home_score)}
+                  away={sideFor(g.away_team_id, g.away_score)}
+                  status={g.status}
+                  tracked={g.is_tracked}
+                />
+              ))
+            )}
+          </div>
 
-          {standings?.length ? (
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-ash-200 text-ash-500">
-                  <th className="eyebrow px-4 py-2 text-left font-semibold">Team</th>
-                  <th className="eyebrow px-2 py-2 text-right font-semibold">W</th>
-                  <th className="eyebrow px-2 py-2 text-right font-semibold">L</th>
-                  <th className="eyebrow px-2 py-2 text-right font-semibold">PF</th>
-                  <th className="eyebrow px-2 py-2 text-right font-semibold">PA</th>
-                  <th className="eyebrow px-4 py-2 text-right font-semibold">Diff</th>
-                </tr>
-              </thead>
-              <tbody>
-                {standings.map((row) => (
-                  <tr key={row.team_id} className="border-b border-ash-100 last:border-0">
-                    <td className="px-4 py-2.5 font-semibold text-ash-900">
-                      <span className="mr-2 font-mono text-xs text-ash-400">{row.rank}</span>
-                      {row.name}
-                    </td>
-                    <td className="px-2 py-2.5 text-right font-mono text-xs">{row.wins}</td>
-                    <td className="px-2 py-2.5 text-right font-mono text-xs">{row.losses}</td>
-                    <td className="px-2 py-2.5 text-right font-mono text-xs">{row.points_for}</td>
-                    <td className="px-2 py-2.5 text-right font-mono text-xs">{row.points_against}</td>
-                    <td
-                      className={`px-4 py-2.5 text-right font-mono text-xs font-bold ${
-                        (row.point_differential ?? 0) > 0
-                          ? "text-win"
-                          : (row.point_differential ?? 0) < 0
-                            ? "text-loss"
-                            : "text-ash-400"
-                      }`}
-                    >
-                      {(row.point_differential ?? 0) > 0 ? "+" : ""}
-                      {row.point_differential}
-                    </td>
-                  </tr>
+          {upcoming.length > 0 && (
+            <>
+              <h2 className="mb-2 mt-5 font-display text-base font-bold text-navy-800">
+                Coming up
+              </h2>
+              <div className="overflow-hidden rounded-lg border border-ash-200 bg-white">
+                {upcoming.map((g) => (
+                  <ScoreLine
+                    key={g.id}
+                    gameId={g.id}
+                    home={sideFor(g.home_team_id, g.home_score)}
+                    away={sideFor(g.away_team_id, g.away_score)}
+                    status={g.status}
+                    when={
+                      g.scheduled_at
+                        ? format(new Date(g.scheduled_at), "EEE MMM d, h:mm a")
+                        : null
+                    }
+                  />
                 ))}
-              </tbody>
-            </table>
-          ) : (
-            <p className="px-4 py-8 text-center text-sm text-ash-500">
-              No games played yet this season.
-            </p>
+              </div>
+            </>
           )}
         </section>
 
-        {/* ---------- scores ---------- */}
-        <section className="overflow-hidden rounded-xl border border-ash-200 bg-white">
-          <header className="flex items-center justify-between border-b border-ash-200 px-4 py-3">
-            <h2 className="font-display text-sm font-bold uppercase tracking-wide text-navy-800">
-              Scores
-            </h2>
-            <Link href="/games" className="text-xs font-semibold text-pink-500 hover:underline">
-              All games
+        <section>
+          <div className="mb-2 flex items-baseline justify-between">
+            <h2 className="font-display text-base font-bold text-navy-800">Standings</h2>
+            <Link href="/standings" className="text-xs text-pink-500 hover:underline">
+              Full table
             </Link>
-          </header>
-
-          {games?.length ? (
-            <ul>
-              {games.map((g) => {
-                const homeWon = g.home_score > g.away_score;
-                return (
-                  <li key={g.id} className="border-b border-ash-100 px-4 py-3 last:border-0">
-                    <div className="mb-1.5 flex items-center gap-2">
-                      <span className="eyebrow text-ash-400">Week {g.week}</span>
-                      <span className="eyebrow text-ash-400">
-                        {g.status === "final" ? "Final" : g.status.replace(/_/g, " ")}
-                      </span>
-                      {g.is_tracked && (
-                        <span className="eyebrow rounded bg-navy-50 px-1.5 py-0.5 text-navy-600">
-                          Tracked
-                        </span>
-                      )}
-                    </div>
-
-                    <div className="flex items-baseline justify-between gap-3">
-                      <span
-                        className={`truncate text-sm ${homeWon ? "font-bold text-ash-900" : "text-ash-500"}`}
-                      >
-                        {teamName.get(g.home_team_id) ?? "—"}
-                      </span>
-                      <span className="font-mono text-sm font-bold">{g.home_score}</span>
-                    </div>
-                    <div className="flex items-baseline justify-between gap-3">
-                      <span
-                        className={`truncate text-sm ${!homeWon ? "font-bold text-ash-900" : "text-ash-500"}`}
-                      >
-                        {teamName.get(g.away_team_id) ?? "—"}
-                      </span>
-                      <span className="font-mono text-sm font-bold">{g.away_score}</span>
-                    </div>
-                  </li>
-                );
-              })}
-            </ul>
-          ) : (
-            <p className="px-4 py-8 text-center text-sm text-ash-500">Nothing scheduled yet.</p>
-          )}
+          </div>
+          <div className="overflow-hidden rounded-lg border border-ash-200 bg-white">
+            {standings.slice(0, 8).map((s) => (
+              <Link
+                key={s.team_id}
+                href={`/teams/${s.team_id}`}
+                className={`flex items-baseline gap-2.5 border-b border-ash-100 px-3 py-2 last:border-0 hover:bg-ash-50 ${
+                  s.team_id === myTeamId ? "bg-pink-500/5" : ""
+                }`}
+              >
+                <span className="w-4 shrink-0 font-mono text-[10px] tabular-nums text-ash-400">
+                  {s.rank}
+                </span>
+                <span className="min-w-0 flex-1 truncate text-sm text-navy-800">
+                  {s.name}
+                  <span className="ml-1.5 text-[10px] text-ash-400">
+                    {(rosters.get(s.team_id ?? "") ?? []).map(shortName).join(" · ")}
+                  </span>
+                </span>
+                <span className="shrink-0 font-mono text-sm tabular-nums text-ash-700">
+                  {s.wins}–{s.losses}
+                </span>
+              </Link>
+            ))}
+            {standings.length === 0 && (
+              <p className="px-3 py-6 text-center text-sm text-ash-500">No teams yet.</p>
+            )}
+          </div>
         </section>
       </div>
     </div>
