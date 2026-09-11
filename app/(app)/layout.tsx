@@ -10,6 +10,8 @@ const NAV = [
   { href: "/players", label: "Players" },
   { href: "/stats", label: "Stats" },
   { href: "/track", label: "Track" },
+  { href: "/playoffs", label: "Playoffs" },
+  { href: "/records", label: "Records" },
 ];
 
 export default async function AppLayout({

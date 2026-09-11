@@ -509,6 +509,37 @@ export type Database = {
       };
     };
     Views: {
+      game_records: {
+        Row: {
+          game_id: string | null;
+          person_id: string | null;
+          record: string | null;
+          season_id: string | null;
+          team_id: string | null;
+          value: number | null;
+        };
+        Relationships: [];
+      };
+      season_champions: {
+        Row: {
+          playoff_id: string | null;
+          round_number: number | null;
+          season_id: string | null;
+          team_id: string | null;
+        };
+        Relationships: [];
+      };
+      team_streaks: {
+        Row: {
+          ended: string | null;
+          length: number | null;
+          season_id: string | null;
+          started: string | null;
+          team_id: string | null;
+          won: boolean | null;
+        };
+        Relationships: [];
+      };
       game_mvp: {
         Row: {
           accuracy_pct: number | null;
