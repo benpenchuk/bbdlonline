@@ -1,0 +1,98 @@
+@import "tailwindcss";
+
+/* =============================================================
+   BBDL design tokens.
+
+   Navy and pink are Beta Theta Pi's colours, carried over from the
+   old App.css (--navy-900: #1a2a52, --pink-500: #e91e63). Everything
+   else is new. The structure is ESPN-ish: dark navy chrome, light
+   content, dense data tables, tabular figures everywhere a number
+   sits in a column.
+   ============================================================= */
+@theme {
+  --color-navy-50:  #eef1f9;
+  --color-navy-100: #d4dbef;
+  --color-navy-200: #aab8dd;
+  --color-navy-300: #7d90c6;
+  --color-navy-400: #5468a6;
+  --color-navy-500: #3a4b85;
+  --color-navy-600: #2b3969;
+  --color-navy-700: #223055;
+  --color-navy-800: #1a2a52;
+  --color-navy-900: #131f3d;
+  --color-navy-950: #0c1428;
+
+  --color-pink-50:  #fdeaf1;
+  --color-pink-100: #fbd0de;
+  --color-pink-200: #f7a3bf;
+  --color-pink-300: #f2709c;
+  --color-pink-400: #ea4178;
+  --color-pink-500: #d0175a;
+  --color-pink-600: #b30e4b;
+  --color-pink-700: #8f0b3c;
+
+  /* neutrals, biased very slightly toward the navy so greys read as chosen */
+  --color-ash-50:  #f6f7fa;
+  --color-ash-100: #eef0f6;
+  --color-ash-200: #dfe3ed;
+  --color-ash-300: #c5cbda;
+  --color-ash-400: #949cb2;
+  --color-ash-500: #6b7489;
+  --color-ash-600: #4c5468;
+  --color-ash-700: #353c4c;
+  --color-ash-800: #232936;
+  --color-ash-900: #151a24;
+
+  --color-win:  #1e7a4d;
+  --color-loss: #b3261e;
+
+  --font-display: var(--font-archivo), "Helvetica Neue", Arial, sans-serif;
+  --font-sans: var(--font-source-sans), "Segoe UI", system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains), ui-monospace, Menlo, monospace;
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    background: var(--color-ash-50);
+    color: var(--color-ash-900);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1, h2, h3, h4 {
+    font-family: var(--font-display);
+    letter-spacing: -0.02em;
+    text-wrap: balance;
+  }
+
+  /* Any digit that sits in a column lines up. */
+  table, .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-pink-500);
+    outline-offset: 2px;
+  }
+}
+
+@layer components {
+  /* the small uppercase mono label used above sections and in table heads */
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 0.625rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
