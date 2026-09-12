@@ -1,16 +1,25 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import type { Database } from "./types";
+import { getSupabaseEnv } from "./env";
 
 /** Supabase client for Server Components, Server Actions and Route Handlers.
  *  Reads the session from cookies so queries run as the signed-in member and
  *  RLS applies to them. */
 export async function createClient() {
+  const env = getSupabaseEnv();
+  if (!env) {
+    throw new Error(
+      "Supabase is not configured. Set NEXT_PUBLIC_SUPABASE_URL and " +
+        "NEXT_PUBLIC_SUPABASE_ANON_KEY in the environment.",
+    );
+  }
+
   const cookieStore = await cookies();
 
   return createServerClient<Database>(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    env.url,
+    env.anonKey,
     {
       cookies: {
         getAll() {

@@ -2,6 +2,7 @@ import Image from "next/image";
 import { AlertCircle } from "lucide-react";
 import { redirect } from "next/navigation";
 import { getCurrentPerson } from "@/lib/auth";
+import { isConfigured } from "@/lib/supabase/env";
 import { JoinForm } from "./join-form";
 
 export const metadata = { title: "Sign in" };
@@ -13,6 +14,28 @@ export default async function JoinPage({
 }) {
   const person = await getCurrentPerson();
   if (person) redirect("/dashboard");
+
+  // A deployment with no Supabase credentials can't sign anyone in. Say that
+  // plainly rather than presenting a form that will always fail.
+  if (!isConfigured()) {
+    return (
+      <main className="flex min-h-dvh flex-col items-center justify-center bg-navy-900 px-5 text-center">
+        <h1 className="mb-3 font-display text-xl font-bold text-white">
+          Not configured yet
+        </h1>
+        <p className="max-w-sm text-sm text-navy-200">
+          This deployment is missing its database credentials, so sign-in is
+          unavailable. Whoever set it up needs to add{" "}
+          <code className="font-mono text-pink-300">NEXT_PUBLIC_SUPABASE_URL</code>{" "}
+          and{" "}
+          <code className="font-mono text-pink-300">
+            NEXT_PUBLIC_SUPABASE_ANON_KEY
+          </code>{" "}
+          to the environment.
+        </p>
+      </main>
+    );
+  }
 
   const { next = "/dashboard", code, error } = await searchParams;
 

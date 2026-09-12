@@ -1,11 +1,13 @@
 import { cache } from "react";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { isConfigured } from "@/lib/supabase/env";
 import type { Person } from "@/lib/supabase/types";
 
 /** The signed-in member's person row, or null. Cached per request so a page
  *  and its layout don't both hit the database. */
 export const getCurrentPerson = cache(async (): Promise<Person | null> => {
+  if (!isConfigured()) return null;
   const supabase = await createClient();
 
   const {

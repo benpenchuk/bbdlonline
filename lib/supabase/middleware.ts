@@ -1,6 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import type { Database } from "./types";
+import { getSupabaseEnv } from "./env";
 
 /** Routes reachable without signing in. Everything else redirects to /join.
  *  Per the decision that nothing about the league is public: the landing page
@@ -16,9 +17,14 @@ function isPublic(pathname: string) {
 export async function updateSession(request: NextRequest) {
   let response = NextResponse.next({ request });
 
+  // Unconfigured deployment: don't attempt auth, and let the page render a
+  // setup notice instead of throwing on every single request.
+  const env = getSupabaseEnv();
+  if (!env) return response;
+
   const supabase = createServerClient<Database>(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    env.url,
+    env.anonKey,
     {
       cookies: {
         getAll() {
