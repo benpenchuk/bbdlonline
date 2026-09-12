@@ -4,6 +4,9 @@ import { updatePerson, revokeInvite } from "./actions";
 import { AddPersonForm } from "./add-person-form";
 import { InviteForm } from "./invite-form";
 import { CheckCircle2, CircleDashed } from "lucide-react";
+import { CopyButton } from "@/components/copy-button";
+import { getSiteUrl } from "@/lib/site-url";
+import { inviteLink } from "@/lib/invite-link";
 
 export const metadata = { title: "People · Admin" };
 
@@ -16,6 +19,7 @@ const ROLE_LABEL: Record<string, string> = {
 export default async function AdminPeoplePage() {
   const me = await requireCommissioner();
   const supabase = await createClient();
+  const siteUrl = await getSiteUrl();
 
   const [{ data: people }, { data: invites }] = await Promise.all([
     supabase
@@ -165,7 +169,7 @@ export default async function AdminPeoplePage() {
 
       <section className="grid gap-6 lg:grid-cols-2">
         <AddPersonForm />
-        <InviteForm people={roster} />
+        <InviteForm people={roster} siteUrl={siteUrl} />
       </section>
 
       <section>
@@ -182,7 +186,7 @@ export default async function AdminPeoplePage() {
               <thead>
                 <tr className="border-b border-ash-200 bg-ash-50">
                   <th className="px-3 py-2 text-left font-mono text-[10px] uppercase tracking-wider text-ash-500">
-                    Code
+                    Invite link
                   </th>
                   <th className="px-3 py-2 text-left font-mono text-[10px] uppercase tracking-wider text-ash-500">
                     For
@@ -203,8 +207,17 @@ export default async function AdminPeoplePage() {
                     : null;
                   return (
                     <tr key={inv.id} className="border-b border-ash-100 last:border-0">
-                      <td className="px-3 py-2 font-mono text-xs text-ash-900">
-                        {inv.code}
+                      <td className="px-3 py-2">
+                        <div className="flex items-center gap-2">
+                          <code className="max-w-[22rem] truncate font-mono text-[11px] text-ash-600">
+                            {inviteLink(siteUrl, inv.code)}
+                          </code>
+                          <CopyButton
+                            value={inviteLink(siteUrl, inv.code)}
+                            label="Copy"
+                            className="inline-flex shrink-0 items-center gap-1 rounded border border-ash-300 px-2 py-1 font-mono text-[10px] text-ash-600 hover:border-pink-500 hover:text-pink-500"
+                          />
+                        </div>
                       </td>
                       <td className="px-3 py-2 text-xs text-ash-600">
                         {target ? (

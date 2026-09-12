@@ -1,9 +1,11 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
-import { KeyRound, Copy, Check } from "lucide-react";
+import { KeyRound } from "lucide-react";
 import { createInvite, type ActionResult } from "./actions";
+import { CopyButton } from "@/components/copy-button";
+import { inviteLink } from "@/lib/invite-link";
 import type { Person } from "@/lib/supabase/types";
 
 const initial: ActionResult = { ok: false };
@@ -21,41 +23,49 @@ function Submit() {
   );
 }
 
-function CodeBox({ code }: { code: string }) {
-  const [copied, setCopied] = useState(false);
+function InviteCreated({ code, siteUrl }: { code: string; siteUrl: string }) {
+  const link = inviteLink(siteUrl, code);
 
   return (
     <div className="mt-3 rounded-lg border border-win/30 bg-win/5 p-3">
       <p className="mb-2 text-xs text-ash-600">
-        Send this code. They enter it at <span className="font-mono">/join</span>{" "}
-        with their email.
+        Send them this link. It opens the sign-in page with the code already
+        filled in — all they do is type their email.
       </p>
-      <div className="flex items-center gap-2">
-        <code className="flex-1 truncate rounded bg-white px-2 py-1.5 font-mono text-xs text-ash-900">
-          {code}
+
+      <div className="mb-3 flex items-center gap-2">
+        <code className="min-w-0 flex-1 truncate rounded bg-white px-2 py-1.5 font-mono text-xs text-ash-900">
+          {link}
         </code>
-        <button
-          type="button"
-          onClick={() => {
-            navigator.clipboard?.writeText(code).then(
-              () => {
-                setCopied(true);
-                setTimeout(() => setCopied(false), 2000);
-              },
-              () => setCopied(false),
-            );
-          }}
-          className="flex shrink-0 items-center gap-1 rounded bg-navy-800 px-2.5 py-1.5 font-display text-xs font-semibold text-white"
-        >
-          {copied ? <Check size={13} /> : <Copy size={13} />}
-          {copied ? "Copied" : "Copy"}
-        </button>
+        <CopyButton value={link} label="Copy link" />
       </div>
+
+      <details className="text-xs">
+        <summary className="cursor-pointer text-ash-500 hover:text-ash-700">
+          Just the code
+        </summary>
+        <div className="mt-2 flex items-center gap-2">
+          <code className="min-w-0 flex-1 truncate rounded bg-white px-2 py-1.5 font-mono text-xs text-ash-900">
+            {code}
+          </code>
+          <CopyButton value={code} label="Copy" />
+        </div>
+        <p className="mt-1.5 text-[11px] text-ash-500">
+          For anyone who&apos;d rather type it in at{" "}
+          <span className="font-mono">/join</span>.
+        </p>
+      </details>
     </div>
   );
 }
 
-export function InviteForm({ people }: { people: Person[] }) {
+export function InviteForm({
+  people,
+  siteUrl,
+}: {
+  people: Person[];
+  siteUrl: string;
+}) {
   const [state, action] = useActionState(createInvite, initial);
 
   // Only offer to pre-link people who haven't signed up yet — anyone already
@@ -131,7 +141,9 @@ export function InviteForm({ people }: { people: Person[] }) {
         <Submit />
       </form>
 
-      {state.ok && state.code && <CodeBox code={state.code} />}
+      {state.ok && state.code && (
+        <InviteCreated code={state.code} siteUrl={siteUrl} />
+      )}
       {state.message && !state.ok && (
         <p className="mt-3 text-xs text-loss" role="status">
           {state.message}

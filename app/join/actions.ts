@@ -1,21 +1,13 @@
 "use server";
 
-import { headers } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
+import { getSiteUrl } from "@/lib/site-url";
 
 export type JoinState = {
   status: "idle" | "sent" | "error";
   message?: string;
   email?: string;
 };
-
-async function siteOrigin() {
-  if (process.env.NEXT_PUBLIC_SITE_URL) return process.env.NEXT_PUBLIC_SITE_URL;
-  const h = await headers();
-  const host = h.get("x-forwarded-host") ?? h.get("host") ?? "localhost:3000";
-  const proto = h.get("x-forwarded-proto") ?? "http";
-  return `${proto}://${host}`;
-}
 
 export async function requestMagicLink(
   _prev: JoinState,
@@ -30,7 +22,7 @@ export async function requestMagicLink(
   }
 
   const supabase = await createClient();
-  const origin = await siteOrigin();
+  const origin = await getSiteUrl();
   const emailRedirectTo = `${origin}/auth/callback?next=${encodeURIComponent(next)}`;
 
   // With an invite code: create the account if it doesn't exist. The code
