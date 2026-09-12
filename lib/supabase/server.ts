@@ -7,6 +7,13 @@ import { getSupabaseEnv } from "./env";
  *  Reads the session from cookies so queries run as the signed-in member and
  *  RLS applies to them. */
 export async function createClient() {
+  // cookies() must be awaited FIRST. It is what marks the route dynamic, and
+  // during a production build that is how Next knows to stop prerendering
+  // this page. Throwing before it means an unconfigured build dies on
+  // /players instead of bailing out of prerender — which is exactly what
+  // happened once.
+  const cookieStore = await cookies();
+
   const env = getSupabaseEnv();
   if (!env) {
     throw new Error(
@@ -14,8 +21,6 @@ export async function createClient() {
         "NEXT_PUBLIC_SUPABASE_ANON_KEY in the environment.",
     );
   }
-
-  const cookieStore = await cookies();
 
   return createServerClient<Database>(
     env.url,
