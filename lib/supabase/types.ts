@@ -671,6 +671,11 @@ export type Database = {
       is_in_game: { Args: { p_game: string }; Returns: boolean };
       is_on_team: { Args: { p_team: string }; Returns: boolean };
       is_superadmin: { Args: Record<string, never>; Returns: boolean };
+      start_playoff: { Args: { p_playoff: string }; Returns: undefined };
+      override_playoff_winner: {
+        Args: { p_match: string; p_winner: string };
+        Returns: undefined;
+      };
     };
     Enums: {
       challenge_status: "pending" | "accepted" | "declined" | "expired";

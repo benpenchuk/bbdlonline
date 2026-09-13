@@ -2,18 +2,22 @@
 
 import { useState, useTransition, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { turnState, isGameOver, COUNTS_AS_HIT, type LoggedThrow } from "@/lib/turn-order";
-import { logThrow, undoThrow, submitTrackedGame } from "./actions";
+import { turnState, isGameOver, type LoggedThrow } from "@/lib/turn-order";
+import { defaultLineup, needsChoosing, validateLineup, PLAYERS_PER_SIDE } from "@/lib/lineup";
+import { logThrow, undoThrow, submitTrackedGame, setLineup } from "./actions";
 import type { ThrowOutcome } from "@/lib/supabase/types";
 
-type Player = { id: string; name: string; full: string; teamId: string };
+type Player = { id: string; name: string; full: string; teamId: string; isSub?: boolean };
 type Team = { id: string; name: string };
 
 export type TrackerProps = {
   gameId: string;
   home: Team;
   away: Team;
-  players: Player[];
+  /** everyone on both rosters, subs included — the pool the lineup comes from */
+  roster: Player[];
+  /** the lineup, if one was already chosen and locked in */
+  lockedLineup: string[] | null;
   rules: { target: number; winBy: number; cap: number | null };
   initialThrows: (LoggedThrow & { id: string; points: number | null; scoring_team_id: string | null })[];
 };
@@ -37,8 +41,27 @@ const OUTCOMES: {
   { id: "fifa", label: "Fifa", sub: "+1 defense", kind: "fifa" },
 ];
 
-export function Tracker({ gameId, home, away, players, rules, initialThrows }: TrackerProps) {
+export function Tracker({
+  gameId,
+  home,
+  away,
+  roster,
+  lockedLineup,
+  rules,
+  initialThrows,
+}: TrackerProps) {
   const router = useRouter();
+  const teamIds = [away.id, home.id];
+
+  // Two-player teams fill in on their own; only a team carrying a sub asks.
+  const [lineup, setLineupState] = useState<string[]>(
+    lockedLineup ?? defaultLineup(roster, teamIds),
+  );
+  const [lineupLocked, setLineupLocked] = useState(lockedLineup !== null);
+
+  // The turn engine only ever sees the two players each team actually fielded.
+  const players = roster.filter((p) => lineup.includes(p.id));
+
   const [throws, setThrows] = useState(initialThrows);
   const [startTeam, setStartTeam] = useState<string | null>(
     initialThrows.length ? initialThrows[0].thrower_team_id : null,
@@ -136,6 +159,35 @@ export function Tracker({ gameId, home, away, players, rules, initialThrows }: T
 
   // ---------- setup ----------
   if (!startTeam) {
+    const choosing = teamIds.filter((t) => needsChoosing(roster, t));
+    const lineupProblem = validateLineup(lineup, roster, teamIds);
+
+    const toggle = (playerId: string, teamId: string) => {
+      if (lineupLocked) return;
+      setLineupState((prev) => {
+        if (prev.includes(playerId)) return prev.filter((id) => id !== playerId);
+        const onTeam = prev.filter((id) => roster.find((r) => r.id === id)?.teamId === teamId);
+        // already two picked for this team: swap out the earliest pick
+        const trimmed =
+          onTeam.length >= PLAYERS_PER_SIDE ? prev.filter((id) => id !== onTeam[0]) : prev;
+        return [...trimmed, playerId];
+      });
+    };
+
+    const begin = (teamId: string) =>
+      startTransition(async () => {
+        setError(null);
+        if (!lineupLocked) {
+          const res = await setLineup(gameId, lineup);
+          if (!res.ok) {
+            setError(res.message ?? "Couldn't save the lineup.");
+            return;
+          }
+          setLineupLocked(true);
+        }
+        setStartTeam(teamId);
+      });
+
     return (
       <div className="mx-auto max-w-sm">
         <div className="rounded-t-xl bg-navy-800 px-5 py-5 text-white">
@@ -144,29 +196,95 @@ export function Tracker({ gameId, home, away, players, rules, initialThrows }: T
             {away.name} vs {home.name}
           </h1>
           <p className="mt-1 text-sm text-navy-100">
-            Roll for it, then tell me who won. That&apos;s all I need.
+            {choosing.length > 0 && !lineupLocked
+              ? "Pick who's playing, then who won the roll."
+              : "Roll for it, then tell me who won. That's all I need."}
           </p>
         </div>
-        <div className="rounded-b-xl border border-t-0 border-ash-200 bg-white p-5">
-          <div className="eyebrow mb-2 text-ash-500">Which team throws first?</div>
-          <div className="grid grid-cols-2 gap-2">
-            {[away, home].map((t) => (
-              <button
-                key={t.id}
-                onClick={() => setStartTeam(t.id)}
-                className="rounded-lg border-2 border-ash-200 px-3 py-4 font-display font-semibold text-navy-800 transition hover:border-pink-500"
-              >
-                {t.name}
-                <span className="mt-1 block font-mono text-[10px] font-normal uppercase tracking-wide text-ash-400">
-                  {players.filter((p) => p.teamId === t.id).map((p) => p.name).join(" · ")}
-                </span>
-              </button>
-            ))}
+
+        <div className="space-y-5 rounded-b-xl border border-t-0 border-ash-200 bg-white p-5">
+          {choosing.length > 0 && !lineupLocked && (
+            <div className="space-y-4">
+              {choosing.map((teamId) => {
+                const team = teamId === home.id ? home : away;
+                const members = roster.filter((r) => r.teamId === teamId);
+                const picked = members.filter((m) => lineup.includes(m.id)).length;
+
+                return (
+                  <div key={teamId}>
+                    <div className="eyebrow mb-2 flex items-center justify-between text-ash-500">
+                      <span>Who&apos;s playing for {team.name}?</span>
+                      <span className={picked === PLAYERS_PER_SIDE ? "text-win" : "text-pink-500"}>
+                        {picked}/{PLAYERS_PER_SIDE}
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      {members.map((m) => {
+                        const on = lineup.includes(m.id);
+                        return (
+                          <button
+                            key={m.id}
+                            onClick={() => toggle(m.id, teamId)}
+                            aria-pressed={on}
+                            className={`rounded-lg border-2 px-3 py-3 font-display text-sm font-semibold transition ${
+                              on
+                                ? "border-pink-500 bg-pink-500 text-white"
+                                : "border-ash-200 text-navy-800 hover:border-pink-500"
+                            }`}
+                          >
+                            {m.name}
+                            {m.isSub && (
+                              <span
+                                className={`mt-0.5 block font-mono text-[9px] font-normal uppercase tracking-wide ${
+                                  on ? "text-pink-100" : "text-ash-400"
+                                }`}
+                              >
+                                sub
+                              </span>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })}
+              <p className="text-xs text-ash-500">
+                Only the two who play get the game, the result, and the stats. A
+                sub who sits this one out gets nothing.
+              </p>
+            </div>
+          )}
+
+          <div>
+            <div className="eyebrow mb-2 text-ash-500">Which team throws first?</div>
+            <div className="grid grid-cols-2 gap-2">
+              {[away, home].map((t) => (
+                <button
+                  key={t.id}
+                  onClick={() => begin(t.id)}
+                  disabled={pending || (!lineupLocked && lineupProblem !== null)}
+                  className="rounded-lg border-2 border-ash-200 px-3 py-4 font-display font-semibold text-navy-800 transition hover:border-pink-500 disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  {t.name}
+                  <span className="mt-1 block font-mono text-[10px] font-normal uppercase tracking-wide text-ash-400">
+                    {players.filter((p) => p.teamId === t.id).map((p) => p.name).join(" · ") ||
+                      "pick players"}
+                  </span>
+                </button>
+              ))}
+            </div>
+            {!lineupLocked && lineupProblem && choosing.length > 0 && (
+              <p className="mt-2 text-xs text-pink-500">{lineupProblem}</p>
+            )}
           </div>
-          <p className="mt-4 text-xs text-ash-500">
+
+          <p className="text-xs text-ash-500">
             Teams alternate turns, two throws each. You&apos;ll pick who leads at
             the top of every turn — nothing else.
           </p>
+
+          {error && <p className="text-xs text-loss">{error}</p>}
         </div>
       </div>
     );

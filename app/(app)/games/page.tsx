@@ -38,11 +38,16 @@ export default async function GamesPage({
   }
 
   const teamById = new Map(teams.map((t) => [t.id, t]));
-  const weeks = [...new Set(games.map((g) => g.week ?? 0))].sort((a, b) => a - b);
+  // Playoff games carry no week number, so they get a tab of their own after
+  // the regular season rather than landing in a "Week 0" bucket.
+  const PLAYOFFS = 999;
+  const tabOf = (g: { kind: string; week: number | null }) =>
+    g.kind === "playoff" ? PLAYOFFS : (g.week ?? 0);
+  const weeks = [...new Set(games.map(tabOf))].sort((a, b) => a - b);
 
   // default to the latest week that has a played game, else the first week
   const lastPlayed = Math.max(
-    ...games.filter((g) => g.status === "final").map((g) => g.week ?? 0),
+    ...games.filter((g) => g.status === "final").map(tabOf),
     0,
   );
   const { week } = await searchParams;
@@ -50,7 +55,7 @@ export default async function GamesPage({
   const current =
     weeks.includes(requested) ? requested : lastPlayed || weeks[0];
 
-  const inWeek = games.filter((g) => (g.week ?? 0) === current);
+  const inWeek = games.filter((g) => tabOf(g) === current);
 
   const sideFor = (teamId: string, score: number) => {
     const team = teamById.get(teamId);
@@ -85,7 +90,7 @@ export default async function GamesPage({
                   : "bg-white text-ash-600 hover:text-navy-800"
               }`}
             >
-              {isRivalry ? "Rivalry" : `Week ${w}`}
+              {w === PLAYOFFS ? "Playoffs" : isRivalry ? "Rivalry" : `Week ${w}`}
             </Link>
           );
         })}

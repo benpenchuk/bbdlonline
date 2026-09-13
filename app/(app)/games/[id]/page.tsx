@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { gameLabel } from "@/lib/game-label";
 import { notFound } from "next/navigation";
 import { format } from "date-fns";
 import { createClient } from "@/lib/supabase/server";
@@ -83,7 +84,7 @@ export default async function GamePage({
       <div className="rounded-lg bg-navy-800 px-5 py-5 text-white">
         <div className="mb-3 flex items-center gap-2 font-mono text-[10px] uppercase tracking-wider text-navy-200">
           <span>
-            {game.kind === "rivalry" ? "Rivalry week" : `Week ${game.week ?? "—"}`}
+            {gameLabel(game)}
           </span>
           {game.scheduled_at && (
             <span>· {format(new Date(game.scheduled_at), "MMM d, yyyy")}</span>

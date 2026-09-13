@@ -4,6 +4,7 @@ import { requirePerson } from "@/lib/auth";
 import { getActiveSeason, getSeasonGames, getTeams, getRosters, shortName } from "@/lib/queries";
 import { EmptyState } from "@/components/empty-state";
 import { ScoreOnlyForm } from "./score-only-form";
+import { gameLabel } from "@/lib/game-label";
 import { Radio } from "lucide-react";
 
 export const metadata = { title: "Track a game · BBDL" };
@@ -49,7 +50,7 @@ export default async function TrackPage() {
                 className="rounded-lg border border-ash-200 bg-white p-3"
               >
                 <div className="mb-2 flex items-center gap-2 font-mono text-[10px] uppercase tracking-wider text-ash-400">
-                  <span>{g.kind === "rivalry" ? "Rivalry" : `Week ${g.week}`}</span>
+                  <span>{gameLabel(g)}</span>
                   {g.scheduled_at && (
                     <span>· {format(new Date(g.scheduled_at), "EEE MMM d")}</span>
                   )}
@@ -79,6 +80,14 @@ export default async function TrackPage() {
                     gameId={g.id}
                     homeName={home?.name ?? "Home"}
                     awayName={away?.name ?? "Away"}
+                    homeRoster={(rosters.get(g.home_team_id) ?? []).map((p) => ({
+                      id: p.id,
+                      name: shortName(p),
+                    }))}
+                    awayRoster={(rosters.get(g.away_team_id) ?? []).map((p) => ({
+                      id: p.id,
+                      name: shortName(p),
+                    }))}
                   />
                 </div>
               </div>

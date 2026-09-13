@@ -57,6 +57,22 @@ export default async function PlayoffsPage() {
 
   const teamById = new Map((teams ?? []).map((t) => [t.id, t]));
   const bracket = matches ?? [];
+
+  // the real games behind each match, oldest first, so a series reads in order
+  const { data: games } = bracket.length
+    ? await supabase
+        .from("games")
+        .select("*")
+        .in("playoff_match_id", bracket.map((m) => m.id))
+        .order("created_at")
+    : { data: [] };
+  const gamesFor = (matchId: string) =>
+    (games ?? []).filter((g) => g.playoff_match_id === matchId && g.status !== "canceled");
+
+  // once any playoff game is played, the bracket can't be deleted
+  const anyPlayed = (games ?? []).some(
+    (g) => g.status !== "scheduled" && g.status !== "canceled",
+  );
   const rounds = [...new Set(bracket.map((m) => m.round_number))].sort((a, b) => a - b);
   const totalRounds = rounds.length;
 
@@ -69,11 +85,13 @@ export default async function PlayoffsPage() {
     matchId,
     winnerId,
     canAdvance,
+    seriesWins,
   }: {
     teamId: string | null;
     matchId: string;
     winnerId: string | null;
     canAdvance: boolean;
+    seriesWins?: number;
   }) => {
     if (!teamId) {
       return (
@@ -101,12 +119,20 @@ export default async function PlayoffsPage() {
             {(rosters.get(teamId) ?? []).map(shortName).join(" · ")}
           </span>
         </Link>
+        {seriesWins !== undefined && (
+          <span className="shrink-0 font-mono text-xs tabular-nums text-ash-500">
+            {seriesWins}
+          </span>
+        )}
         {canAdvance && !winnerId && (
           <form action={advanceTeam}>
             <input type="hidden" name="match_id" value={matchId} />
             <input type="hidden" name="winner_id" value={teamId} />
-            <button className="shrink-0 rounded border border-pink-500 px-2 py-0.5 font-mono text-[10px] text-pink-500 hover:bg-pink-500 hover:text-white">
-              won
+            <button
+              title="Decide this match without a game — for a forfeit"
+              className="shrink-0 font-mono text-[9px] text-ash-300 hover:text-pink-500 hover:underline"
+            >
+              override
             </button>
           </form>
         )}
@@ -125,7 +151,7 @@ export default async function PlayoffsPage() {
             Top half of the league · single elimination
           </p>
         </div>
-        {admin && (
+        {admin && !anyPlayed && (
           <form action={deletePlayoff} className="ml-auto">
             <input type="hidden" name="playoff_id" value={playoff.id} />
             <button className="font-mono text-[10px] text-ash-400 hover:text-loss hover:underline">
@@ -156,30 +182,63 @@ export default async function PlayoffsPage() {
             <div className="space-y-2">
               {bracket
                 .filter((m) => m.round_number === r)
-                .map((m) => (
-                  <div
-                    key={m.id}
-                    className="divide-y divide-ash-100 overflow-hidden rounded-lg border border-ash-200 bg-white"
-                  >
-                    <Side
-                      teamId={m.team1_id}
-                      matchId={m.id}
-                      winnerId={m.winner_id}
-                      canAdvance={admin && !!m.team1_id && !!m.team2_id}
-                    />
-                    <Side
-                      teamId={m.team2_id}
-                      matchId={m.id}
-                      winnerId={m.winner_id}
-                      canAdvance={admin && !!m.team1_id && !!m.team2_id}
-                    />
-                    <div className="bg-ash-50 px-3 py-1 font-mono text-[10px] text-ash-400">
-                      to {m.point_target}
-                      {m.series_length > 1 && ` · best of ${m.series_length}`}
-                      {!m.team2_id && m.team1_id && " · bye"}
+                .map((m) => {
+                  const played = gamesFor(m.id);
+                  const finals = played.filter((g) => g.status === "final");
+                  const winsFor = (teamId: string | null) =>
+                    teamId ? finals.filter((g) => g.winner_team_id === teamId).length : 0;
+                  const live = played.find((g) => g.status !== "final");
+                  const isSeries = m.series_length > 1;
+                  const isBye = m.status === "bye";
+
+                  return (
+                    <div
+                      key={m.id}
+                      className="divide-y divide-ash-100 overflow-hidden rounded-lg border border-ash-200 bg-white"
+                    >
+                      <Side
+                        teamId={m.team1_id}
+                        matchId={m.id}
+                        winnerId={m.winner_id}
+                        canAdvance={admin && !!m.team1_id && !!m.team2_id}
+                        seriesWins={isSeries && finals.length ? winsFor(m.team1_id) : undefined}
+                      />
+                      <Side
+                        teamId={m.team2_id}
+                        matchId={m.id}
+                        winnerId={m.winner_id}
+                        canAdvance={admin && !!m.team1_id && !!m.team2_id}
+                        seriesWins={isSeries && finals.length ? winsFor(m.team2_id) : undefined}
+                      />
+                      <div className="flex items-center gap-2 bg-ash-50 px-3 py-1.5 font-mono text-[10px] text-ash-400">
+                        {isBye ? (
+                          <span className="text-win">bye — advanced</span>
+                        ) : (
+                          <span>
+                            to {m.point_target}
+                            {isSeries && ` · best of ${m.series_length}`}
+                          </span>
+                        )}
+                        {live && (
+                          <Link
+                            href={`/track/${live.id}`}
+                            className="ml-auto rounded bg-pink-500 px-2 py-0.5 font-display text-[10px] font-semibold text-white hover:bg-pink-600"
+                          >
+                            {isSeries ? `Track game ${played.length}` : "Track"}
+                          </Link>
+                        )}
+                        {!live && finals.length > 0 && (
+                          <Link
+                            href={`/games/${finals[finals.length - 1].id}`}
+                            className="ml-auto text-navy-500 hover:text-pink-500 hover:underline"
+                          >
+                            {finals.length > 1 ? `${finals.length} games` : "view game"}
+                          </Link>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
             </div>
           </section>
         ))}

@@ -103,6 +103,17 @@ export async function createPlayoff(
     return { ok: false, message: error.message };
   }
 
+  // Byes advance on their own, and every match with two teams gets a real
+  // game to track. Done in the database (start_playoff) so the rules live in
+  // one place with the rest of the playoff engine.
+  const { error: startError } = await supabase.rpc("start_playoff", {
+    p_playoff: playoff.id,
+  });
+  if (startError) {
+    await supabase.from("playoffs").delete().eq("id", playoff.id);
+    return { ok: false, message: startError.message };
+  }
+
   revalidatePath("/playoffs");
   return {
     ok: true,
@@ -110,7 +121,14 @@ export async function createPlayoff(
   };
 }
 
-/** Record a winner and carry them into the next round. */
+/**
+ * Commissioner override: decide a match without a game — a forfeit, or a
+ * series settled off the site. Normally this never runs; a playoff game going
+ * final advances the winner on its own (resolve_playoff_game in 0010).
+ *
+ * The old version of this did the advancing in application code and could
+ * not handle a bye, which froze any bracket that wasn't a power of two.
+ */
 export async function advanceTeam(formData: FormData): Promise<void> {
   await requireCommissioner();
   const matchId = String(formData.get("match_id") ?? "");
@@ -118,42 +136,10 @@ export async function advanceTeam(formData: FormData): Promise<void> {
   if (!matchId || !winnerId) return;
 
   const supabase = await createClient();
-
-  const { data: match } = await supabase
-    .from("playoff_matches")
-    .select("*")
-    .eq("id", matchId)
-    .maybeSingle();
-  if (!match) return;
-
-  await supabase
-    .from("playoff_matches")
-    .update({ winner_id: winnerId, status: "completed" })
-    .eq("id", matchId);
-
-  // the winner of match N in round R feeds slot N/2 of round R+1
-  const { data: next } = await supabase
-    .from("playoff_matches")
-    .select("*")
-    .eq("playoff_id", match.playoff_id)
-    .eq("round_number", match.round_number + 1)
-    .eq("match_number", Math.floor(match.match_number / 2))
-    .maybeSingle();
-
-  if (next) {
-    // even-numbered matches feed the top slot of the next match, odd the bottom
-    const patch =
-      match.match_number % 2 === 0
-        ? { team1_id: winnerId }
-        : { team2_id: winnerId };
-    await supabase.from("playoff_matches").update(patch).eq("id", next.id);
-  } else {
-    // no next round: that was the final
-    await supabase
-      .from("playoffs")
-      .update({ status: "completed" })
-      .eq("id", match.playoff_id);
-  }
+  await supabase.rpc("override_playoff_winner", {
+    p_match: matchId,
+    p_winner: winnerId,
+  });
 
   revalidatePath("/playoffs");
 }
@@ -164,6 +150,31 @@ export async function deletePlayoff(formData: FormData): Promise<void> {
   if (!id) return;
 
   const supabase = await createClient();
+
+  // games.playoff_match_id is ON DELETE SET NULL, so deleting the bracket
+  // alone would strand its games as orphaned "playoff" games on the schedule.
+  const { data: matches } = await supabase
+    .from("playoff_matches")
+    .select("id")
+    .eq("playoff_id", id);
+  const matchIds = (matches ?? []).map((m) => m.id);
+
+  if (matchIds.length > 0) {
+    // Refuse once anything has been played. Games cascade to their throws, so
+    // deleting a bracket mid-playoffs would silently erase tracked playoff
+    // stats — the same reason a team that has played can't be deleted.
+    const { count: played } = await supabase
+      .from("games")
+      .select("*", { count: "exact", head: true })
+      .in("playoff_match_id", matchIds)
+      .not("status", "in", "(scheduled,canceled)");
+
+    if ((played ?? 0) > 0) return;
+
+    await supabase.from("games").delete().in("playoff_match_id", matchIds);
+  }
+
   await supabase.from("playoffs").delete().eq("id", id);
   revalidatePath("/playoffs");
+  revalidatePath("/games");
 }

@@ -3,9 +3,61 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { requirePerson, requireCommissioner } from "@/lib/auth";
+import { validateLineup } from "@/lib/lineup";
 import type { ThrowOutcome } from "@/lib/supabase/types";
 
 export type ThrowResult = { ok: boolean; id?: string; message?: string };
+
+/**
+ * Record who is actually playing. Exactly two per team, from that team's
+ * roster — so a sub who sits out earns nothing, and a sub who plays earns
+ * everything. Used by both tracked and score-only games; before this, one of
+ * them credited the whole roster and the other credited nobody.
+ *
+ * The lineup can change freely until the first throw, then it locks.
+ */
+async function writeLineup(gameId: string, lineup: string[]): Promise<string | null> {
+  const supabase = await createClient();
+
+  const [{ data: game }, { count: thrown }] = await Promise.all([
+    supabase.from("games").select("home_team_id, away_team_id").eq("id", gameId).maybeSingle(),
+    supabase.from("throws").select("*", { count: "exact", head: true }).eq("game_id", gameId),
+  ]);
+
+  if (!game) return "That game doesn't exist.";
+  if ((thrown ?? 0) > 0) return "The lineup locks once the first throw is logged.";
+
+  const teamIds = [game.home_team_id, game.away_team_id];
+  const { data: members } = await supabase
+    .from("team_members")
+    .select("person_id, team_id")
+    .in("team_id", teamIds)
+    .is("left_at", null);
+
+  const roster = (members ?? []).map((m) => ({ id: m.person_id, teamId: m.team_id }));
+  const problem = validateLineup(lineup, roster, teamIds);
+  if (problem) return problem;
+
+  const teamOf = new Map(roster.map((r) => [r.id, r.teamId]));
+
+  await supabase.from("game_participants").delete().eq("game_id", gameId);
+  const { error } = await supabase.from("game_participants").insert(
+    lineup.map((personId) => ({
+      game_id: gameId,
+      person_id: personId,
+      team_id: teamOf.get(personId)!,
+    })),
+  );
+
+  return error ? error.message : null;
+}
+
+export async function setLineup(gameId: string, lineup: string[]): Promise<ThrowResult> {
+  await requirePerson();
+  const problem = await writeLineup(gameId, lineup);
+  if (problem) return { ok: false, message: problem };
+  return { ok: true };
+}
 
 /**
  * Record one throw. The database fills in the sequence number, which team the
@@ -98,6 +150,12 @@ export async function submitScoreOnly(
   if (home === away) {
     return { ok: false, message: "Dye games can't end level." };
   }
+
+  // Without a lineup a score-only game used to credit nobody: the players
+  // got no game played and no result. Record who played first.
+  const lineup = formData.getAll("lineup").map(String).filter(Boolean);
+  const problem = await writeLineup(gameId, lineup);
+  if (problem) return { ok: false, message: problem };
 
   const supabase = await createClient();
   const { error } = await supabase
