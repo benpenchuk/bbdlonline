@@ -1,22 +1,32 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { requirePerson, isCommissioner } from "@/lib/auth";
-import { getActiveSeason, getRosters, shortName } from "@/lib/queries";
+import { getRosters, shortName } from "@/lib/queries";
 import { roundName } from "@/lib/bracket";
 import { EmptyState } from "@/components/empty-state";
 import { CreatePlayoffButton } from "./create-playoff-button";
 import { advanceTeam, deletePlayoff } from "./actions";
+import { pickSeason, SeasonPicker } from "../admin/season-picker";
 import { Trophy } from "lucide-react";
 
 export const metadata = { title: "Playoffs · BBDL" };
 
-export default async function PlayoffsPage() {
+export default async function PlayoffsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ season?: string }>;
+}) {
   const me = await requirePerson();
   const admin = isCommissioner(me);
-  const season = await getActiveSeason();
-  if (!season) return <EmptyState title="No active season" />;
 
   const supabase = await createClient();
+  // Imported seasons carry finished brackets, and Season 6's final was
+  // never recorded — so this page has to reach any season, not just the
+  // active one, or the champion can never be set.
+  const { season: picked } = await searchParams.then((sp) => sp);
+  const { season, seasons } = await pickSeason(supabase, picked);
+  if (!season) return <EmptyState title="No seasons yet" />;
+
   const { data: playoff } = await supabase
     .from("playoffs")
     .select("*")
@@ -32,6 +42,7 @@ export default async function PlayoffsPage() {
           </h1>
           <p className="text-sm text-ash-500">{season.name}</p>
         </header>
+        <SeasonPicker seasons={seasons} current={season} basePath="/playoffs" />
         {admin ? (
           <CreatePlayoffButton />
         ) : (
@@ -160,6 +171,7 @@ export default async function PlayoffsPage() {
           </form>
         )}
       </header>
+      <SeasonPicker seasons={seasons} current={season} basePath="/playoffs" />
 
       {champion && (
         <div className="rounded-lg bg-navy-800 px-5 py-4 text-center text-white">

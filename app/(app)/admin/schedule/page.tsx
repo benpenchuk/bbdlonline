@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { requireCommissioner } from "@/lib/auth";
 import { setGameSchedule, deleteGame } from "./actions";
 import { GenerateButtons } from "./generate-buttons";
+import { pickSeason, SeasonPicker } from "../season-picker";
 
 export const metadata = { title: "Schedule · Admin" };
 
@@ -12,20 +13,21 @@ function localInputValue(iso: string | null) {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
-export default async function AdminSchedulePage() {
+export default async function AdminSchedulePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ season?: string }>;
+}) {
   await requireCommissioner();
   const supabase = await createClient();
 
-  const { data: season } = await supabase
-    .from("seasons")
-    .select("*")
-    .eq("status", "active")
-    .maybeSingle();
+  const { season: picked } = await searchParams.then((sp) => sp);
+  const { season, seasons } = await pickSeason(supabase, picked);
 
   if (!season) {
     return (
       <p className="rounded-lg border border-loss/30 bg-loss/5 px-4 py-3 text-sm text-loss">
-        No active season.
+        No seasons yet.
       </p>
     );
   }
@@ -49,6 +51,7 @@ export default async function AdminSchedulePage() {
 
   return (
     <div className="space-y-8">
+      <SeasonPicker seasons={seasons} current={season} basePath="/admin/schedule" />
       <div className="flex flex-wrap items-baseline gap-3">
         <h2 className="font-display text-lg font-bold text-navy-800">
           {season.name} schedule
