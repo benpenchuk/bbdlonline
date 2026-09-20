@@ -11,7 +11,7 @@
 --
 -- What the sheet could not tell us, and this file therefore does not say:
 --   * 10 games have no score in the sheet; they import as 'canceled'.
---   * The final's winner was never recorded, so the last match stays 'pending' — decide it from /playoffs.
+--   * Season 7's other finalist is unknown: whoever won Peas n' Pickles vs Dog Eaters. Set it from /playoffs.
 --   * 8 MVP entries matched no player in that game (all of them read 'Forefeit') and are unset.
 -- =============================================================
 
@@ -403,8 +403,13 @@ insert into public.imported_player_season_stats
        (season_id, person_id, total_points, throws, table_hits, catches,
         field_goals, dinks, sinks, fifas, special_points, naked_laps,
         self_sinks, mvps, source_games_played, source)
-select s.id, p.id, v.pts, v.throws, v.hits, v.catches, v.fg, v.dinks,
-       v.sinks, v.fifa, v.special, v.laps, v.selfsink, v.mvps, v.gp,
+-- Explicit casts: a VALUES column that is null in every row -- and in
+-- Season 6 several are, since the sheet never recorded a self sink --
+-- is inferred as text and will not go into an integer column.
+select s.id, p.id, v.pts::integer, v.throws::integer, v.hits::integer,
+       v.catches::integer, v.fg::integer, v.dinks::integer,
+       v.sinks::integer, v.fifa::integer, v.special::integer,
+       v.laps::integer, v.selfsink::integer, v.mvps::integer, v.gp::integer,
        'Copy of BBDL Season 7 Master Sheet.xlsx'
   from public.seasons s
  cross join (values
@@ -480,7 +485,7 @@ on conflict (season_id, person_id) do nothing;
 
 -- ---------- playoffs ----------
 insert into public.playoffs (season_id, name, status)
-select s.id, 'BBDL Season 7 Playoffs', 'complete'
+select s.id, 'BBDL Season 7 Playoffs', 'completed'
   from public.seasons s where s.slug = 'season-7';
 
 insert into public.playoff_matches
@@ -499,10 +504,11 @@ select po.id, v.rnd, v.mtch, t1.id, t2.id, w.id,
     (2, 3, 'johnson-and-johnson', 'more-passion', 'more-passion'),
     (2, 4, 'liver-let-die', 'sleepy-terrorists', 'sleepy-terrorists'),
     (3, 1, 'peas-n-pickles', 'dog-eaters', null),
-    (3, 2, 'more-passion', 'sleepy-terrorists', null)
+    (3, 2, 'more-passion', 'sleepy-terrorists', 'sleepy-terrorists'),
+    (4, 1, 'sleepy-terrorists', null, 'sleepy-terrorists')
   ) as v(rnd, mtch, t1_slug, t2_slug, win_slug)
   join public.teams t1 on t1.season_id = s.id and t1.slug = v.t1_slug
-  join public.teams t2 on t2.season_id = s.id and t2.slug = v.t2_slug
+  left join public.teams t2 on t2.season_id = s.id and t2.slug = v.t2_slug
   left join public.teams w on w.season_id = s.id and w.slug = v.win_slug
  where s.slug = 'season-7'
 on conflict (playoff_id, round_number, match_number) do nothing;

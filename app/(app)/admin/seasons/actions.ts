@@ -140,3 +140,26 @@ export async function updateSeasonRules(formData: FormData): Promise<void> {
 
   revalidatePath("/admin/seasons");
 }
+
+/**
+ * Unlock a finished season so it can be corrected, or lock it again.
+ *
+ * The lock is enforced by RLS (0016), not here — every write policy on
+ * season-scoped data goes through season_is_open(). This action only
+ * flips the flag; if it were the only check, anything holding an API key
+ * would walk straight past it.
+ */
+export async function setSeasonLock(formData: FormData): Promise<void> {
+  await requireCommissioner();
+  const id = String(formData.get("season_id") ?? "");
+  const locked = String(formData.get("locked") ?? "") === "true";
+  if (!id) return;
+
+  const supabase = await createClient();
+  await supabase.from("seasons").update({ locked }).eq("id", id);
+
+  // Every surface that renders season data reflects the lock.
+  for (const p of ["/admin/seasons", "/admin/teams", "/admin/schedule", "/playoffs", "/standings"]) {
+    revalidatePath(p);
+  }
+}

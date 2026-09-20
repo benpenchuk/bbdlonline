@@ -1,6 +1,12 @@
 import { createClient } from "@/lib/supabase/server";
 import { requireCommissioner } from "@/lib/auth";
-import { activateSeason, setSeasonStatus, updateSeasonRules } from "./actions";
+import {
+  activateSeason,
+  setSeasonStatus,
+  setSeasonLock,
+  updateSeasonRules,
+} from "./actions";
+import { Lock, Unlock } from "lucide-react";
 import { NewSeasonForm } from "./new-season-form";
 
 export const metadata = { title: "Seasons · Admin" };
@@ -91,7 +97,31 @@ export default async function AdminSeasonsPage() {
                 {s.status}
               </span>
 
+              {s.locked && (
+                <span className="inline-flex items-center gap-1 rounded bg-ash-100 px-2 py-0.5 font-mono text-[10px] uppercase tracking-wide text-ash-600">
+                  <Lock size={10} /> locked
+                </span>
+              )}
+
               <div className="ml-auto flex items-center gap-2">
+                {/* Unlocking is what makes a finished season correctable.
+                    RLS refuses every write to a locked season, so this is
+                    the only way in — and locking it again afterwards is
+                    what stops a stray click rewriting 2025. */}
+                <form action={setSeasonLock}>
+                  <input type="hidden" name="season_id" value={s.id} />
+                  <input type="hidden" name="locked" value={s.locked ? "false" : "true"} />
+                  <button
+                    className={
+                      s.locked
+                        ? "inline-flex items-center gap-1.5 rounded border border-pink-500 px-3 py-1.5 font-display text-xs font-semibold text-pink-600 hover:bg-pink-50"
+                        : "inline-flex items-center gap-1.5 rounded border border-ash-300 px-3 py-1.5 font-display text-xs font-semibold text-ash-700 hover:border-navy-800"
+                    }
+                  >
+                    {s.locked ? <Unlock size={12} /> : <Lock size={12} />}
+                    {s.locked ? "Unlock to edit" : "Lock"}
+                  </button>
+                </form>
                 {s.status !== "active" && (
                   <form action={activateSeason}>
                     <input type="hidden" name="season_id" value={s.id} />

@@ -220,3 +220,67 @@ export async function deleteGame(formData: FormData): Promise<void> {
   await supabase.from("games").delete().eq("id", id).eq("status", "scheduled");
   revalidatePath("/admin/schedule");
 }
+
+/**
+ * Correct a game's score from the admin schedule.
+ *
+ * The imported seasons need this: 16 games came over with no score
+ * recorded, and Season 7's standings tab disagrees with its own schedule
+ * for ten teams. Nobody is left to confirm a game from 2025, so the
+ * commissioner sets the result and the winner directly rather than going
+ * through the two-team confirmation flow.
+ *
+ * Blank scores mean "this was never played" and send the game back to
+ * 'canceled', which keeps the fixture on record while leaving it out of
+ * the standings.
+ */
+export async function setGameScore(formData: FormData): Promise<void> {
+  await requireCommissioner();
+  const id = String(formData.get("game_id") ?? "");
+  if (!id) return;
+
+  const rawHome = String(formData.get("home_score") ?? "").trim();
+  const rawAway = String(formData.get("away_score") ?? "").trim();
+
+  const supabase = await createClient();
+  const { data: game } = await supabase
+    .from("games")
+    .select("id, home_team_id, away_team_id, is_tracked")
+    .eq("id", id)
+    .maybeSingle();
+  if (!game) return;
+
+  // A tracked game's score is the sum of its throws — resync_game_score()
+  // would overwrite anything set here on the next throw, so refuse rather
+  // than appear to work.
+  if (game.is_tracked) return;
+
+  if (rawHome === "" && rawAway === "") {
+    await supabase
+      .from("games")
+      .update({ home_score: 0, away_score: 0, status: "canceled", winner_team_id: null })
+      .eq("id", id);
+    revalidatePath("/admin/schedule");
+    revalidatePath("/standings");
+    return;
+  }
+
+  const home = Number(rawHome);
+  const away = Number(rawAway);
+  if (!Number.isInteger(home) || !Number.isInteger(away) || home < 0 || away < 0) return;
+  if (home === away) return; // dye games cannot end level
+
+  await supabase
+    .from("games")
+    .update({
+      home_score: home,
+      away_score: away,
+      status: "final",
+      winner_team_id: home > away ? game.home_team_id : game.away_team_id,
+    })
+    .eq("id", id);
+
+  revalidatePath("/admin/schedule");
+  revalidatePath("/standings");
+  revalidatePath("/records");
+}

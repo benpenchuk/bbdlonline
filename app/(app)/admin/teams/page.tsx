@@ -8,7 +8,7 @@ import {
 } from "./actions";
 import { NewTeamForm } from "./new-team-form";
 import { pickSeason, SeasonPicker } from "../season-picker";
-import { CheckCircle2, Clock } from "lucide-react";
+import { CheckCircle2, Clock, Lock } from "lucide-react";
 
 export const metadata = { title: "Teams · Admin" };
 
@@ -64,6 +64,19 @@ export default async function AdminTeamsPage({
   return (
     <div className="space-y-8">
       <SeasonPicker seasons={seasons} current={season} basePath="/admin/teams" />
+      {season.locked && (
+        <p className="flex items-center gap-2 rounded-lg border border-ash-300 bg-ash-50 px-4 py-2.5 text-sm text-ash-700">
+          <Lock size={14} className="shrink-0" />
+          <span>
+            {season.name} is locked — rosters and team names are read-only.
+            Unlock it on the{" "}
+            <a href="/admin/seasons" className="font-semibold text-pink-600 underline">
+              seasons page
+            </a>{" "}
+            to make a correction.
+          </span>
+        </p>
+      )}
       <div className="flex flex-wrap items-baseline gap-3">
         <h2 className="font-display text-lg font-bold text-navy-800">
           {season.name} teams

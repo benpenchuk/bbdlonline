@@ -43,6 +43,21 @@ STAT_ALIASES = {
 # different men -- 52 roster slots against 52 stat rows proves it -- so both
 # are created and this pairing is a GUESS, flagged in the SQL and swappable
 # from /admin/teams.
+# Neither sheet recorded a final. These come from the commissioner.
+#   Season 6: Froomberg and Orlando -- Jumbo Shrimp -- beat La Cosa Nostra.
+#   Season 7: Shawah and Scogna -- Sleepy Terrorists. The same pair were
+#   La Cosa Nostra, who LOST the Season 6 final, and came back to win.
+#
+# Season 7's bracket stops at the semi-finals, so its final is added
+# here. Its other finalist is still unknown -- whoever won Peas n'
+# Pickles vs Dog Eaters -- and is left null for /playoffs to fill in.
+PLAYOFF_RESULTS = {
+    6: dict(winners={(4, 1): "jumbo-shrimp"}, extra=[]),
+    7: dict(winners={(3, 2): "sleepy-terrorists"},
+            extra=[dict(rnd=4, mtch=1, t1="sleepy-terrorists", t2=None,
+                        win="sleepy-terrorists")]),
+}
+
 PETER_SLUG_BY_TEAM = {"queefers": "peter-miller", "toe ticklers": "peter-mut"}
 
 # Names a team was written under in the schedule but never on the roster.
@@ -75,6 +90,12 @@ def uniq(base, taken):
 
 def q(v):
     return "null" if v in (None, "") else "'" + str(v).replace("'", "''") + "'"
+
+
+def qs(v):
+    """Always a string literal, never null. last_name is NOT NULL even
+    though it may be blank — blank means the league never knew it."""
+    return "'" + str(v or "").replace("'", "''") + "'"
 
 
 def num(v):
@@ -295,7 +316,7 @@ on conflict (number) do nothing;\n""")
     L.append("-- league_status is a starting guess: anyone who played the most recent")
     L.append("-- imported season is 'player', everyone else 'alumni'. Fix from /admin/people.")
     L.append("insert into public.people (first_name, last_name, nickname, slug, league_status) values")
-    rows = [f"  ({q(p['first'])}, {q(p['last'])}, {q(p['nick'])}, {q(p['slug'])}, "
+    rows = [f"  ({q(p['first'])}, {qs(p['last'])}, {q(p['nick'])}, {q(p['slug'])}, "
             f"{q(status_of(p['slug']))})"
             for p in sorted(people.values(), key=lambda x: x["slug"])]
     L.append(",\n".join(rows) + "\non conflict (slug) do nothing;\n")
@@ -381,8 +402,13 @@ on conflict (game_id, person_id) do nothing;\n""")
        (season_id, person_id, total_points, throws, table_hits, catches,
         field_goals, dinks, sinks, fifas, special_points, naked_laps,
         self_sinks, mvps, source_games_played, source)
-select s.id, p.id, v.pts, v.throws, v.hits, v.catches, v.fg, v.dinks,
-       v.sinks, v.fifa, v.special, v.laps, v.selfsink, v.mvps, v.gp,""")
+-- Explicit casts: a VALUES column that is null in every row -- and in
+-- Season 6 several are, since the sheet never recorded a self sink --
+-- is inferred as text and will not go into an integer column.
+select s.id, p.id, v.pts::integer, v.throws::integer, v.hits::integer,
+       v.catches::integer, v.fg::integer, v.dinks::integer,
+       v.sinks::integer, v.fifa::integer, v.special::integer,
+       v.laps::integer, v.selfsink::integer, v.mvps::integer, v.gp::integer,""")
     L.append(f"       {q(cfg['file'])}\n  from public.seasons s\n cross join (values")
     L.append(",\n".join(
         "    ({}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {})".format(
@@ -398,8 +424,10 @@ on conflict (season_id, person_id) do nothing;\n""")
 
     if rounds:
         L.append("-- ---------- playoffs ----------")
+        # 'completed', not 'complete': season_champions filters on the
+        # exact string, so the wrong one leaves the champion invisible.
         L.append(f"""insert into public.playoffs (season_id, name, status)
-select s.id, 'BBDL Season {n} Playoffs', 'complete'
+select s.id, 'BBDL Season {n} Playoffs', 'completed'
   from public.seasons s where s.slug = '{sslug}';\n""")
         L.append("""insert into public.playoff_matches
        (playoff_id, round_number, match_number, team1_id, team2_id, winner_id, status)
@@ -408,22 +436,29 @@ select po.id, v.rnd, v.mtch, t1.id, t2.id, w.id,
   from public.playoffs po
   join public.seasons s on s.id = po.season_id
  cross join (values""")
+        res = PLAYOFF_RESULTS.get(n, dict(winners={}, extra=[]))
         vals = []
         for ri, seq in enumerate(rounds, 1):
             nxt = rounds[ri] if ri < len(rounds) else None
             for mi in range(0, len(seq) - 1, 2):
                 t1, t2 = seq[mi], seq[mi + 1]
-                win = None
-                if nxt:
+                mn = mi // 2 + 1
+                # Who advanced is normally read off the next round. The
+                # last round has no next round, so its result is supplied.
+                win = res["winners"].get((ri, mn))
+                if win is None and nxt:
                     adv = {t["slug"] for t in nxt}
                     hit = [t["slug"] for t in (t1, t2) if t["slug"] in adv]
                     win = hit[0] if len(hit) == 1 else None
-                vals.append(f"    ({ri}, {mi // 2 + 1}, {q(t1['slug'])}, "
+                vals.append(f"    ({ri}, {mn}, {q(t1['slug'])}, "
                             f"{q(t2['slug'])}, {q(win)})")
+        for e in res["extra"]:
+            vals.append(f"    ({e['rnd']}, {e['mtch']}, {q(e['t1'])}, "
+                        f"{q(e['t2'])}, {q(e['win'])})")
         L.append(",\n".join(vals))
         L.append(f"""  ) as v(rnd, mtch, t1_slug, t2_slug, win_slug)
   join public.teams t1 on t1.season_id = s.id and t1.slug = v.t1_slug
-  join public.teams t2 on t2.season_id = s.id and t2.slug = v.t2_slug
+  left join public.teams t2 on t2.season_id = s.id and t2.slug = v.t2_slug
   left join public.teams w on w.season_id = s.id and w.slug = v.win_slug
  where s.slug = '{sslug}'
 on conflict (playoff_id, round_number, match_number) do nothing;\n""")
@@ -464,9 +499,9 @@ def main():
         if cancels:
             caveats.append(f"{len(cancels)} games have no score in the sheet; "
                            "they import as 'canceled'.")
-        if rounds:
-            caveats.append("The final's winner was never recorded, so the last "
-                           "match stays 'pending' — decide it from /playoffs.")
+        if n == 7:
+            caveats.append("Season 7's other finalist is unknown: whoever won "
+                           "Peas n' Pickles vs Dog Eaters. Set it from /playoffs.")
         if n == 6:
             caveats.append("Two men played as 'Peter M'. Which team each was on "
                            "is a GUESS: swap them from /admin/teams if wrong.")

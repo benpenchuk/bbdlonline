@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import type { TablesUpdate } from "@/lib/supabase/types";
 import { requireCommissioner } from "@/lib/auth";
 import { buildBracket } from "@/lib/bracket";
 
@@ -177,4 +178,33 @@ export async function deletePlayoff(formData: FormData): Promise<void> {
   await supabase.from("playoffs").delete().eq("id", id);
   revalidatePath("/playoffs");
   revalidatePath("/games");
+}
+
+/**
+ * Fill an empty slot in a bracket.
+ *
+ * Season 7's sheet recorded its semi-finals but never its final, so the
+ * final was imported with one side known (the champion Ben confirmed)
+ * and the other blank. Advancing a team cannot fill that slot — there is
+ * no match to advance FROM — so the commissioner names it directly.
+ *
+ * Also covers a bracket built before every qualifier was decided.
+ */
+export async function setMatchTeam(formData: FormData): Promise<void> {
+  await requireCommissioner();
+  const matchId = String(formData.get("match_id") ?? "");
+  const slot = String(formData.get("slot") ?? "");
+  const teamId = String(formData.get("team_id") ?? "");
+  if (!matchId || (slot !== "team1_id" && slot !== "team2_id")) return;
+
+  // Built explicitly rather than with a computed key: `{ [slot]: ... }`
+  // widens to a string index signature, which the generated row type
+  // rejects outright.
+  const patch: TablesUpdate<"playoff_matches"> =
+    slot === "team1_id" ? { team1_id: teamId || null } : { team2_id: teamId || null };
+
+  const supabase = await createClient();
+  await supabase.from("playoff_matches").update(patch).eq("id", matchId);
+
+  revalidatePath("/playoffs");
 }

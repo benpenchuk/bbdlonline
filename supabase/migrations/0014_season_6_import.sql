@@ -11,7 +11,6 @@
 --
 -- What the sheet could not tell us, and this file therefore does not say:
 --   * 6 games have no score in the sheet; they import as 'canceled'.
---   * The final's winner was never recorded, so the last match stays 'pending' — decide it from /playoffs.
 --   * Two men played as 'Peter M'. Which team each was on is a GUESS: swap them from /admin/teams if wrong.
 -- =============================================================
 
@@ -68,7 +67,7 @@ insert into public.people (first_name, last_name, nickname, slug, league_status)
   ('Paul', 'Hewitt', null, 'paul-hewitt', 'alumni'),
   ('Peter', 'Lynch', null, 'peter-lynch', 'player'),
   ('Peter', 'Miller', null, 'peter-miller', 'player'),
-  ('Peter', null, 'Mut.', 'peter-mut', 'alumni'),
+  ('Peter', '', 'Mut.', 'peter-mut', 'alumni'),
   ('Peyton', 'Jones', null, 'peyton-jones', 'player'),
   ('Piero', 'E', null, 'piero-e', 'player'),
   ('Sam', 'Abner', null, 'sam-abner', 'player'),
@@ -314,8 +313,13 @@ insert into public.imported_player_season_stats
        (season_id, person_id, total_points, throws, table_hits, catches,
         field_goals, dinks, sinks, fifas, special_points, naked_laps,
         self_sinks, mvps, source_games_played, source)
-select s.id, p.id, v.pts, v.throws, v.hits, v.catches, v.fg, v.dinks,
-       v.sinks, v.fifa, v.special, v.laps, v.selfsink, v.mvps, v.gp,
+-- Explicit casts: a VALUES column that is null in every row -- and in
+-- Season 6 several are, since the sheet never recorded a self sink --
+-- is inferred as text and will not go into an integer column.
+select s.id, p.id, v.pts::integer, v.throws::integer, v.hits::integer,
+       v.catches::integer, v.fg::integer, v.dinks::integer,
+       v.sinks::integer, v.fifa::integer, v.special::integer,
+       v.laps::integer, v.selfsink::integer, v.mvps::integer, v.gp::integer,
        'BBDL Season 6 Master Sheet.xlsx'
   from public.seasons s
  cross join (values
@@ -379,7 +383,7 @@ on conflict (season_id, person_id) do nothing;
 
 -- ---------- playoffs ----------
 insert into public.playoffs (season_id, name, status)
-select s.id, 'BBDL Season 6 Playoffs', 'complete'
+select s.id, 'BBDL Season 6 Playoffs', 'completed'
   from public.seasons s where s.slug = 'season-6';
 
 insert into public.playoff_matches
@@ -403,10 +407,10 @@ select po.id, v.rnd, v.mtch, t1.id, t2.id, w.id,
     (2, 4, 'colonial-wonton', 'johnson-and-johnson', 'colonial-wonton'),
     (3, 1, 'la-cosa-nostra', 'beercelona', 'la-cosa-nostra'),
     (3, 2, 'jumbo-shrimp', 'colonial-wonton', 'jumbo-shrimp'),
-    (4, 1, 'la-cosa-nostra', 'jumbo-shrimp', null)
+    (4, 1, 'la-cosa-nostra', 'jumbo-shrimp', 'jumbo-shrimp')
   ) as v(rnd, mtch, t1_slug, t2_slug, win_slug)
   join public.teams t1 on t1.season_id = s.id and t1.slug = v.t1_slug
-  join public.teams t2 on t2.season_id = s.id and t2.slug = v.t2_slug
+  left join public.teams t2 on t2.season_id = s.id and t2.slug = v.t2_slug
   left join public.teams w on w.season_id = s.id and w.slug = v.win_slug
  where s.slug = 'season-6'
 on conflict (playoff_id, round_number, match_number) do nothing;

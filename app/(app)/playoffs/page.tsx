@@ -5,7 +5,7 @@ import { getRosters, shortName } from "@/lib/queries";
 import { roundName } from "@/lib/bracket";
 import { EmptyState } from "@/components/empty-state";
 import { CreatePlayoffButton } from "./create-playoff-button";
-import { advanceTeam, deletePlayoff } from "./actions";
+import { advanceTeam, deletePlayoff, setMatchTeam } from "./actions";
 import { pickSeason, SeasonPicker } from "../admin/season-picker";
 import { Trophy } from "lucide-react";
 
@@ -67,6 +67,7 @@ export default async function PlayoffsPage({
   ]);
 
   const teamById = new Map((teams ?? []).map((t) => [t.id, t]));
+  const teamList = [...(teams ?? [])].sort((a, b) => a.name.localeCompare(b.name));
   const bracket = matches ?? [];
 
   // the real games behind each match, oldest first, so a series reads in order
@@ -172,6 +173,15 @@ export default async function PlayoffsPage({
         )}
       </header>
       <SeasonPicker seasons={seasons} current={season} basePath="/playoffs" />
+      {admin && season.locked && (
+        <p className="rounded-lg border border-ash-300 bg-ash-50 px-4 py-2.5 text-sm text-ash-700">
+          {season.name} is locked. Unlock it on the{" "}
+          <Link href="/admin/seasons" className="font-semibold text-pink-600 underline">
+            seasons page
+          </Link>{" "}
+          to change this bracket.
+        </p>
+      )}
 
       {champion && (
         <div className="rounded-lg bg-navy-800 px-5 py-4 text-center text-white">
@@ -222,6 +232,37 @@ export default async function PlayoffsPage({
                         canAdvance={admin && !!m.team1_id && !!m.team2_id}
                         seriesWins={isSeries && finals.length ? winsFor(m.team2_id) : undefined}
                       />
+                      {/* An empty slot cannot be filled by advancing a
+                          team — there is no earlier match to advance
+                          from — so it is named directly. */}
+                      {admin && !season.locked && !isBye && (!m.team1_id || !m.team2_id) && (
+                        <form
+                          action={setMatchTeam}
+                          className="flex items-center gap-1.5 bg-pink-50 px-3 py-2"
+                        >
+                          <input type="hidden" name="match_id" value={m.id} />
+                          <input
+                            type="hidden"
+                            name="slot"
+                            value={m.team1_id ? "team2_id" : "team1_id"}
+                          />
+                          <select
+                            name="team_id"
+                            defaultValue=""
+                            className="min-w-0 flex-1 rounded border border-ash-300 px-2 py-1 text-xs"
+                          >
+                            <option value="">Who played here?</option>
+                            {teamList.map((t) => (
+                              <option key={t.id} value={t.id}>
+                                {t.name}
+                              </option>
+                            ))}
+                          </select>
+                          <button className="font-mono text-[10px] font-semibold text-pink-600 hover:underline">
+                            set
+                          </button>
+                        </form>
+                      )}
                       <div className="flex items-center gap-2 bg-ash-50 px-3 py-1.5 font-mono text-[10px] text-ash-400">
                         {isBye ? (
                           <span className="text-win">bye — advanced</span>

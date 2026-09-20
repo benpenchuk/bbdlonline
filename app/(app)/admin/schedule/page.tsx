@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { requireCommissioner } from "@/lib/auth";
-import { setGameSchedule, deleteGame } from "./actions";
+import { setGameSchedule, deleteGame, setGameScore } from "./actions";
+import { Lock } from "lucide-react";
 import { GenerateButtons } from "./generate-buttons";
 import { pickSeason, SeasonPicker } from "../season-picker";
 
@@ -52,6 +53,15 @@ export default async function AdminSchedulePage({
   return (
     <div className="space-y-8">
       <SeasonPicker seasons={seasons} current={season} basePath="/admin/schedule" />
+      {season.locked && (
+        <p className="flex items-center gap-2 rounded-lg border border-ash-300 bg-ash-50 px-4 py-2.5 text-sm text-ash-700">
+          <Lock size={14} className="shrink-0" />
+          <span>
+            {season.name} is locked, so nothing here can be changed. Unlock it
+            on the <a href="/admin/seasons" className="font-semibold text-pink-600 underline">seasons page</a> first.
+          </span>
+        </p>
+      )}
       <div className="flex flex-wrap items-baseline gap-3">
         <h2 className="font-display text-lg font-bold text-navy-800">
           {season.name} schedule
@@ -95,7 +105,11 @@ export default async function AdminSchedulePage({
                   {inWeek.map((g) => {
                     const home = teamById.get(g.home_team_id);
                     const away = teamById.get(g.away_team_id);
-                    const locked = g.status !== "scheduled";
+                    // A tracked game's score is the sum of its throws, so
+                    // resync_game_score() would overwrite anything typed
+                    // here. Those get the tracker, not a score box.
+                    const played = g.status !== "scheduled";
+                    const scoreEditable = !season.locked && !g.is_tracked;
 
                     return (
                       <form
@@ -113,12 +127,41 @@ export default async function AdminSchedulePage({
                           <span className="font-semibold text-ash-900">
                             {away?.name ?? "?"}
                           </span>
-                          {locked && (
+                          {played && (
                             <span className="ml-2 font-mono text-[10px] tabular-nums text-ash-500">
-                              {g.home_score}–{g.away_score} {g.status}
+                              {g.status === "canceled"
+                                ? "no score recorded"
+                                : `${g.home_score}–${g.away_score} ${g.status}`}
+                              {g.is_tracked && " · tracked"}
                             </span>
                           )}
                         </span>
+
+                        {scoreEditable && (
+                          <span className="flex items-center gap-1">
+                            <input
+                              name="home_score"
+                              inputMode="numeric"
+                              defaultValue={g.status === "canceled" ? "" : g.home_score}
+                              aria-label={`${home?.name ?? "Home"} score`}
+                              className="w-11 rounded border border-ash-300 px-1.5 py-1 text-center text-xs tabular-nums"
+                            />
+                            <span className="text-ash-400">–</span>
+                            <input
+                              name="away_score"
+                              inputMode="numeric"
+                              defaultValue={g.status === "canceled" ? "" : g.away_score}
+                              aria-label={`${away?.name ?? "Away"} score`}
+                              className="w-11 rounded border border-ash-300 px-1.5 py-1 text-center text-xs tabular-nums"
+                            />
+                            <button
+                              formAction={setGameScore}
+                              className="font-mono text-[10px] text-pink-500 hover:underline"
+                            >
+                              score
+                            </button>
+                          </span>
+                        )}
 
                         <input
                           type="datetime-local"
@@ -135,7 +178,7 @@ export default async function AdminSchedulePage({
                         <button className="font-mono text-[10px] text-pink-500 hover:underline">
                           save
                         </button>
-                        {!locked && (
+                        {!played && !season.locked && (
                           <button
                             formAction={deleteGame}
                             className="font-mono text-[10px] text-ash-400 hover:text-loss hover:underline"

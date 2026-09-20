@@ -86,7 +86,14 @@ create policy imported_stats_write_commissioner on public.imported_player_season
 -- The join also lets each column come from the right side: participation
 -- from the games, scoring from whichever source has it.
 -- =============================================================
-create or replace view public.player_season_stats with (security_invoker = true) as
+-- Dropped and recreated rather than CREATE OR REPLACEd: replacing a view
+-- cannot reorder or rename its columns, and is_imported is added near the
+-- front. Nothing else in the schema reads these two, so there is nothing
+-- to cascade into.
+drop view if exists public.player_career_stats;
+drop view if exists public.player_season_stats;
+
+create view public.player_season_stats with (security_invoker = true) as
 with tracked as (
   select season_id,
          person_id,
@@ -150,7 +157,7 @@ full outer join public.imported_player_season_stats i
 
 -- Career totals pick the import up for free, since they sum the view
 -- above. coalesce guards the nulls an imported season leaves behind.
-create or replace view public.player_career_stats with (security_invoker = true) as
+create view public.player_career_stats with (security_invoker = true) as
 select person_id,
        count(distinct season_id)        as seasons,
        sum(games_played)                as games_played,
