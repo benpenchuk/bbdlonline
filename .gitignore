@@ -27,3 +27,7 @@ next-env.d.ts
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# the roster mapping lives in roster.tsv; the Numbers bundle it was
+# filled in with is a 250KB binary copy of the same data
+scripts/import/*.numbers

@@ -23,6 +23,7 @@ export async function createSeason(
   const term = String(formData.get("term") ?? "fall");
   const year = num(formData, "year", new Date().getFullYear());
   const weeks = num(formData, "regular_weeks", 6);
+  const number = num(formData, "number", 0);
 
   if (term !== "fall" && term !== "spring") {
     return { ok: false, message: "Term must be fall or spring." };
@@ -30,14 +31,19 @@ export async function createSeason(
   if (year < 2000 || year > 2100) {
     return { ok: false, message: "That year doesn't look right." };
   }
+  if (number < 1) {
+    return { ok: false, message: "A season needs its number — BBDL Season 9, and so on." };
+  }
 
-  const name = `${term === "fall" ? "Fall" : "Spring"} ${year}`;
-  const slug = `${term}-${year}`;
+  // The number is the name. Year and term still record when it happened.
+  const name = `BBDL Season ${number}`;
+  const slug = `season-${number}`;
 
   const supabase = await createClient();
   const { error } = await supabase.from("seasons").insert({
     name,
     slug,
+    number,
     year,
     term,
     regular_weeks: weeks,
@@ -45,11 +51,17 @@ export async function createSeason(
   });
 
   if (error) {
+    // Two different unique constraints can fire here, and telling them
+    // apart is the difference between a useful message and a shrug.
+    const dupeNumber = /seasons_number_unique|seasons_slug_key/i.test(error.message);
+    const dupeTerm = /seasons_year_term_key/i.test(error.message);
     return {
       ok: false,
-      message: /duplicate|unique/i.test(error.message)
+      message: dupeNumber
         ? `${name} already exists.`
-        : error.message,
+        : dupeTerm
+          ? `There is already a season for ${term} ${year}.`
+          : error.message,
     };
   }
 

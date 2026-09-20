@@ -72,6 +72,7 @@ export type Database = {
           home_score: number;
           home_team_id: string;
           id: string;
+          imported_mvp_person_id: string | null;
           is_tracked: boolean;
           kind: Database["public"]["Enums"]["game_kind"];
           location: string | null;
@@ -91,6 +92,7 @@ export type Database = {
           home_score?: number;
           home_team_id: string;
           id?: string;
+          imported_mvp_person_id?: string | null;
           is_tracked?: boolean;
           kind?: Database["public"]["Enums"]["game_kind"];
           location?: string | null;
@@ -110,6 +112,7 @@ export type Database = {
           home_score?: number;
           home_team_id?: string;
           id?: string;
+          imported_mvp_person_id?: string | null;
           is_tracked?: boolean;
           kind?: Database["public"]["Enums"]["game_kind"];
           location?: string | null;
@@ -345,6 +348,7 @@ export type Database = {
           final_series_length: number;
           id: string;
           name: string;
+          number: number;
           point_cap: number | null;
           point_target: number;
           regular_weeks: number;
@@ -364,6 +368,7 @@ export type Database = {
           final_series_length?: number;
           id?: string;
           name: string;
+          number: number;
           point_cap?: number | null;
           point_target?: number;
           regular_weeks?: number;
@@ -383,6 +388,7 @@ export type Database = {
           final_series_length?: number;
           id?: string;
           name?: string;
+          number?: number;
           point_cap?: number | null;
           point_target?: number;
           regular_weeks?: number;
