@@ -23,6 +23,7 @@ export async function createSeason(
   const term = String(formData.get("term") ?? "fall");
   const year = num(formData, "year", new Date().getFullYear());
   const weeks = num(formData, "regular_weeks", 6);
+  const number = num(formData, "number", 0);
 
   if (term !== "fall" && term !== "spring") {
     return { ok: false, message: "Term must be fall or spring." };
@@ -30,14 +31,19 @@ export async function createSeason(
   if (year < 2000 || year > 2100) {
     return { ok: false, message: "That year doesn't look right." };
   }
+  if (number < 1) {
+    return { ok: false, message: "A season needs its number — BBDL Season 9, and so on." };
+  }
 
-  const name = `${term === "fall" ? "Fall" : "Spring"} ${year}`;
-  const slug = `${term}-${year}`;
+  // The number is the name. Year and term still record when it happened.
+  const name = `BBDL Season ${number}`;
+  const slug = `season-${number}`;
 
   const supabase = await createClient();
   const { error } = await supabase.from("seasons").insert({
     name,
     slug,
+    number,
     year,
     term,
     regular_weeks: weeks,
@@ -45,11 +51,17 @@ export async function createSeason(
   });
 
   if (error) {
+    // Two different unique constraints can fire here, and telling them
+    // apart is the difference between a useful message and a shrug.
+    const dupeNumber = /seasons_number_unique|seasons_slug_key/i.test(error.message);
+    const dupeTerm = /seasons_year_term_key/i.test(error.message);
     return {
       ok: false,
-      message: /duplicate|unique/i.test(error.message)
+      message: dupeNumber
         ? `${name} already exists.`
-        : error.message,
+        : dupeTerm
+          ? `There is already a season for ${term} ${year}.`
+          : error.message,
     };
   }
 
@@ -127,4 +139,27 @@ export async function updateSeasonRules(formData: FormData): Promise<void> {
   await supabase.from("seasons").update(patch).eq("id", id);
 
   revalidatePath("/admin/seasons");
+}
+
+/**
+ * Unlock a finished season so it can be corrected, or lock it again.
+ *
+ * The lock is enforced by RLS (0016), not here — every write policy on
+ * season-scoped data goes through season_is_open(). This action only
+ * flips the flag; if it were the only check, anything holding an API key
+ * would walk straight past it.
+ */
+export async function setSeasonLock(formData: FormData): Promise<void> {
+  await requireCommissioner();
+  const id = String(formData.get("season_id") ?? "");
+  const locked = String(formData.get("locked") ?? "") === "true";
+  if (!id) return;
+
+  const supabase = await createClient();
+  await supabase.from("seasons").update({ locked }).eq("id", id);
+
+  // Every surface that renders season data reflects the lock.
+  for (const p of ["/admin/seasons", "/admin/teams", "/admin/schedule", "/playoffs", "/standings"]) {
+    revalidatePath(p);
+  }
 }

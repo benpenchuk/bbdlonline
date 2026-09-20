@@ -29,11 +29,25 @@ export function NewSeasonForm() {
         <CalendarPlus size={16} /> Start a season
       </h3>
       <p className="mb-4 text-xs text-ash-500">
-        One per term. Creating it doesn&apos;t activate it — you can set the teams
-        up first and flip it live when play starts.
+        The number is the name — BBDL Season 9. Term and year record when it
+        happened. Creating it doesn&apos;t activate it: set the teams up first
+        and flip it live when play starts.
       </p>
 
       <form action={action} className="space-y-3">
+        <label className="block">
+          <span className="mb-1 block font-mono text-[10px] uppercase tracking-wider text-ash-500">
+            Season number
+          </span>
+          <input
+            name="number"
+            type="number"
+            min={1}
+            required
+            placeholder="9"
+            className="w-full rounded-lg border border-ash-300 px-3 py-2 text-sm tabular-nums outline-none focus:border-pink-500"
+          />
+        </label>
         <div className="grid grid-cols-2 gap-2">
           <select
             name="term"

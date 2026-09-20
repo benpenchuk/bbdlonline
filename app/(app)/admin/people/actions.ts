@@ -153,6 +153,18 @@ export async function updatePerson(formData: FormData): Promise<void> {
     patch.site_role = value as SiteRole;
   } else if (field === "league_status" && STATUSES.includes(value as LeagueStatus)) {
     patch.league_status = value as LeagueStatus;
+  } else if (field === "name") {
+    // The imported seasons arrive with names typed off a spreadsheet, and
+    // a few men have no surname on record at all — so a blank last name is
+    // allowed and meaningful here. A blank FIRST name is not: it is what
+    // the site falls back to when there is no surname.
+    const first = String(formData.get("first_name") ?? "").trim();
+    const last = String(formData.get("last_name") ?? "").trim();
+    const nickname = String(formData.get("nickname") ?? "").trim() || null;
+    if (!first) return;
+    patch.first_name = first;
+    patch.last_name = last;
+    patch.nickname = nickname;
   } else {
     return; // unknown field — ignore rather than write something arbitrary
   }

@@ -7,24 +7,26 @@ import {
   removeTeamMember,
 } from "./actions";
 import { NewTeamForm } from "./new-team-form";
-import { CheckCircle2, Clock } from "lucide-react";
+import { pickSeason, SeasonPicker } from "../season-picker";
+import { CheckCircle2, Clock, Lock } from "lucide-react";
 
 export const metadata = { title: "Teams · Admin" };
 
-export default async function AdminTeamsPage() {
+export default async function AdminTeamsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ season?: string }>;
+}) {
   await requireCommissioner();
   const supabase = await createClient();
 
-  const { data: season } = await supabase
-    .from("seasons")
-    .select("*")
-    .eq("status", "active")
-    .maybeSingle();
+  const { season: picked } = await searchParams.then((sp) => sp);
+  const { season, seasons } = await pickSeason(supabase, picked);
 
   if (!season) {
     return (
       <p className="rounded-lg border border-loss/30 bg-loss/5 px-4 py-3 text-sm text-loss">
-        No active season. Teams belong to a season, so activate one first.
+        No seasons yet. Teams belong to a season, so create one first.
       </p>
     );
   }
@@ -61,6 +63,20 @@ export default async function AdminTeamsPage() {
 
   return (
     <div className="space-y-8">
+      <SeasonPicker seasons={seasons} current={season} basePath="/admin/teams" />
+      {season.locked && (
+        <p className="flex items-center gap-2 rounded-lg border border-ash-300 bg-ash-50 px-4 py-2.5 text-sm text-ash-700">
+          <Lock size={14} className="shrink-0" />
+          <span>
+            {season.name} is locked — rosters and team names are read-only.
+            Unlock it on the{" "}
+            <a href="/admin/seasons" className="font-semibold text-pink-600 underline">
+              seasons page
+            </a>{" "}
+            to make a correction.
+          </span>
+        </p>
+      )}
       <div className="flex flex-wrap items-baseline gap-3">
         <h2 className="font-display text-lg font-bold text-navy-800">
           {season.name} teams

@@ -50,7 +50,11 @@ export function displayName(person: {
   last_name: string;
   nickname?: string | null;
 }): string {
-  return person.nickname?.trim()
-    ? `${person.first_name} "${person.nickname}" ${person.last_name}`
-    : `${person.first_name} ${person.last_name}`;
+  // last_name is blank for players whose surname the league never knew.
+  // Joining on a filtered array keeps "Wesley" from rendering as
+  // "Wesley " with a trailing space everywhere it appears.
+  const parts = person.nickname?.trim()
+    ? [person.first_name, `"${person.nickname}"`, person.last_name]
+    : [person.first_name, person.last_name];
+  return parts.map((p) => p?.trim()).filter(Boolean).join(" ");
 }

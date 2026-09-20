@@ -77,13 +77,20 @@ export async function logThrow(input: {
 
   const { data, error } = await supabase
     .from("throws")
-    .insert({
-      game_id: input.gameId,
-      thrower_id: input.throwerId,
-      thrower_team_id: input.throwerTeamId,
-      outcome: input.outcome,
-      defender_id: input.defenderId ?? null,
-    })
+    .insert([
+      {
+        game_id: input.gameId,
+        thrower_id: input.throwerId,
+        thrower_team_id: input.throwerTeamId,
+        outcome: input.outcome,
+        defender_id: input.defenderId ?? null,
+        // seq is NOT NULL with no default, so the generated types demand
+        // it — but prepare_throw() assigns it, and a tracker that picked
+        // its own sequence number would race every other tracker on the
+        // same game. Undefined is the honest value: the database knows.
+        seq: undefined as unknown as number,
+      },
+    ])
     .select("id")
     .single();
 

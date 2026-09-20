@@ -20,8 +20,9 @@ function Save() {
   );
 }
 
-/** Nickname, hometown and throwing hand are yours. Your real name and your role
- *  are the commissioner's — the database enforces that independently. */
+/** Your name, nickname, hometown and throwing hand are yours. Your role and
+ *  league status are the commissioner's — the database enforces that
+ *  independently of this form. */
 export function ProfileEditor({ person }: { person: Person }) {
   const [open, setOpen] = useState(false);
   const [state, action] = useActionState(updateMyProfile, initial);
@@ -39,6 +40,37 @@ export function ProfileEditor({ person }: { person: Person }) {
 
   return (
     <form action={action} className="w-64 rounded-lg border border-ash-200 bg-white p-4">
+      <div className="mb-3 grid grid-cols-2 gap-2">
+        <label className="block">
+          <span className="mb-1 block font-mono text-[10px] uppercase tracking-wider text-ash-500">
+            First
+          </span>
+          <input
+            name="first_name"
+            defaultValue={person.first_name}
+            required
+            className="w-full rounded border border-ash-300 px-2 py-1.5 text-sm outline-none focus:border-pink-500"
+          />
+        </label>
+        <label className="block">
+          <span className="mb-1 block font-mono text-[10px] uppercase tracking-wider text-ash-500">
+            Last
+          </span>
+          <input
+            name="last_name"
+            defaultValue={person.last_name ?? ""}
+            placeholder="unknown"
+            className="w-full rounded border border-ash-300 px-2 py-1.5 text-sm outline-none focus:border-pink-500"
+          />
+        </label>
+      </div>
+      {!person.last_name?.trim() && (
+        <p className="mb-3 text-[11px] leading-snug text-ash-500">
+          We imported you from an old season sheet without a last name. Add it
+          and it&apos;ll show up across the site.
+        </p>
+      )}
+
       <label className="mb-3 block">
         <span className="mb-1 block font-mono text-[10px] uppercase tracking-wider text-ash-500">
           Nickname

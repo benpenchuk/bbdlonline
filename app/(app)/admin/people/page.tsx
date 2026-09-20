@@ -77,14 +77,54 @@ export default async function AdminPeoplePage() {
                 return (
                   <tr key={p.id} className="border-b border-ash-100 last:border-0">
                     <td className="px-3 py-2">
-                      <span className="font-semibold text-ash-900">
-                        {displayName(p)}
-                      </span>
-                      {isMe && (
-                        <span className="ml-2 font-mono text-[10px] text-pink-500">
-                          you
-                        </span>
-                      )}
+                      <details>
+                        <summary className="cursor-pointer list-none">
+                          <span className="font-semibold text-ash-900 underline decoration-ash-300 decoration-dotted underline-offset-4">
+                            {displayName(p)}
+                          </span>
+                          {!p.last_name?.trim() && (
+                            <span className="ml-2 font-mono text-[10px] text-ash-400">
+                              no surname
+                            </span>
+                          )}
+                          {isMe && (
+                            <span className="ml-2 font-mono text-[10px] text-pink-500">
+                              you
+                            </span>
+                          )}
+                        </summary>
+                        <form
+                          action={updatePerson}
+                          className="mt-2 flex flex-wrap items-end gap-1.5"
+                        >
+                          <input type="hidden" name="person_id" value={p.id} />
+                          <input type="hidden" name="field" value="name" />
+                          <input
+                            name="first_name"
+                            defaultValue={p.first_name}
+                            required
+                            aria-label="First name"
+                            className="w-24 rounded border border-ash-300 px-2 py-1 text-xs"
+                          />
+                          <input
+                            name="last_name"
+                            defaultValue={p.last_name ?? ""}
+                            placeholder="unknown"
+                            aria-label="Last name"
+                            className="w-28 rounded border border-ash-300 px-2 py-1 text-xs"
+                          />
+                          <input
+                            name="nickname"
+                            defaultValue={p.nickname ?? ""}
+                            placeholder="nickname"
+                            aria-label="Nickname"
+                            className="w-24 rounded border border-ash-300 px-2 py-1 text-xs"
+                          />
+                          <button className="rounded bg-navy-800 px-2 py-1 font-display text-xs font-semibold text-white hover:bg-navy-700">
+                            Save
+                          </button>
+                        </form>
+                      </details>
                       {p.email && (
                         <div className="font-mono text-[11px] text-ash-500">
                           {p.email}
